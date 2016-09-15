@@ -1,0 +1,71 @@
+#!/usr/bin/make -f
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
+
+%:
+	dh $@ --parallel --with=autoreconf,gir,systemd
+
+override_dh_auto_clean:
+	if [ -e Makefile ]; then dh_auto_clean; fi
+
+override_dh_autoreconf:
+	env NOCONFIGURE=1 dh_autoreconf ./autogen.sh
+
+override_dh_auto_configure:
+	dh_auto_configure -- \
+		--disable-silent-rules \
+		--enable-gtk-doc \
+		--enable-installed-tests \
+		--libexecdir='$${prefix}/lib' \
+		--with-dracut \
+		--with-grub2 \
+		--with-grub2-mkconfig-path=/usr/sbin/grub-mkconfig \
+		--with-systemdsystemunitdir=/lib/systemd/system \
+		$(NULL)
+	chmod +x tests/*.js
+
+override_dh_auto_test:
+	debian/test.sh
+
+override_dh_auto_install:
+	dh_auto_install
+	# docbook-xsl capitalizes the whole heading, including the macro
+	# used to represent a single quote... https://bugs.debian.org/821235
+	sed -i -e 's,\*(AQ,*(Aq,g' \
+		debian/tmp/usr/share/man/man1/ostree-remote.1 \
+		debian/tmp/usr/share/man/man1/ostree-static-delta.1 \
+		$(NULL)
+
+override_dh_install:
+	rm -f debian/tmp/usr/lib/*/*.la
+	rm -f debian/tmp/usr/lib/installed-tests/ostree/*.la
+	:
+	# FIXME: when someone documents how to test these (#824649) they
+	# should be installed in a new ostree-boot package: see
+	# debian/ostree-boot.* and https://bugs.debian.org/824650
+	rm -f debian/tmp/etc/dracut.conf.d/ostree.conf
+	rm -f debian/tmp/etc/grub.d/15_ostree
+	rm -f debian/tmp/lib/systemd/system/ostree-prepare-root.service
+	rm -f debian/tmp/lib/systemd/system/ostree-remount.service
+	rm -fr debian/tmp/usr/lib/dracut/modules.d/98ostree/
+	rm -f debian/tmp/usr/lib/ostree/grub2-15_ostree
+	rm -f debian/tmp/usr/lib/ostree/ostree-prepare-root
+	rm -f debian/tmp/usr/lib/ostree/ostree-remount
+	:
+	dh_install --fail-missing
+
+override_dh_makeshlibs:
+	# this is an LD_PRELOAD, not a real shared library
+	dh_makeshlibs -Xinstalled-tests/ostree/libreaddir-rand.so
+
+override_dh_fixperms-arch:
+	dh_fixperms -X'*.js'
+	chmod -v 0755 debian/ostree-tests/usr/lib/installed-tests/ostree/*.js
+	chmod -v 0755 debian/ostree-tests/usr/lib/installed-tests/ostree/*.py
+	chmod -v 0755 debian/ostree-tests/usr/lib/installed-tests/ostree/*.sh
+	# this one is a library, not a script
+	chmod -v 0644 debian/ostree-tests/usr/lib/installed-tests/ostree/libtest.sh
+
+override_dh_systemd_start:
+	dh_systemd_start --no-start
