@@ -134,6 +134,21 @@ gboolean _ostree_fetcher_request_uri_to_membuf (OstreeFetcher *fetcher,
                                                 guint64        max_size,
                                                 GCancellable   *cancellable,
                                                 GError         **error);
+
+void _ostree_fetcher_request_to_membuf (OstreeFetcher         *self,
+                                        GPtrArray             *mirrorlist,
+                                        const char            *filename,
+                                        guint64                max_size,
+                                        int                    priority,
+                                        GCancellable          *cancellable,
+                                        GAsyncReadyCallback    callback,
+                                        gpointer               user_data);
+
+gboolean _ostree_fetcher_request_to_membuf_finish (OstreeFetcher *self,
+                                                   GAsyncResult  *result,
+                                                   GBytes       **out_buf,
+                                                   GError       **error);
+
 G_END_DECLS
 
 #endif
