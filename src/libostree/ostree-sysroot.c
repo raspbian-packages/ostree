@@ -1698,6 +1698,7 @@ ostree_sysroot_deployment_unlock (OstreeSysroot     *self,
     return FALSE;
 
   const char *ovl_options = NULL;
+  static const char hotfix_ovl_options[] = "lowerdir=usr,upperdir=.usr-ovl-upper,workdir=.usr-ovl-work";
   switch (unlocked_state)
     {
     case OSTREE_DEPLOYMENT_UNLOCKED_NONE:
@@ -1705,7 +1706,6 @@ ostree_sysroot_deployment_unlock (OstreeSysroot     *self,
       break;
     case OSTREE_DEPLOYMENT_UNLOCKED_HOTFIX:
       {
-        const char hotfix_ovl_options[] = "lowerdir=usr,upperdir=.usr-ovl-upper,workdir=.usr-ovl-work";
         /* Create the overlayfs directories in the deployment root
          * directly for hotfixes.  The ostree-prepare-root.c helper
          * is also set up to detect and mount these.
