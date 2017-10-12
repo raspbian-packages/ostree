@@ -3,20 +3,12 @@
 set -e
 exec 2>&1
 
-e=0
+# Ubuntu provides internet access via a proxy, but libostree doesn't need
+# that. However, libostree also doesn't support no_proxy, so it will try
+# to use Ubuntu's proxy for localhost, and fail to reach itself.
+unset ftp_proxy
+unset http_proxy
+unset https_proxy
+unset no_proxy
 
-tests="$(gnome-desktop-testing-runner -l libostree | while read t; do
-	t="${t%% *}"
-
-	case "$t" in
-		(libostree/test-local-pull.sh.test)
-			# frequently times out, https://bugs.debian.org/842606
-			# https://github.com/ostreedev/ostree/issues/605
-			continue
-			;;
-	esac
-
-	echo "$t"
-done)"
-
-gnome-desktop-testing-runner $tests
+exec gnome-desktop-testing-runner libostree

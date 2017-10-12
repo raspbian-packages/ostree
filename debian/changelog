@@ -1,8 +1,28 @@
-ostree (2017.11-2+rpi1) buster-staging; urgency=medium
+ostree (2017.12-1+rpi1) buster-staging; urgency=medium
 
+  [changes brought forward from 2017.11-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Thu, 28 Sep 2017 16:17:06 +0000]
   * Disable testsuite.
 
- -- Peter Michael Green <plugwash@raspbian.org>  Thu, 28 Sep 2017 16:17:06 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Thu, 12 Oct 2017 11:52:04 +0000
+
+ostree (2017.12-1) unstable; urgency=medium
+
+  * New upstream release
+    - Drop all current patches, applied upstream
+    - Update symbols file
+  * Add some post-release bug fix patches
+  * Simplify autopkgtest now that test-local-pull seems to be stable
+  * Unexport HTTP proxy variables in autopkgtest to work around lack of
+    support for no_proxy, which breaks the tests on Ubuntu autopkgtest.
+    We don't actually need Internet access, so this is OK.
+  * debian/test.sh: Unexport HTTP proxy variables for build-time tests
+    too
+  * Make build-time test failures fatal if they fail at least twice
+    out of 5 tries (previously they had to fail at least 3 times)
+  * Add patch to reinstate test-libglnx-shutil.c, which was missed out
+    of the upstream tarball
+
+ -- Simon McVittie <smcv@debian.org>  Tue, 03 Oct 2017 22:47:48 +0100
 
 ostree (2017.11-2) unstable; urgency=medium
 
