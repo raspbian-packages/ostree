@@ -50,6 +50,8 @@ ot_util_filename_validate (const char *name,
     {
       return glnx_throw (error, "Invalid / in filename %s", name);
     }
+  if (!g_utf8_validate (name, -1, NULL))
+    return glnx_throw (error, "Invalid UTF-8 in filename %s", name);
   return TRUE;
 }
 
