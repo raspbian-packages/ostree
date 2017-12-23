@@ -1,9 +1,64 @@
-ostree (2017.12-1+rpi1) buster-staging; urgency=medium
+ostree (2017.14-1+rpi1) buster-staging; urgency=medium
 
   [changes brought forward from 2017.11-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Thu, 28 Sep 2017 16:17:06 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Thu, 12 Oct 2017 11:52:04 +0000
+ -- Peter Michael Green <plugwash@raspbian.org>  Sat, 23 Dec 2017 00:07:40 +0000
+
+ostree (2017.14-1) unstable; urgency=medium
+
+  * New upstream release
+    - d/libostree-1-1.symbols: Update
+  * Standards-Version: 4.1.2 (no changes required)
+  * d/p/tests-Don-t-assume-uid-primary-gid.patch:
+    Add patch to fix automated test failure when uid != primary gid
+
+ -- Simon McVittie <smcv@debian.org>  Sun, 10 Dec 2017 19:42:36 +0000
+
+ostree (2017.13-1) unstable; urgency=medium
+
+  * New upstream release
+    - d/patches: Drop all patches
+    - d/copyright: Update
+    - Update symbols file
+  * d/control: Require dh-exec 0.23~, for build-profile support.
+    Strictly speaking we might only need 0.15, but I'm not going to
+    test versions older than the jessie backport.
+  * Set Rules-Requires-Root to no
+  * Standards-Version: 4.1.1 (no changes required)
+
+ -- Simon McVittie <smcv@debian.org>  Sat, 04 Nov 2017 14:05:06 +0000
+
+ostree (2017.12-2) unstable; urgency=medium
+
+  * Disable gtk-doc if we are not going to build libostree-doc,
+    in particular for architecture-specific builds. Note that it remains
+    in Build-Depends (not Build-Depends-Indep) because it is also needed
+    for gtkdocize during dh_autoreconf.
+    - In particular this might fix FTBFS on sparc64, where highlight(1)
+      fails.
+  * d/p/2017.13/lib-core-Init-struct-stat-buffer.patch,
+    d/p/2017.13/lib-sysroot-Fix-pointer-going-out-of-scope-in-unlock-code.patch,
+    d/p/2017.13/lib-deploy-Ignore-FIFREEZE-FITHAW-errors-when-already-in-.patch,
+    d/p/2017.13/lib-deploy-Use-_exit-for-FIFREEZE-watchdog.patch,
+    d/p/2017.13/lib-deltas-Check-cancellable-during-processing.patch,
+    d/p/2017.13/lib-utils-Check-for-invalid-UTF-8-in-filenames.patch,
+    d/p/2017.13/Cope-with-xattr-syscalls-raising-EOPNOTSUPP.patch,
+    d/p/2017.13/lib-sysroot-Fix-error-handling-when-mounting-overlayfs-fa.patch,
+    d/p/2017.13/lib-repo-Properly-handle-NULL-homedir-when-signing-commit.patch,
+    d/p/2017.13/fdio-allow-NULL-for-fstatat_allow_noent-stbuf.patch,
+    d/p/2017.13/lib-repo-Fix-loading-commitstate-with-parent-repos.patch:
+    Add various bugfix patches from upstream
+    - In particular, dealing with the possibility that EOPNOTSUPP != ENOTSUP
+      should fix test failures on hppa.
+  * d/p/2017.13/tests-Add-test-pull-bareuseronly.patch:
+    Add more test coverage from upstream
+    - d/rules: Make the new test executable
+  * d/test.sh: Clean up ostree-trivial-httpd processes
+  * d/test.sh: Don't repeat build-time tests if they fail once. They seem
+    to be somewhat reliable now.
+
+ -- Simon McVittie <smcv@debian.org>  Fri, 27 Oct 2017 00:19:45 +0100
 
 ostree (2017.12-1) unstable; urgency=medium
 

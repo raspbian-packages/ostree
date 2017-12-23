@@ -14,7 +14,7 @@ Build-Depends:
  ca-certificates,
  cpio,
  debhelper (>= 10~),
- dh-exec,
+ dh-exec (>= 0.23~),
  docbook-xml <!nodoc>,
  docbook-xsl <!nodoc>,
  e2fslibs-dev,
@@ -43,7 +43,8 @@ Build-Depends:
  zlib1g-dev,
 Build-Depends-Indep:
  libglib2.0-doc,
-Standards-Version: 4.1.0
+Rules-Requires-Root: no
+Standards-Version: 4.1.2
 Homepage: https://github.com/ostreedev/ostree/
 Vcs-Git: https://anonscm.debian.org/git/collab-maint/ostree.git
 Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/ostree.git

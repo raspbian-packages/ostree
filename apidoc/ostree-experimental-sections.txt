@@ -19,6 +19,9 @@ OstreeRemote
 ostree_remote_ref
 ostree_remote_unref
 ostree_remote_get_name
+ostree_remote_get_url
+<SUBSECTION Standard>
+ostree_remote_get_type
 </SECTION>
 
 <SECTION>
@@ -74,6 +77,15 @@ OstreeRepoFinderMount
 ostree_repo_finder_mount_new
 <SUBSECTION Standard>
 ostree_repo_finder_mount_get_type
+</SECTION>
+
+<SECTION>
+<FILE>ostree-repo-finder-override</FILE>
+OstreeRepoFinderOverride
+ostree_repo_finder_override_new
+ostree_repo_finder_override_add_uri
+<SUBSECTION Standard>
+ostree_repo_finder_override_get_type
 </SECTION>
 
 <SECTION>
