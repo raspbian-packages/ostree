@@ -2,8 +2,6 @@
 
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
-# Some tests assert that we will see English strings
-export LC_ALL=C.UTF-8
 
 binaries := $(shell dh_listpackages)
 
@@ -14,6 +12,7 @@ override_dh_autoreconf:
 	env NOCONFIGURE=1 dh_autoreconf ./autogen.sh
 
 configure_options = \
+	GJS=some-nonexistent-gjs-binary \
 	--enable-installed-tests \
 	--libexecdir='$${prefix}/lib' \
 	--with-dracut \

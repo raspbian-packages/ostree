@@ -1,9 +1,33 @@
-ostree (2017.14-1+rpi1) buster-staging; urgency=medium
+ostree (2017.15-2+rpi1) buster-staging; urgency=medium
 
   [changes brought forward from 2017.11-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Thu, 28 Sep 2017 16:17:06 +0000]
   * Disable testsuite.
 
- -- Peter Michael Green <plugwash@raspbian.org>  Sat, 23 Dec 2017 00:07:40 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Thu, 11 Jan 2018 18:46:19 +0000
+
+ostree (2017.15-2) unstable; urgency=medium
+
+  * d/p/2018.1/tests-Don-t-assume-uid-primary-gid.patch: Mark as applied
+    upstream in 2018.1
+  * d/p/2018.1/tests-Assert-that-byte-order-[etc.].patch:
+    Add patch to fix test failures on big-endian machines
+    (Closes: #886218)
+  * Temporarily disable gjs tests. gjs is not currently installable on
+    buildds due to the glibc transition and a long dependency chain
+    involving systemd-shim being preferred over systemd-sysv, which
+    ends with libnih1 Depends: libc6 (<< 2.26).
+
+ -- Simon McVittie <smcv@debian.org>  Thu, 04 Jan 2018 19:26:16 +0000
+
+ostree (2017.15-1) unstable; urgency=medium
+
+  * New upstream release
+    - d/libostree-1-1.symbols: Update
+  * d/rules: Stop forcing C.UTF-8 locale: the tests now do this internally
+  * Standards-Version: 4.1.3 (no changes required)
+  * d/p/tests-Don-t-assume-uid-primary-gid.patch: Mark as forwarded
+
+ -- Simon McVittie <smcv@debian.org>  Tue, 02 Jan 2018 14:13:08 +0000
 
 ostree (2017.14-1) unstable; urgency=medium
 
