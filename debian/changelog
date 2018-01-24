@@ -1,9 +1,24 @@
-ostree (2017.15-2+rpi1) buster-staging; urgency=medium
+ostree (2018.1-1+rpi1) buster-staging; urgency=medium
 
   [changes brought forward from 2017.11-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Thu, 28 Sep 2017 16:17:06 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Thu, 11 Jan 2018 18:46:19 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Wed, 24 Jan 2018 08:28:23 +0000
+
+ostree (2018.1-1) unstable; urgency=medium
+
+  * New upstream release
+    - d/copyright: Update
+    - d/patches: Remove, applied upstream
+    - d/libostree-1-1.symbols: Update
+  * Move Vcs-* to salsa.debian.org
+    d/p/test-concurrency-Explicitly-use-floor-division.patch,
+    d/p/tests-bootloader-entries-crosscheck-Use-Python-3-friendly.patch:
+    Make tests compatible with Python 3
+  * d/control, d/p/debian/Use-Python-3-for-tests.patch:
+    Switch build-time tests and autopkgtests to Python 3
+
+ -- Simon McVittie <smcv@debian.org>  Wed, 17 Jan 2018 15:34:46 +0000
 
 ostree (2017.15-2) unstable; urgency=medium
 
