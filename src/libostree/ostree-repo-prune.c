@@ -153,26 +153,29 @@ _ostree_repo_prune_tmp (OstreeRepo *self,
       size_t len;
       gboolean has_sig_suffix = FALSE;
       struct dirent *dent;
+      g_autofree gchar *d_name = NULL;
 
       if (!glnx_dirfd_iterator_next_dent (&dfd_iter, &dent, cancellable, error))
         return FALSE;
       if (dent == NULL)
         break;
 
-      len = strlen (dent->d_name);
-      if (len > 4 && g_strcmp0 (dent->d_name + len - 4, ".sig") == 0)
+      /* dirent->d_name can't be modified directly; see `man 3 readdir` */
+      d_name = g_strdup (dent->d_name);
+      len = strlen (d_name);
+      if (len > 4 && g_strcmp0 (d_name + len - 4, ".sig") == 0)
         {
           has_sig_suffix = TRUE;
-          dent->d_name[len - 4] = '\0';
+          d_name[len - 4] = '\0';
         }
 
-      if (!g_hash_table_contains (self->remotes, dent->d_name))
+      if (!g_hash_table_contains (self->remotes, d_name))
         {
           /* Restore the previous value to get the file name.  */
           if (has_sig_suffix)
-            dent->d_name[len - 4] = '.';
+            d_name[len - 4] = '.';
 
-          if (!glnx_unlinkat (dfd_iter.fd, dent->d_name, 0, error))
+          if (!glnx_unlinkat (dfd_iter.fd, d_name, 0, error))
             return FALSE;
         }
     }
@@ -302,6 +305,64 @@ repo_prune_internal (OstreeRepo        *self,
 }
 
 /**
+ * ostree_repo_traverse_reachable_refs:
+ * @self: Repo
+ * @depth: Depth of traversal
+ * @reachable: (element-type GVariant GVariant): Set of reachable objects (will be modified)
+ * @cancellable: Cancellable
+ * @error: Error
+ *
+ * Add all commit objects directly reachable via a ref to @reachable.
+ *
+ * Locking: shared
+ * Since: 2018.6
+ */
+gboolean
+ostree_repo_traverse_reachable_refs (OstreeRepo *self,
+                                     guint       depth,
+                                     GHashTable *reachable,
+                                     GCancellable *cancellable,
+                                     GError      **error)
+{
+  g_autoptr(OstreeRepoAutoLock) lock =
+    _ostree_repo_auto_lock_push (self, OSTREE_REPO_LOCK_SHARED, cancellable, error);
+  if (!lock)
+    return FALSE;
+
+  /* Ignoring collections. */
+  g_autoptr(GHashTable) all_refs = NULL;  /* (element-type utf8 utf8) */
+
+  if (!ostree_repo_list_refs (self, NULL, &all_refs,
+                              cancellable, error))
+    return FALSE;
+
+  GLNX_HASH_TABLE_FOREACH_V (all_refs, const char*, checksum)
+    {
+      g_debug ("Finding objects to keep for commit %s", checksum);
+      if (!ostree_repo_traverse_commit_union (self, checksum, depth, reachable,
+                                              cancellable, error))
+        return FALSE;
+    }
+
+  /* Using collections. */
+  g_autoptr(GHashTable) all_collection_refs = NULL;  /* (element-type OstreeChecksumRef utf8) */
+
+  if (!ostree_repo_list_collection_refs (self, NULL, &all_collection_refs,
+                                         OSTREE_REPO_LIST_REFS_EXT_EXCLUDE_REMOTES, cancellable, error))
+    return FALSE;
+
+  GLNX_HASH_TABLE_FOREACH_V (all_collection_refs, const char*, checksum)
+    {
+      g_debug ("Finding objects to keep for commit %s", checksum);
+      if (!ostree_repo_traverse_commit_union (self, checksum, depth, reachable,
+                                              cancellable, error))
+        return FALSE;
+    }
+
+  return TRUE;
+}
+
+/**
  * ostree_repo_prune:
  * @self: Repo
  * @flags: Options controlling prune process
@@ -355,35 +416,8 @@ ostree_repo_prune (OstreeRepo        *self,
 
   if (refs_only)
     {
-      /* Ignoring collections. */
-      g_autoptr(GHashTable) all_refs = NULL;  /* (element-type utf8 utf8) */
-
-      if (!ostree_repo_list_refs (self, NULL, &all_refs,
-                                  cancellable, error))
+      if (!ostree_repo_traverse_reachable_refs (self, depth, reachable, cancellable, error))
         return FALSE;
-
-      GLNX_HASH_TABLE_FOREACH_V (all_refs, const char*, checksum)
-        {
-          g_debug ("Finding objects to keep for commit %s", checksum);
-          if (!ostree_repo_traverse_commit_union (self, checksum, depth, reachable,
-                                                  cancellable, error))
-            return FALSE;
-        }
-
-      /* Using collections. */
-      g_autoptr(GHashTable) all_collection_refs = NULL;  /* (element-type OstreeChecksumRef utf8) */
-
-      if (!ostree_repo_list_collection_refs (self, NULL, &all_collection_refs,
-                                             OSTREE_REPO_LIST_REFS_EXT_EXCLUDE_REMOTES, cancellable, error))
-        return FALSE;
-
-      GLNX_HASH_TABLE_FOREACH_V (all_collection_refs, const char*, checksum)
-        {
-          g_debug ("Finding objects to keep for commit %s", checksum);
-          if (!ostree_repo_traverse_commit_union (self, checksum, depth, reachable,
-                                                  cancellable, error))
-            return FALSE;
-        }
     }
 
   if (!ostree_repo_list_objects (self, OSTREE_REPO_LIST_OBJECTS_ALL | OSTREE_REPO_LIST_OBJECTS_NO_PARENTS,

@@ -56,7 +56,7 @@
  * intersection is non-empty, that remote is returned as a result. Remotes which
  * do not have their `collection-id` key configured are ignored.
  *
- * Since: 2017.8
+ * Since: 2018.6
  */
 
 static void ostree_repo_finder_config_iface_init (OstreeRepoFinderInterface *iface);
@@ -96,7 +96,7 @@ ostree_repo_finder_config_resolve_async (OstreeRepoFinder                  *find
   GHashTableIter iter;
   const gchar *remote_name;
   g_auto(GStrv) remotes = NULL;
-  gsize n_remotes = 0;
+  guint n_remotes = 0;
 
   task = g_task_new (finder, cancellable, callback, user_data);
   g_task_set_source_tag (task, ostree_repo_finder_config_resolve_async);
@@ -106,9 +106,9 @@ ostree_repo_finder_config_resolve_async (OstreeRepoFinder                  *find
 
   /* List all remotes in this #OstreeRepo and see which of their ref lists
    * intersect with @refs. */
-  remotes = ostree_repo_remote_list (parent_repo, (guint *) &n_remotes);
+  remotes = ostree_repo_remote_list (parent_repo, &n_remotes);
 
-  g_debug ("%s: Checking %" G_GSIZE_FORMAT " remotes", G_STRFUNC, n_remotes);
+  g_debug ("%s: Checking %u remotes", G_STRFUNC, n_remotes);
 
   for (i = 0; i < n_remotes; i++)
     {
@@ -234,7 +234,7 @@ ostree_repo_finder_config_iface_init (OstreeRepoFinderInterface *iface)
  * Create a new #OstreeRepoFinderConfig.
  *
  * Returns: (transfer full): a new #OstreeRepoFinderConfig
- * Since: 2017.8
+ * Since: 2018.6
  */
 OstreeRepoFinderConfig *
 ostree_repo_finder_config_new (void)

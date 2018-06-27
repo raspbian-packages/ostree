@@ -1,9 +1,41 @@
-ostree (2018.5-2+rpi1) buster-staging; urgency=medium
+ostree (2018.6-3+rpi1) buster-staging; urgency=medium
 
   [changes brought forward from 2017.11-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Thu, 28 Sep 2017 16:17:06 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Wed, 20 Jun 2018 20:43:35 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Wed, 27 Jun 2018 09:26:40 +0000
+
+ostree (2018.6-3) unstable; urgency=medium
+
+  * d/p/avahi-Fail-immediately-if-we-can-t-talk-to-D-Bus-or-Avahi.patch:
+    Mark as applied upstream
+  * d/p/OstreeRepoFinderConfig-Fix-guint-gsize-confusion.patch:
+    Add patch to fix incorrect type aliasing that caused assertion
+    failures on 64-bit big-endian platforms (Closes: #902209)
+
+ -- Simon McVittie <smcv@debian.org>  Sun, 24 Jun 2018 13:04:09 +0100
+
+ostree (2018.6-2) unstable; urgency=medium
+
+  * d/p/lib-repo-Fix-32-bit-format-string-error.patch:
+    Apply patch from upstream to fix FTBFS on 32-bit architectures
+    (Closes: #902194)
+
+ -- Simon McVittie <smcv@debian.org>  Sat, 23 Jun 2018 12:37:27 +0100
+
+ostree (2018.6-1) unstable; urgency=medium
+
+  * New upstream release with support for peer-to-peer software
+    collections, required by Flatpak's peer-to-peer app sharing feature
+    - d/copyright: Update
+    - d/libostree-1-1.symbols: Update
+    - Build-depend on Avahi libraries
+  * d/rules: Explicitly enable various desired libraries
+  * d/p/avahi-Fail-immediately-if-we-can-t-talk-to-D-Bus-or-Avahi.patch:
+    Add patch to avoid Flatpak test failures with this ostree if Avahi
+    (or dbus-daemon --system) is not available on the build/test system
+
+ -- Simon McVittie <smcv@debian.org>  Fri, 22 Jun 2018 21:05:29 +0100
 
 ostree (2018.5-2) unstable; urgency=medium
 
