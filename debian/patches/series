@@ -1,3 +1,2 @@
-lib-repo-Fix-32-bit-format-string-error.patch
-avahi-Fail-immediately-if-we-can-t-talk-to-D-Bus-or-Avahi.patch
-OstreeRepoFinderConfig-Fix-guint-gsize-confusion.patch
+lib-pull-Fix-minor-memleak-in-error-path.patch
+debian/Skip-test-pull-repeated-during-CI.patch

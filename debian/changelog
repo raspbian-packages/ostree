@@ -1,9 +1,33 @@
-ostree (2018.6-3+rpi1) buster-staging; urgency=medium
+ostree (2018.7-2+rpi1) buster-staging; urgency=medium
 
   [changes brought forward from 2017.11-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Thu, 28 Sep 2017 16:17:06 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Wed, 27 Jun 2018 09:26:40 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Thu, 09 Aug 2018 15:34:14 +0000
+
+ostree (2018.7-2) unstable; urgency=medium
+
+  * d/p/debian/Skip-test-pull-repeated-during-CI.patch:
+    Skip a test that is non-deterministic and can spuriously fail,
+    which is not suitable for build-time testing or gating migration in
+    autopkgtest.
+
+ -- Simon McVittie <smcv@debian.org>  Mon, 30 Jul 2018 16:52:35 +0100
+
+ostree (2018.7-1) unstable; urgency=medium
+
+  * New upstream release
+    - d/libostree-1-1.symbols: Update
+    - Drop all patches, applied upstream
+    - d/copyright: Remove details of Rust files not included in this
+      release
+  * d/p/lib-pull-Fix-minor-memleak-in-error-path.patch:
+    Apply a memory leak fix from upstream
+  * Use upstream default ${libexecdir} now that Debian Policy allows
+    /usr/libexec (via FHS 3.0)
+  * Standards-Version: 4.1.5 (no changes required)
+
+ -- Simon McVittie <smcv@debian.org>  Wed, 25 Jul 2018 23:46:29 +0100
 
 ostree (2018.6-3) unstable; urgency=medium
 
