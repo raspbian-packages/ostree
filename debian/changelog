@@ -1,9 +1,19 @@
-ostree (2018.7-2+rpi1) buster-staging; urgency=medium
+ostree (2018.8-1+rpi1) buster-staging; urgency=medium
 
   [changes brought forward from 2017.11-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Thu, 28 Sep 2017 16:17:06 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Thu, 09 Aug 2018 15:34:14 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Sat, 25 Aug 2018 19:00:30 +0000
+
+ostree (2018.8-1) unstable; urgency=medium
+
+  * New upstream release
+    - d/p/debian/Skip-test-pull-repeated-during-CI.patch:
+      Drop, applied upstream
+    - d/copyright: Update
+  * Standards-Version: 4.2.0 (no changes required)
+
+ -- Simon McVittie <smcv@debian.org>  Thu, 23 Aug 2018 13:19:00 +0100
 
 ostree (2018.7-2) unstable; urgency=medium
 
