@@ -1,9 +1,38 @@
-ostree (2018.8-1+rpi1) buster-staging; urgency=medium
+ostree (2018.9.1-1+rpi1) buster-staging; urgency=medium
 
   [changes brought forward from 2017.11-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Thu, 28 Sep 2017 16:17:06 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Sat, 25 Aug 2018 19:00:30 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Mon, 05 Nov 2018 12:21:42 +0000
+
+ostree (2018.9.1-1) unstable; urgency=medium
+
+  * d/tests/build: Mark as superficial (see #904979)
+  * New upstream release
+    - d/libostree-1-1.symbols: Update
+  * Skip installation of new ostree-finalize-staged.path unit, which
+    should be in ostree-boot when added (see #824650)
+  * Override lintian warning for /usr/share/ostree/trusted.gpg.d/README-gpg
+    not being in /usr/share/doc: it documents the directory in which it is
+    located
+
+ -- Simon McVittie <smcv@debian.org>  Tue, 30 Oct 2018 16:04:19 +0000
+
+ostree (2018.8-2) unstable; urgency=medium
+
+  [ Simon McVittie ]
+  * ostree-tests: Remove gjs dependency on s390x.
+    mozjs60 doesn't work on s390x, so gjs is in danger of being removed
+    from that architecture (see #909536). The test that uses JS is
+    automatically skipped if the interpreter is missing.
+    (Closes: #910286)
+  * Standards-Version: 4.2.1 (no changes required)
+
+  [ Ondřej Nový ]
+  * d/tests: Use AUTOPKGTEST_TMP instead of ADTTMP
+  * d/changelog: Remove trailing whitespaces
+
+ -- Simon McVittie <smcv@debian.org>  Thu, 04 Oct 2018 14:54:29 +0100
 
 ostree (2018.8-1) unstable; urgency=medium
 
@@ -743,7 +772,7 @@ ostree (2015.9-alexlarsson1) vivid; urgency=medium
 ostree (2015.4-0amigadave2) trusty; urgency=low
 
   [ David King ]
-  * Add build dependency on libattr1-dev. 
+  * Add build dependency on libattr1-dev.
 
  -- David King <amigadave@amigadave.com>  Wed, 08 Apr 2015 13:10:39 +0100
 
