@@ -1,9 +1,17 @@
-ostree (2018.9.1-1+rpi1) buster-staging; urgency=medium
+ostree (2019.1-1+rpi1) buster-staging; urgency=medium
 
   [changes brought forward from 2017.11-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Thu, 28 Sep 2017 16:17:06 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Mon, 05 Nov 2018 12:21:42 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Fri, 18 Jan 2019 12:00:16 +0000
+
+ostree (2019.1-1) unstable; urgency=medium
+
+  * New upstream release
+  * d/copyright: Update
+  * Standards-Version: 4.3.0 (no changes required)
+
+ -- Simon McVittie <smcv@debian.org>  Mon, 14 Jan 2019 08:23:44 +0000
 
 ostree (2018.9.1-1) unstable; urgency=medium
 
