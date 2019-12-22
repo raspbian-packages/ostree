@@ -1,0 +1,10 @@
+Tests: flaky
+Restrictions: flaky
+Depends: gnome-desktop-testing, ostree-tests
+
+Tests: gnome-desktop-testing
+Depends: gnome-desktop-testing, ostree-tests
+
+Tests: build
+Restrictions: superficial
+Depends: build-essential, libostree-dev, pkg-config
