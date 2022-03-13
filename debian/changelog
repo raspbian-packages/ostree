@@ -1,9 +1,44 @@
-ostree (2022.1-3+rpi1) bookworm-staging; urgency=medium
+ostree (2022.2-3+rpi1) bookworm-staging; urgency=medium
 
   [changes brought forward from 2020.8-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Tue, 15 Dec 2020 11:54:45 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Tue, 01 Feb 2022 11:03:13 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Sun, 13 Mar 2022 02:46:05 +0000
+
+ostree (2022.2-3) unstable; urgency=medium
+
+  * d/rules: Correct argument used to disable gjs on s390x
+
+ -- Simon McVittie <smcv@debian.org>  Tue, 08 Mar 2022 16:16:43 +0000
+
+ostree (2022.2-2) unstable; urgency=medium
+
+  * d/control: Disable JavaScript-based tests on s390x.
+    Mitigates: ostreedev/ostree#2527
+  * d/rules: Explicitly disable JS-based tests on architectures where
+    they're unreliable, or where an up-to-date gjs is unavailable.
+    Otherwise we'd build and install these tests if gjs (maybe an
+    old version) happens to be installed, despite it not being in
+    Build-Depends.
+
+ -- Simon McVittie <smcv@debian.org>  Tue, 08 Mar 2022 09:55:53 +0000
+
+ostree (2022.2-1) unstable; urgency=medium
+
+  * New upstream release
+    - Updated libglnx submodule fixes an incompatibility with eCryptFS
+      (Closes: #1004467)
+  * Install new script /usr/libexec/libostree/s390x-se-luks-gencpio
+    into ostree-boot
+  * d/p/s390x-se-luks-gencpio-Fix-shebang-syntax.patch,
+    d/p/s390x-se-luks-gencpio-Use-interoperable-path-for-bash.patch:
+    Add patches to retain compatibility with non-/usr-merged systems
+  * d/libostree-1-1.symbols: Update
+  * d/p/test-prune-Read-to-the-end-of-cut-1-output.patch:
+    Add patch to fix an intermittent test failure involving SIGPIPE
+  * Revert Lintian overrides to latest released version of Lintian
+
+ -- Simon McVittie <smcv@debian.org>  Mon, 07 Mar 2022 21:12:45 +0000
 
 ostree (2022.1-3) unstable; urgency=medium
 
