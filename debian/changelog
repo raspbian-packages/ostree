@@ -1,9 +1,33 @@
-ostree (2022.2-3+rpi1) bookworm-staging; urgency=medium
+ostree (2022.4-2+rpi1) bookworm-staging; urgency=medium
 
   [changes brought forward from 2020.8-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Tue, 15 Dec 2020 11:54:45 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Sun, 13 Mar 2022 02:46:05 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Wed, 22 Jun 2022 09:17:52 +0000
+
+ostree (2022.4-2) unstable; urgency=medium
+
+  [ Dan Nicholson ]
+  * Backport patch to fix 2022.4 symbol version parent
+
+ -- Simon McVittie <smcv@debian.org>  Sun, 19 Jun 2022 20:58:51 +0100
+
+ostree (2022.4-1) unstable; urgency=medium
+
+  [ Dan Nicholson ]
+  * New upstream release
+    - Drop patches that were applied upstream
+  * d/control: Bump libglib2.0-dev dependency to 2.66.0
+  * Add new ostree-boot-complete.service unit to ostree-boot
+
+  [ Simon McVittie ]
+  * d/copyright: Update
+  * New upstream release
+  * d/libostree-1-1.symbols: Update
+  * d/p/test-basic-c-Don-t-assert-that-extended-attributes-are-av.patch:
+    Add patch to skip a test-case if /var/tmp doesn't support xattrs
+
+ -- Simon McVittie <smcv@debian.org>  Fri, 17 Jun 2022 16:35:46 +0100
 
 ostree (2022.2-3) unstable; urgency=medium
 

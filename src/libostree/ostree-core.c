@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2011 Colin Walters <walters@verbum.org>
+ * Copyright (C) 2022 Igalia S.L.
  *
  * SPDX-License-Identifier: LGPL-2.0+
  *
@@ -836,6 +837,51 @@ gboolean ostree_break_hardlink (int               dfd,
 }
 
 /**
+ * ostree_fs_get_all_xattrs:
+ * @fd: File descriptor
+ * @cancellable: Cancellable
+ * @error: Error
+ *
+ * Retrieve all extended attributes in a canonical (sorted) order from
+ * the given file descriptor.
+ *
+ * Returns: (transfer full): A GVariant of type `a(ayay)`
+ */
+GVariant *
+ostree_fs_get_all_xattrs (int fd, GCancellable *cancellable, GError **error)
+{
+  GVariant *ret = NULL;
+  if (!glnx_fd_get_all_xattrs (fd, &ret, cancellable, error))
+    return NULL;
+  return ret;
+}
+
+/**
+ * ostree_fs_get_all_xattrs_at:
+ * @dfd: Directory file descriptor
+ * @path: Filesystem path
+ * @cancellable: Cancellable
+ * @error: Error
+ *
+ * Retrieve all extended attributes in a canonical (sorted) order from
+ * the given path, relative to the provided directory file descriptor.
+ * The target path will not be dereferenced.  Currently on Linux, this
+ * API must be used currently to retrieve extended attributes
+ * for symbolic links because while `O_PATH` exists, it cannot be used
+ * with `fgetxattr()`.
+ *
+ * Returns: (transfer full): A GVariant of type `a(ayay)`
+ */
+GVariant *
+ostree_fs_get_all_xattrs_at (int dfd, const char *path, GCancellable *cancellable, GError **error)
+{
+  GVariant *ret = NULL;
+  if (!glnx_dfd_name_get_all_xattrs (dfd, path, &ret, cancellable, error))
+    return NULL;
+  return ret;
+}
+
+/**
  * ostree_checksum_file_from_input:
  * @file_info: File information
  * @xattrs: (allow-none): Optional extended attributes
@@ -927,8 +973,8 @@ ostree_checksum_file (GFile            *f,
   g_autoptr(GVariant) xattrs = NULL;
   if (objtype == OSTREE_OBJECT_TYPE_FILE)
     {
-      if (!glnx_dfd_name_get_all_xattrs (AT_FDCWD, gs_file_get_path_cached (f),
-                                         &xattrs, cancellable, error))
+      xattrs = ostree_fs_get_all_xattrs_at (AT_FDCWD, gs_file_get_path_cached (f), cancellable, error);
+      if (!xattrs)
         return FALSE;
     }
 
@@ -1031,19 +1077,22 @@ typedef struct {
 } ChecksumFileAsyncData;
 
 static void
-checksum_file_async_thread (GSimpleAsyncResult  *res,
+checksum_file_async_thread (GTask               *task,
                             GObject             *object,
+                            gpointer             datap,
                             GCancellable        *cancellable)
 {
   GError *error = NULL;
-  ChecksumFileAsyncData *data;
+  ChecksumFileAsyncData *data = datap;
   guchar *csum = NULL;
 
-  data = g_simple_async_result_get_op_res_gpointer (res);
   if (!ostree_checksum_file (data->f, data->objtype, &csum, cancellable, &error))
-    g_simple_async_result_take_error (res, error);
+    g_task_return_error (task, error);
   else
-    data->csum = csum;
+    {
+      data->csum = csum;
+      g_task_return_pointer (task, data, NULL);
+    }
 }
 
 static void
@@ -1076,18 +1125,18 @@ ostree_checksum_file_async (GFile                 *f,
                             GAsyncReadyCallback    callback,
                             gpointer               user_data)
 {
-  GSimpleAsyncResult  *res;
+  g_autoptr(GTask) task = NULL;
   ChecksumFileAsyncData *data;
 
   data = g_new0 (ChecksumFileAsyncData, 1);
   data->f = g_object_ref (f);
   data->objtype = objtype;
 
-  res = g_simple_async_result_new (G_OBJECT (f), callback, user_data, ostree_checksum_file_async);
-  g_simple_async_result_set_op_res_gpointer (res, data, (GDestroyNotify)checksum_file_async_data_free);
-
-  g_simple_async_result_run_in_thread (res, checksum_file_async_thread, io_priority, cancellable);
-  g_object_unref (res);
+  task = g_task_new (G_OBJECT (f), cancellable, callback, user_data);
+  g_task_set_task_data (task, data, (GDestroyNotify)checksum_file_async_data_free);
+  g_task_set_priority (task, io_priority);
+  g_task_set_source_tag (task, ostree_checksum_file_async);
+  g_task_run_in_thread (task, (GTaskThreadFunc)checksum_file_async_thread);
 }
 
 /**
@@ -1106,15 +1155,19 @@ ostree_checksum_file_async_finish (GFile          *f,
                                    guchar        **out_csum,
                                    GError        **error)
 {
-  GSimpleAsyncResult *simple = G_SIMPLE_ASYNC_RESULT (result);
   ChecksumFileAsyncData *data;
 
-  g_warn_if_fail (g_simple_async_result_get_source_tag (simple) == ostree_checksum_file_async);
+  g_return_val_if_fail (G_IS_FILE (f), FALSE);
+  g_return_val_if_fail (G_IS_ASYNC_RESULT (result), FALSE);
+  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+  g_return_val_if_fail (g_task_is_valid (result, f), FALSE);
+  g_return_val_if_fail (g_async_result_is_tagged (result, ostree_checksum_file_async), FALSE);
 
-  if (g_simple_async_result_propagate_error (simple, error))
+  data = g_task_propagate_pointer (G_TASK (result), error);
+
+  if (data == NULL)
     return FALSE;
 
-  data = g_simple_async_result_get_op_res_gpointer (simple);
   /* Transfer ownership */
   *out_csum = data->csum;
   data->csum = NULL;

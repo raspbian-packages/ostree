@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2011 Colin Walters <walters@verbum.org>
+ * Copyright (C) 2022 Igalia S.L.
  *
  * SPDX-License-Identifier: LGPL-2.0+
  *
@@ -24,7 +25,7 @@
 #include "ot-main.h"
 #include "ot-builtins.h"
 #include "ostree.h"
-#include "ostree-cmdprivate.h"
+#include "ostree-cmd-private.h"
 #include "otutil.h"
 
 static gboolean opt_quiet;
@@ -419,7 +420,7 @@ ostree_builtin_fsck (int argc, char **argv, OstreeCommandInvocation *invocation,
         }
     }
 
-  g_clear_pointer (&objects, (GDestroyNotify) g_hash_table_unref);
+  g_clear_pointer (&objects, g_hash_table_unref);
 
   if (!opt_quiet)
     g_print ("Verifying content integrity of %u commit objects...\n",

@@ -32,7 +32,7 @@
 
 #include "ostree.h"
 #include "ostree-core-private.h"
-#include "ostree-cmdprivate.h"
+#include "ostree-cmd-private.h"
 
 #ifdef HAVE_LIBMOUNT
 typedef FILE OtLibMountFile;
@@ -133,6 +133,8 @@ require_internal_units (const char *normal_dir,
   if (!glnx_shutil_mkdir_p_at (normal_dir_dfd, "multi-user.target.wants", 0755, cancellable, error))
     return FALSE;
   if (symlinkat (SYSTEM_DATA_UNIT_PATH "/ostree-finalize-staged.path", normal_dir_dfd, "multi-user.target.wants/ostree-finalize-staged.path") < 0)
+    return glnx_throw_errno_prefix (error, "symlinkat");
+  if (symlinkat (SYSTEM_DATA_UNIT_PATH "/ostree-boot-complete.service", normal_dir_dfd, "multi-user.target.wants/ostree-boot-complete.service") < 0)
     return glnx_throw_errno_prefix (error, "symlinkat");
 
   return TRUE;

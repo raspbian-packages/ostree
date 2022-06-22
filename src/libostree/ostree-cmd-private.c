@@ -19,7 +19,7 @@
 
 #include "config.h"
 
-#include "ostree-cmdprivate.h"
+#include "ostree-cmd-private.h"
 #include "ostree-repo-private.h"
 #include "ostree-core-private.h"
 #include "ostree-repo-static-delta-private.h"
@@ -51,6 +51,7 @@ ostree_cmd__private__ (void)
     _ostree_repo_static_delta_delete,
     _ostree_repo_verify_bindings,
     _ostree_sysroot_finalize_staged,
+    _ostree_sysroot_boot_complete,
   };
 
   return &table;

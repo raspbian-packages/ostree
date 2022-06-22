@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2011 Colin Walters <walters@verbum.org>
  * Copyright (C) 2015 Red Hat, Inc.
+ * Copyright (C) 2022 Igalia S.L.
  *
  * SPDX-License-Identifier: LGPL-2.0+
  *
@@ -27,6 +28,7 @@
 #include <gio/gunixoutputstream.h>
 #include <gio/gfiledescriptorbased.h>
 #include "libglnx.h"
+#include "ostree-core.h"
 #include "otutil.h"
 #include <glnx-console.h>
 #include <linux/magic.h>
@@ -710,6 +712,32 @@ ostree_repo_auto_lock_cleanup (OstreeRepoAutoLock *auto_lock)
 }
 
 /**
+ * _ostree_repo_auto_transaction_new:
+ * @repo: (not nullable): an #OsreeRepo object
+ * @cancellable: Cancellable
+ * @error: a #GError
+ *
+ * Return a guard for a transaction in @repo.
+ *
+ * Do not call this function outside the OstreeRepo transaction implementation.
+ * Use _ostree_repo_auto_transaction_start() instead.
+ *
+ * Returns: (transfer full): an #OstreeRepoAutoTransaction guard on success,
+ * %NULL otherwise.
+ */
+OstreeRepoAutoTransaction *
+_ostree_repo_auto_transaction_new (OstreeRepo *repo)
+{
+  g_assert (repo != NULL);
+
+  OstreeRepoAutoTransaction *txn = g_malloc(sizeof(OstreeRepoAutoTransaction));
+  txn->atomic_refcount = 1;
+  txn->repo = g_object_ref (repo);
+
+  return g_steal_pointer (&txn);
+}
+
+/**
  * _ostree_repo_auto_transaction_start:
  * @repo: (not nullable): an #OsreeRepo object
  * @cancellable: Cancellable
@@ -730,11 +758,7 @@ _ostree_repo_auto_transaction_start (OstreeRepo     *repo,
   if (!ostree_repo_prepare_transaction (repo, NULL, cancellable, error))
     return NULL;
 
-  OstreeRepoAutoTransaction *txn = g_malloc(sizeof(OstreeRepoAutoTransaction));
-  txn->atomic_refcount = 1;
-  txn->repo = g_object_ref (repo);
-
-  return g_steal_pointer (&txn);
+  return _ostree_repo_auto_transaction_new (repo);
 }
 
 /**
@@ -1208,8 +1232,8 @@ ostree_repo_finalize (GObject *object)
   g_clear_pointer (&self->txn.refs, g_hash_table_destroy);
   g_clear_pointer (&self->txn.collection_refs, g_hash_table_destroy);
   g_clear_error (&self->writable_error);
-  g_clear_pointer (&self->object_sizes, (GDestroyNotify) g_hash_table_unref);
-  g_clear_pointer (&self->dirmeta_cache, (GDestroyNotify) g_hash_table_unref);
+  g_clear_pointer (&self->object_sizes, g_hash_table_unref);
+  g_clear_pointer (&self->dirmeta_cache, g_hash_table_unref);
   g_mutex_clear (&self->cache_lock);
   g_mutex_clear (&self->txn_lock);
   g_free (self->collection_id);
@@ -2306,7 +2330,7 @@ ostree_repo_remote_gpg_import (OstreeRepo         *self,
           goto out;
         }
 
-      g_clear_pointer (&data_buffer, (GDestroyNotify) gpgme_data_release);
+      g_clear_pointer (&data_buffer, gpgme_data_release);
     }
 
   /* Retrieve all keys or specific keys from the source GPGME context.
@@ -3179,7 +3203,7 @@ reload_core_config (OstreeRepo          *self,
   gboolean is_archive;
   gsize len;
 
-  g_clear_pointer (&self->config, (GDestroyNotify)g_key_file_unref);
+  g_clear_pointer (&self->config, g_key_file_unref);
   self->config = g_key_file_new ();
 
   contents = glnx_file_get_contents_utf8_at (self->repo_dir_fd, "config", &len,
@@ -4322,9 +4346,12 @@ _ostree_repo_load_file_bare (OstreeRepo         *self,
         {
           if (self->disable_xattrs)
             ret_xattrs = g_variant_ref_sink (g_variant_new_array (G_VARIANT_TYPE ("(ayay)"), NULL, 0));
-          else if (!glnx_fd_get_all_xattrs (fd, &ret_xattrs,
-                                            cancellable, error))
-            return FALSE;
+          else 
+            {
+              ret_xattrs = ostree_fs_get_all_xattrs (fd, cancellable, error);
+              if (!ret_xattrs)
+                return FALSE;
+            }
         }
       else if (S_ISLNK (stbuf.st_mode) && out_xattrs)
         {
@@ -6274,7 +6301,7 @@ ostree_repo_regenerate_summary (OstreeRepo     *self,
     g_autoptr(GHashTable) collection_map = NULL;  /* (element-type utf8 GHashTable) */
     g_hash_table_iter_init (&iter, collection_refs);
     collection_map = g_hash_table_new_full (g_str_hash, g_str_equal, NULL,
-                                            (GDestroyNotify) g_hash_table_unref);
+                                            (GDestroyNotify)g_hash_table_unref);
 
     const OstreeCollectionRef *c_ref;
     const char *checksum;
@@ -6594,7 +6621,7 @@ _ostree_repo_memory_cache_ref_destroy (OstreeRepoMemoryCacheRef *state)
   g_mutex_lock (lock);
   repo->dirmeta_cache_refcount--;
   if (repo->dirmeta_cache_refcount == 0)
-    g_clear_pointer (&repo->dirmeta_cache, (GDestroyNotify) g_hash_table_unref);
+    g_clear_pointer (&repo->dirmeta_cache, g_hash_table_unref);
   g_mutex_unlock (lock);
   g_object_unref (repo);
 }
