@@ -1,9 +1,18 @@
-ostree (2022.5-3+rpi1) bookworm-staging; urgency=medium
+ostree (2022.5-4+rpi1) bookworm-staging; urgency=medium
 
   [changes brought forward from 2020.8-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Tue, 15 Dec 2020 11:54:45 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Fri, 09 Sep 2022 19:06:32 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Wed, 05 Oct 2022 13:49:49 +0000
+
+ostree (2022.5-4) unstable; urgency=medium
+
+  * Re-enable gjs-based tests on armel.
+    Adrian Bunk and Mike Hommey were able to fix mozjs102 on armel, so we
+    can continue to have gjs on that architecture for Debian 12.
+  * d/watch: Adapt to Github website changes
+
+ -- Simon McVittie <smcv@debian.org>  Mon, 03 Oct 2022 10:19:36 +0100
 
 ostree (2022.5-3) unstable; urgency=medium
 
