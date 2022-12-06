@@ -38,6 +38,11 @@ function libtestExec(shellCode) {
     proc.wait_check(null);
 }
 
+if (GLib.getenv('DEB_HOST_ARCH') === 's390x' && !GLib.getenv('DEB_ALLOW_FLAKY_TESTS')) {
+    print('1..0 # SKIP https://bugs.debian.org/1025532');
+    imports.system.exit(0);
+}
+
 print('1..1')
 
 libtestExec('setup_os_repository archive syslinux');
