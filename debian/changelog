@@ -1,3 +1,11 @@
+ostree (2023.5-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream release
+  * deiban/libostree-1-1.symbols: Add new symbols
+
+ -- Jeremy Bícha <jbicha@ubuntu.com>  Wed, 16 Aug 2023 10:01:24 -0400
+
 ostree (2023.3-2) unstable; urgency=medium
 
   * Release to unstable
