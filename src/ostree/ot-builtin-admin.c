@@ -47,6 +47,8 @@ static OstreeCommand admin_subcommands[] = {
     "Deprecated commands intended for installer programs" },
   { "os-init", OSTREE_BUILTIN_FLAG_NO_REPO, ot_admin_builtin_os_init,
     "Initialize empty state for given operating system" },
+  { "stateroot-init", OSTREE_BUILTIN_FLAG_NO_REPO, ot_admin_builtin_os_init,
+    "Initialize empty state for given operating system" },
   { "pin", OSTREE_BUILTIN_FLAG_NO_REPO, ot_admin_builtin_pin,
     "Change the \"pinning\" state of a deployment" },
   { "set-origin", OSTREE_BUILTIN_FLAG_NO_REPO, ot_admin_builtin_set_origin,
@@ -55,6 +57,8 @@ static OstreeCommand admin_subcommands[] = {
   { "switch", OSTREE_BUILTIN_FLAG_NO_REPO, ot_admin_builtin_switch,
     "Construct new tree from REFSPEC and deploy it" },
   { "undeploy", OSTREE_BUILTIN_FLAG_NO_REPO, ot_admin_builtin_undeploy, "Delete deployment INDEX" },
+  { "set-default", OSTREE_BUILTIN_FLAG_NO_REPO, ot_admin_builtin_set_default,
+    "Make deployment INDEX the default" },
   { "unlock", OSTREE_BUILTIN_FLAG_NO_REPO, ot_admin_builtin_unlock,
     "Make the current deployment mutable (as a hotfix or development)" },
   { "upgrade", OSTREE_BUILTIN_FLAG_NO_REPO, ot_admin_builtin_upgrade,
@@ -91,18 +95,13 @@ gboolean
 ostree_builtin_admin (int argc, char **argv, OstreeCommandInvocation *invocation,
                       GCancellable *cancellable, GError **error)
 {
-  gboolean ret = FALSE;
-  const char *subcommand_name = NULL;
-  OstreeCommand *subcommand;
-  g_autofree char *prgname = NULL;
-  int in, out;
-
   /*
    * Parse the global options. We rearrange the options as
    * necessary, in order to pass relevant options through
    * to the commands, but also have them take effect globally.
    */
-
+  int in, out;
+  const char *subcommand_name = NULL;
   for (in = 1, out = 1; in < argc; in++, out++)
     {
       /* The non-option is the command, take it out of the arguments */
@@ -126,7 +125,7 @@ ostree_builtin_admin (int argc, char **argv, OstreeCommandInvocation *invocation
 
   argc = out;
 
-  subcommand = admin_subcommands;
+  OstreeCommand *subcommand = admin_subcommands;
   while (subcommand->name)
     {
       if (g_strcmp0 (subcommand_name, subcommand->name) == 0)
@@ -161,17 +160,14 @@ ostree_builtin_admin (int argc, char **argv, OstreeCommandInvocation *invocation
       help = g_option_context_get_help (context, FALSE, NULL);
       g_printerr ("%s", help);
 
-      goto out;
+      return FALSE;
     }
 
-  prgname = g_strdup_printf ("%s %s", g_get_prgname (), subcommand_name);
-  g_set_prgname (prgname);
+  {
+    g_autofree char *prgname = g_strdup_printf ("%s %s", g_get_prgname (), subcommand_name);
+    g_set_prgname (prgname);
+  }
 
   OstreeCommandInvocation sub_invocation = { .command = subcommand };
-  if (!subcommand->fn (argc, argv, &sub_invocation, cancellable, error))
-    goto out;
-
-  ret = TRUE;
-out:
-  return ret;
+  return subcommand->fn (argc, argv, &sub_invocation, cancellable, error);
 }

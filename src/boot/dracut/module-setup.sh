@@ -33,6 +33,14 @@ depends() {
 
 install() {
     dracut_install /usr/lib/ostree/ostree-prepare-root
+    for r in /usr/lib /etc; do
+        if test -f "$r/ostree/prepare-root.conf"; then
+            inst_simple "$r/ostree/prepare-root.conf"
+        fi
+    done
+    if test -f "/etc/ostree/initramfs-root-binding.key"; then
+        inst_simple "/etc/ostree/initramfs-root-binding.key"
+    fi
     inst_simple "${systemdsystemunitdir}/ostree-prepare-root.service"
     mkdir -p "${initdir}${systemdsystemconfdir}/initrd-root-fs.target.wants"
     ln_r "${systemdsystemunitdir}/ostree-prepare-root.service" \

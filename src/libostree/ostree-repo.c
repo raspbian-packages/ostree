@@ -2637,7 +2637,7 @@ repo_create_at_internal (int dfd, const char *path, OstreeRepoMode mode, GVarian
 
       const char *collection_id = NULL;
       if (options)
-        g_variant_lookup (options, "collection-id", "&s", &collection_id);
+        (void)g_variant_lookup (options, "collection-id", "&s", &collection_id);
       if (collection_id != NULL)
         g_string_append_printf (config_data, "collection-id=%s\n", collection_id);
 
@@ -2838,8 +2838,9 @@ static gboolean
 append_one_remote_config (OstreeRepo *self, GFile *path, GCancellable *cancellable, GError **error)
 {
   g_autoptr (GKeyFile) remotedata = g_key_file_new ();
-  if (!g_key_file_load_from_file (remotedata, gs_file_get_path_cached (path), 0, error))
-    return FALSE;
+  const char *pathname = gs_file_get_path_cached (path);
+  if (!g_key_file_load_from_file (remotedata, pathname, 0, error))
+    return glnx_prefix_error (error, "Failed to parse %s", pathname);
 
   return add_remotes_from_keyfile (self, remotedata, path, error);
 }
@@ -3080,7 +3081,7 @@ reload_core_config (OstreeRepo *self, GCancellable *cancellable, GError **error)
       {
         g_autofree char *lock_timeout_seconds = NULL;
 
-        if (!ot_keyfile_get_value_with_default (self->config, "core", "lock-timeout-secs", "30",
+        if (!ot_keyfile_get_value_with_default (self->config, "core", "lock-timeout-secs", "300",
                                                 &lock_timeout_seconds, error))
           return FALSE;
 
@@ -3245,6 +3246,7 @@ reload_core_config (OstreeRepo *self, GCancellable *cancellable, GError **error)
 static gboolean
 reload_remote_config (OstreeRepo *self, GCancellable *cancellable, GError **error)
 {
+  GLNX_AUTO_PREFIX_ERROR ("Reloading remotes", error);
 
   g_mutex_lock (&self->remotes_lock);
   g_hash_table_remove_all (self->remotes);
@@ -3425,6 +3427,17 @@ ostree_repo_open (OstreeRepo *self, GCancellable *cancellable, GError **error)
       glnx_set_error_from_errno (&self->writable_error);
       /* Note - we don't return this error yet! */
     }
+
+  {
+    struct statfs fsstbuf;
+    if (fstatfs (self->repo_dir_fd, &fsstbuf) < 0)
+      return glnx_throw_errno_prefix (error, "fstatfs");
+#ifndef FUSE_SUPER_MAGIC
+#define FUSE_SUPER_MAGIC 0x65735546
+#endif
+    self->is_on_fuse = (fsstbuf.f_type == FUSE_SUPER_MAGIC);
+    g_debug ("using fuse: %d", self->is_on_fuse);
+  }
 
   if (!glnx_fstat (self->objects_dir_fd, &stbuf, error))
     return FALSE;
@@ -5793,10 +5806,10 @@ regenerate_metadata (OstreeRepo *self, gboolean do_metadata_commit, GVariant *ad
         return glnx_throw (error, "Invalid options doesn't match variant type '%s'",
                            (const char *)G_VARIANT_TYPE_VARDICT);
 
-      g_variant_lookup (options, "gpg-key-ids", "^a&s", &gpg_key_ids);
-      g_variant_lookup (options, "gpg-homedir", "&s", &gpg_homedir);
+      (void)g_variant_lookup (options, "gpg-key-ids", "^a&s", &gpg_key_ids);
+      (void)g_variant_lookup (options, "gpg-homedir", "&s", &gpg_homedir);
       sign_keys = g_variant_lookup_value (options, "sign-keys", G_VARIANT_TYPE_ARRAY);
-      g_variant_lookup (options, "sign-type", "&s", &sign_type);
+      (void)g_variant_lookup (options, "sign-type", "&s", &sign_type);
 
       if (sign_keys != NULL)
         {

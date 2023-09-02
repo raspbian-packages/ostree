@@ -1,7 +1,7 @@
 AC_PREREQ([2.63])
 dnl To perform a release, follow the instructions in `docs/CONTRIBUTING.md`.
 m4_define([year_version], [2023])
-m4_define([release_version], [5])
+m4_define([release_version], [6])
 m4_define([package_version], [year_version.release_version])
 AC_INIT([libostree], [package_version], [walters@verbum.org])
 is_release_build=yes
@@ -82,7 +82,10 @@ AM_COND_IF([BUILDOPT_TSAN],
 LT_PREREQ([2.2.4])
 LT_INIT([disable-static])
 
-OSTREE_FEATURES=""
+dnl We have an always-on feature now to signify the fix for 
+dnl https://github.com/ostreedev/ostree/pull/2874/commits/de6fddc6adee09a93901243dc7074090828a1912
+dnl "commit: fix ostree deployment on 64-bit inode fs"
+OSTREE_FEATURES="inode64"
 AC_SUBST([OSTREE_FEATURES])
 
 GLIB_TESTS
@@ -212,14 +215,6 @@ AS_IF([test x$with_soup = xyes || test x$with_soup3 = xyes], [
   AC_DEFINE([HAVE_LIBSOUP_OR_LIBSOUP3], 1, [Define if we have libsoup.pc or libsoup3.pc])
 ])
 
-AC_ARG_ENABLE(trivial-httpd-cmdline,
-  [AS_HELP_STRING([--enable-trivial-httpd-cmdline],
-  [Continue to support "ostree trivial-httpd" [default=no]])],,
-  enable_trivial_httpd_cmdline=no)
-AS_IF([test x$enable_trivial_httpd_cmdline = xyes],
-  [AC_DEFINE([BUILDOPT_ENABLE_TRIVIAL_HTTPD_CMDLINE], 1, [Define if we are enabling ostree trivial-httpd entrypoint])]
-)
-
 AS_IF([test x$with_curl = xyes && test x$with_soup = xno && test x$with_soup3 = xno], [
   AC_MSG_WARN([Curl enabled, but libsoup is not; libsoup is needed for tests (make check, etc.)])
 ])
@@ -279,7 +274,18 @@ AS_IF([test x$have_gpgme = xyes],
 )
 AM_CONDITIONAL(USE_GPGME, test "x$have_gpgme" = xyes)
 
-# These are needed by libcomposefs
+dnl composefs won't work at all without this
+AC_MSG_CHECKING([for MOUNT_ATTR_IDMAP])
+AC_COMPILE_IFELSE(
+	[AC_LANG_PROGRAM([
+			#include <sys/mount.h>
+			#include <linux/mount.h>
+  ],[int foo = MOUNT_ATTR_IDMAP;]
+	)],
+	[AC_MSG_RESULT(yes)
+	 have_mount_attr_idmap=yes],
+	[AC_MSG_RESULT(no)])
+dnl These are needed by libcomposefs to use the new mount API optionally
 AC_MSG_CHECKING([for new mount API (fsconfig)])
 AC_COMPILE_IFELSE(
 	[AC_LANG_SOURCE([[
@@ -300,9 +306,13 @@ AC_COMPILE_IFELSE(
 		 AC_DEFINE([HAVE_FSCONFIG_CMD_CREATE_LINUX_MOUNT_H], 1, [Define if FSCONFIG_CMD_CREATE is available in linux/mount.h])],
 	[AC_MSG_RESULT(no)])
 
+composefs_default=yes
+if test x"$have_mount_attr_idmap" != xyes; then
+  composefs_default=no
+fi
 AC_ARG_WITH(composefs,
 	    AS_HELP_STRING([--with-composefs], [Support composefs]),
-	    :, with_composefs=no)
+	    :, with_composefs=$composefs_default)
 
 if test x$with_composefs != xno; then OSTREE_FEATURES="$OSTREE_FEATURES composefs";
    AC_DEFINE([HAVE_COMPOSEFS], 1, [Define if we have libcomposefs])
@@ -319,7 +329,6 @@ AS_IF([test x$with_ed25519_libsodium != xno], [
     AS_IF([ test x$have_libsodium = xno ], [
        AC_MSG_ERROR([Need LIBSODIUM version $LIBSODIUM_DEPENDENCY or later])
     ])
-    OSTREE_FEATURES="$OSTREE_FEATURES sign-ed25519"
 ], with_ed25519_libsodium=no )
 AM_CONDITIONAL(USE_LIBSODIUM, test "x$have_libsodium" = xyes)
 
@@ -458,6 +467,11 @@ if test x$with_openssl != xno; then OSTREE_FEATURES="$OSTREE_FEATURES openssl"; 
 AM_CONDITIONAL(USE_OPENSSL, test $with_openssl != no)
 dnl end openssl
 
+if test x$with_openssl != xno || test x$with_ed25519_libsodium != xno; then
+   AC_DEFINE([HAVE_ED25519], 1, [Define if ed25519 is supported ])
+   OSTREE_FEATURES="$OSTREE_FEATURES sign-ed25519"
+fi
+
 dnl begin gnutls; in contrast to openssl this one only
 dnl supports --with-crypto=gnutls
 GNUTLS_DEPENDENCY="gnutls >= 3.5.0"
@@ -468,6 +482,10 @@ AS_IF([ test $with_crypto = gnutls ], [
 ])
 AM_CONDITIONAL(USE_GNUTLS, test $with_crypto = gnutls)
 dnl end gnutls
+
+dnl we always inject libsodium into our crypto deps in addition to openssl/gnutls
+OT_DEP_CRYPTO_CFLAGS="${OT_DEP_CRYPTO_CFLAGS} ${OT_DEP_LIBSODIUM_CFLAGS}"
+OT_DEP_CRYPTO_LIBS="${OT_DEP_CRYPTO_LIBS} ${OT_DEP_LIBSODIUM_LIBS}"
 
 dnl Avahi dependency for finding repos
 AVAHI_DEPENDENCY="avahi-client >= 0.6.31 avahi-glib >= 0.6.31"
@@ -686,13 +704,13 @@ echo "
     introspection:                                $found_introspection
     rofiles-fuse:                                 $enable_rofiles_fuse
     HTTP backend:                                 $fetcher_backend
-    \"ostree trivial-httpd\":                       $enable_trivial_httpd_cmdline
     SELinux:                                      $with_selinux
     fs-verity:                                    $ac_cv_header_linux_fsverity_h
     cryptographic checksums:                      $with_crypto
     systemd:                                      $with_libsystemd
     libmount:                                     $with_libmount
     libsodium (ed25519 signatures):               $with_ed25519_libsodium
+    openssl (ed25519 signatures):                 $with_openssl
     libarchive (parse tar files directly):        $with_libarchive
     static deltas:                                yes (always enabled now)
     O_TMPFILE:                                    $enable_otmpfile

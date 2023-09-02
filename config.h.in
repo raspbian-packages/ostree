@@ -3,9 +3,6 @@
 /* Define if we are building with asan and ubsan */
 #undef BUILDOPT_ASAN
 
-/* Define if we are enabling ostree trivial-httpd entrypoint */
-#undef BUILDOPT_ENABLE_TRIVIAL_HTTPD_CMDLINE
-
 /* Define if we enable http2 by default */
 #undef BUILDOPT_HTTP2
 
@@ -60,6 +57,9 @@
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
+
+/* Define if ed25519 is supported */
+#undef HAVE_ED25519
 
 /* Define if FSCONFIG_CMD_CREATE is available in linux/mount.h */
 #undef HAVE_FSCONFIG_CMD_CREATE_LINUX_MOUNT_H
