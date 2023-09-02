@@ -1,3 +1,12 @@
+ostree (2023.6-1) UNRELEASED; urgency=medium
+
+  * New upstream release
+  * d/rules: Enable composefs support.
+    This is now on by default when compiled with sufficiently new kernel
+    headers.
+
+ -- Simon McVittie <smcv@debian.org>  Sat, 02 Sep 2023 11:05:31 +0100
+
 ostree (2023.5-1) unstable; urgency=medium
 
   * Team upload
