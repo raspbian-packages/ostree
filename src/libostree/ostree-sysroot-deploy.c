@@ -46,7 +46,7 @@
 #include "ostree-sepolicy-private.h"
 #include "ostree-sysroot-private.h"
 #include "ostree.h"
-#include "otutil.h"
+#include "otcore.h"
 
 #ifdef HAVE_LIBSYSTEMD
 #define OSTREE_VARRELABEL_ID \
@@ -662,7 +662,7 @@ checkout_deployment_tree (OstreeSysroot *sysroot, OstreeRepo *repo, OstreeDeploy
       g_autoptr (GVariant) metadata_composefs = g_variant_lookup_value (
           metadata, OSTREE_COMPOSEFS_DIGEST_KEY_V0, G_VARIANT_TYPE_BYTESTRING);
 
-      /* Create a composefs image and put in deploy dir as .ostree.cfs */
+      /* Create a composefs image and put in deploy dir */
       g_autoptr (OstreeComposefsTarget) target = ostree_composefs_target_new ();
 
       g_autoptr (GFile) commit_root = NULL;
@@ -674,7 +674,7 @@ checkout_deployment_tree (OstreeSysroot *sysroot, OstreeRepo *repo, OstreeDeploy
         return FALSE;
 
       g_autofree char *composefs_cfs_path
-          = g_strdup_printf ("%s/.ostree.cfs", checkout_target_name);
+          = g_strdup_printf ("%s/" OSTREE_COMPOSEFS_NAME, checkout_target_name);
 
       if (!glnx_open_tmpfile_linkable_at (osdeploy_dfd, checkout_target_name, O_WRONLY | O_CLOEXEC,
                                           &tmpf, error))
@@ -695,13 +695,6 @@ checkout_deployment_tree (OstreeSysroot *sysroot, OstreeRepo *repo, OstreeDeploy
 
       if (!glnx_link_tmpfile_at (&tmpf, GLNX_LINK_TMPFILE_REPLACE, osdeploy_dfd, composefs_cfs_path,
                                  error))
-        return FALSE;
-
-      /* This is where the erofs image will be temporarily mounted */
-      g_autofree char *composefs_mnt_path
-          = g_strdup_printf ("%s/.ostree.mnt", checkout_target_name);
-
-      if (!glnx_shutil_mkdir_p_at (osdeploy_dfd, composefs_mnt_path, 0775, cancellable, error))
         return FALSE;
     }
 #endif
@@ -879,26 +872,80 @@ prepare_deployment_etc (OstreeSysroot *sysroot, OstreeRepo *repo, OstreeDeployme
 {
   GLNX_AUTO_PREFIX_ERROR ("Preparing /etc", error);
 
+  enum DirectoryState
+  {
+    DIRSTATE_NONEXISTENT,
+    DIRSTATE_EMPTY,
+    DIRSTATE_POPULATED,
+  };
+
+  enum DirectoryState etc_state;
+  {
+    gboolean exists = FALSE;
+    g_auto (GLnxDirFdIterator) dfd_iter = {
+      0,
+    };
+    if (!ot_dfd_iter_init_allow_noent (deployment_dfd, "etc", &dfd_iter, &exists, error))
+      return glnx_prefix_error (error, "Failed to stat etc in deployment");
+    if (!exists)
+      {
+        etc_state = DIRSTATE_NONEXISTENT;
+      }
+    else
+      {
+        struct dirent *dent;
+        if (!glnx_dirfd_iterator_next_dent (&dfd_iter, &dent, NULL, error))
+          return FALSE;
+        if (dent)
+          etc_state = DIRSTATE_POPULATED;
+        else
+          etc_state = DIRSTATE_EMPTY;
+      }
+  }
   struct stat stbuf;
-  if (!glnx_fstatat_allow_noent (deployment_dfd, "etc", &stbuf, AT_SYMLINK_NOFOLLOW, error))
-    return FALSE;
-  gboolean etc_exists = (errno == 0);
   if (!glnx_fstatat_allow_noent (deployment_dfd, "usr/etc", &stbuf, AT_SYMLINK_NOFOLLOW, error))
     return FALSE;
   gboolean usretc_exists = (errno == 0);
 
-  if (etc_exists)
+  switch (etc_state)
     {
-      if (usretc_exists)
-        return glnx_throw (error, "Tree contains both /etc and /usr/etc");
-      /* Compatibility hack */
-      if (!glnx_renameat (deployment_dfd, "etc", deployment_dfd, "usr/etc", error))
-        return FALSE;
-      usretc_exists = TRUE;
+    case DIRSTATE_NONEXISTENT:
+      break;
+    case DIRSTATE_EMPTY:
+      {
+        if (usretc_exists)
+          {
+            /* For now it's actually simpler to just remove the empty directory
+             * and have a symmetrical code path.
+             */
+            if (unlinkat (deployment_dfd, "etc", AT_REMOVEDIR) < 0)
+              return glnx_throw_errno_prefix (error, "Failed to remove empty etc");
+            etc_state = DIRSTATE_NONEXISTENT;
+          }
+        /* Otherwise, there's no /etc or /usr/etc, we'll assume they know what they're doing... */
+      }
+      break;
+    case DIRSTATE_POPULATED:
+      {
+        if (usretc_exists)
+          {
+            return glnx_throw (error, "Tree contains both /etc and /usr/etc");
+          }
+        else
+          {
+            /* Compatibility hack */
+            if (!glnx_renameat (deployment_dfd, "etc", deployment_dfd, "usr/etc", error))
+              return FALSE;
+            etc_state = DIRSTATE_NONEXISTENT;
+            usretc_exists = TRUE;
+          }
+      }
+      break;
     }
 
   if (usretc_exists)
     {
+      g_assert (etc_state == DIRSTATE_NONEXISTENT);
       /* We need copies of /etc from /usr/etc (so admins can use vi), and if
        * SELinux is enabled, we need to relabel.
        */
@@ -1613,9 +1660,10 @@ static void *
 sync_in_thread (void *ptr)
 {
   SyncData *syncdata = ptr;
-  // Ensure that the caller is blocked waiting
-  g_mutex_lock (&syncdata->mutex);
+  ot_journal_print (LOG_INFO, "Starting global sync()");
   sync ();
+  ot_journal_print (LOG_INFO, "Completed global sync()");
+  g_mutex_lock (&syncdata->mutex);
   // Signal success
   syncdata->success = true;
   g_cond_broadcast (&syncdata->cond);
@@ -1634,8 +1682,10 @@ full_system_sync (OstreeSysroot *self, SyncStats *out_stats, GCancellable *cance
 {
   GLNX_AUTO_PREFIX_ERROR ("Full sync", error);
   guint64 start_msec = g_get_monotonic_time () / 1000;
+  ot_journal_print (LOG_INFO, "Starting syncfs() for system root");
   if (syncfs (self->sysroot_fd) != 0)
     return glnx_throw_errno_prefix (error, "syncfs(sysroot)");
+  ot_journal_print (LOG_INFO, "Completed syncfs() for system root");
   guint64 end_msec = g_get_monotonic_time () / 1000;
 
   out_stats->root_syncfs_msec = (end_msec - start_msec);
@@ -1645,8 +1695,10 @@ full_system_sync (OstreeSysroot *self, SyncStats *out_stats, GCancellable *cance
 
   start_msec = g_get_monotonic_time () / 1000;
   g_assert_cmpint (self->boot_fd, !=, -1);
+  ot_journal_print (LOG_INFO, "Starting freeze/thaw cycle for system root");
   if (!fsfreeze_thaw_cycle (self, self->boot_fd, cancellable, error))
     return FALSE;
+  ot_journal_print (LOG_INFO, "Completed freeze/thaw cycle for system root");
   end_msec = g_get_monotonic_time () / 1000;
   out_stats->boot_syncfs_msec = (end_msec - start_msec);
 
@@ -1860,8 +1912,15 @@ install_deployment_kernel (OstreeSysroot *sysroot, int new_bootversion,
   const char *bootcsum = ostree_deployment_get_bootcsum (deployment);
   g_autofree char *bootcsumdir = g_strdup_printf ("ostree/%s-%s", osname, bootcsum);
   g_autofree char *bootconfdir = g_strdup_printf ("loader.%d/entries", new_bootversion);
-  g_autofree char *bootconf_name = g_strdup_printf (
-      "ostree-%d-%s.conf", n_deployments - ostree_deployment_get_index (deployment), osname);
+  g_autofree char *bootconf_name = NULL;
+  guint index = n_deployments - ostree_deployment_get_index (deployment);
+  // Allow opt-in to dropping the stateroot, because grub2 parses the *filename* and ignores
+  // the version field.  xref https://github.com/ostreedev/ostree/issues/2961
+  bool use_new_naming = (sysroot->opt_flags & OSTREE_SYSROOT_GLOBAL_OPT_BOOTLOADER_NAMING_2) > 0;
+  if (use_new_naming)
+    bootconf_name = g_strdup_printf ("ostree-%d.conf", index);
+  else
+    bootconf_name = g_strdup_printf ("ostree-%d-%s.conf", index, osname);
   if (!glnx_shutil_mkdir_p_at (sysroot->boot_fd, bootcsumdir, 0775, cancellable, error))
     return FALSE;
 
@@ -3078,6 +3137,8 @@ sysroot_initialize_deployment (OstreeSysroot *self, const char *osname, const ch
                                OstreeDeployment **out_new_deployment, GCancellable *cancellable,
                                GError **error)
 {
+  GLNX_AUTO_PREFIX_ERROR ("Initializing deployment", error);
+
   g_assert (osname != NULL || self->booted_deployment != NULL);
 
   if (osname == NULL)
@@ -3408,6 +3469,8 @@ ostree_sysroot_deploy_tree_with_options (OstreeSysroot *self, const char *osname
                                          OstreeDeployment **out_new_deployment,
                                          GCancellable *cancellable, GError **error)
 {
+  GLNX_AUTO_PREFIX_ERROR ("Deploying tree", error);
+
   if (!_ostree_sysroot_ensure_writable (self, error))
     return FALSE;
 
@@ -3612,6 +3675,8 @@ ostree_sysroot_stage_tree_with_options (OstreeSysroot *self, const char *osname,
                                         OstreeDeployment **out_new_deployment,
                                         GCancellable *cancellable, GError **error)
 {
+  GLNX_AUTO_PREFIX_ERROR ("Staging deployment", error);
+
   if (!_ostree_sysroot_ensure_writable (self, error))
     return FALSE;
 
@@ -3766,6 +3831,7 @@ _ostree_sysroot_finalize_staged_inner (OstreeSysroot *self, GCancellable *cancel
   if (!sysroot_finalize_deployment (self, self->staged_deployment, merge_deployment, cancellable,
                                     error))
     return FALSE;
+  ot_journal_print (LOG_INFO, "Finalized deployment");
 
   /* Now, take ownership of the staged state, as normally the API below strips
    * it out.
@@ -3785,10 +3851,12 @@ _ostree_sysroot_finalize_staged_inner (OstreeSysroot *self, GCancellable *cancel
   if (!ostree_sysroot_simple_write_deployment (self, ostree_deployment_get_osname (staged), staged,
                                                merge_deployment, flags, cancellable, error))
     return FALSE;
+  ot_journal_print (LOG_INFO, "Finished writing deployment");
 
   /* Do the basic cleanup that may impact /boot, but not the repo pruning */
   if (!ostree_sysroot_prepare_cleanup (self, cancellable, error))
     return FALSE;
+  ot_journal_print (LOG_INFO, "Cleanup complete");
 
   // Cleanup will have closed some FDs, re-ensure writability
   if (!_ostree_sysroot_ensure_writable (self, error))

@@ -2966,6 +2966,8 @@ _ostree_repo_remote_new_fetcher (OstreeRepo *self, const char *remote_name, gboo
   }
 
   fetcher = _ostree_fetcher_new (self->tmp_dir_fd, remote_name, fetcher_flags);
+  if (self->is_on_fuse)
+    _ostree_fetcher_set_force_anonymous_tmpfiles (fetcher);
 
   {
     g_autofree char *tls_client_cert_path = NULL;
@@ -3546,8 +3548,9 @@ ostree_repo_pull_with_options (OstreeRepo *self, const char *remote_name_or_base
       opt_gpg_verify_set = g_variant_lookup (options, "gpg-verify", "b", &pull_data->gpg_verify);
       opt_gpg_verify_summary_set
           = g_variant_lookup (options, "gpg-verify-summary", "b", &pull_data->gpg_verify_summary);
-      g_variant_lookup (options, "disable-sign-verify", "b", &disable_sign_verify);
-      g_variant_lookup (options, "disable-sign-verify-summary", "b", &disable_sign_verify_summary);
+      (void)g_variant_lookup (options, "disable-sign-verify", "b", &disable_sign_verify);
+      (void)g_variant_lookup (options, "disable-sign-verify-summary", "b",
+                              &disable_sign_verify_summary);
       (void)g_variant_lookup (options, "depth", "i", &pull_data->maxdepth);
       (void)g_variant_lookup (options, "disable-static-deltas", "b",
                               &pull_data->disable_static_deltas);
@@ -4413,8 +4416,8 @@ ostree_repo_pull_with_options (OstreeRepo *self, const char *remote_name_or_base
           if (!collect_available_deltas_for_pull (pull_data, deltas, error))
             goto out;
 
-          g_variant_lookup (additional_metadata, OSTREE_SUMMARY_INDEXED_DELTAS, "b",
-                            &pull_data->has_indexed_deltas);
+          (void)g_variant_lookup (additional_metadata, OSTREE_SUMMARY_INDEXED_DELTAS, "b",
+                                  &pull_data->has_indexed_deltas);
         }
 
       if (pull_data->summary

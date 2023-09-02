@@ -19,7 +19,7 @@
 
 set -euo pipefail
 
-echo "1..$((28 + ${extra_admin_tests:-0}))"
+echo "1..$((29 + ${extra_admin_tests:-0}))"
 
 mkdir sysrootmin
 ${CMD_PREFIX} ostree admin init-fs --modern sysrootmin
@@ -97,7 +97,7 @@ assert_file_has_content_literal err.txt "Cannot stage deployment: Not currently 
 echo "ok staging does not work when not booted"
 
 orig_mtime=$(stat -c '%.Y' sysroot/ostree/deploy)
-${CMD_PREFIX} ostree admin deploy --os=testos testos:testos/buildmain/x86_64-runtime
+${CMD_PREFIX} ostree admin deploy --stateroot=testos testos:testos/buildmain/x86_64-runtime
 new_mtime=$(stat -c '%.Y' sysroot/ostree/deploy)
 assert_not_streq "${orig_mtime}" "${new_mtime}"
 # Need a new bootversion, sine we now have two deployments
@@ -207,6 +207,16 @@ ${CMD_PREFIX} ostree admin status
 validate_bootloader
 
 echo "ok deploy --retain-rollback"
+
+
+${CMD_PREFIX} ostree admin status
+assert_file_has_content sysroot/boot/loader/entries/ostree-3-otheros.conf "^title.*TestOS 42 1.0.10"
+${CMD_PREFIX} ostree admin set-default 1
+assert_file_has_content sysroot/boot/loader/entries/ostree-3-testos.conf "^title.*TestOS 42 1.0.10"
+${CMD_PREFIX} ostree admin set-default 1
+assert_file_has_content sysroot/boot/loader/entries/ostree-3-otheros.conf "^title.*TestOS 42 1.0.10"
+
+echo "ok set-default"
 
 os_repository_new_commit
 ${CMD_PREFIX} ostree --repo=sysroot/ostree/repo pull-local --remote=testos testos-repo testos/buildmain/x86_64-runtime

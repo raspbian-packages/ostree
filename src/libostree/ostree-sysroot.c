@@ -180,6 +180,7 @@ ostree_sysroot_init (OstreeSysroot *self)
   const GDebugKey globalopt_keys[] = {
     { "skip-sync", OSTREE_SYSROOT_GLOBAL_OPT_SKIP_SYNC },
     { "early-prune", OSTREE_SYSROOT_GLOBAL_OPT_EARLY_PRUNE },
+    { "bootloader-naming-2", OSTREE_SYSROOT_GLOBAL_OPT_BOOTLOADER_NAMING_2 },
   };
   const GDebugKey keys[] = {
     { "mutable-deployments", OSTREE_SYSROOT_DEBUG_MUTABLE_DEPLOYMENTS },
@@ -537,6 +538,8 @@ _ostree_sysroot_read_current_subbootversion (OstreeSysroot *self, int bootversio
                                              int *out_subbootversion, GCancellable *cancellable,
                                              GError **error)
 {
+  GLNX_AUTO_PREFIX_ERROR ("Reading current subbootversion", error);
+
   if (!ensure_sysroot_fd (self, error))
     return FALSE;
 
@@ -556,7 +559,7 @@ _ostree_sysroot_read_current_subbootversion (OstreeSysroot *self, int bootversio
       g_autofree char *current_subbootdir_name
           = glnx_readlinkat_malloc (self->sysroot_fd, ostree_bootdir_name, cancellable, error);
       if (!current_subbootdir_name)
-        return FALSE;
+        return glnx_prefix_error (error, "Reading %s", ostree_bootdir_name);
 
       if (g_str_has_suffix (current_subbootdir_name, ".0"))
         *out_subbootversion = 0;
@@ -718,9 +721,10 @@ load_origin (OstreeSysroot *self, OstreeDeployment *deployment, GCancellable *ca
   return TRUE;
 }
 
-static gboolean
-parse_bootlink (const char *bootlink, int *out_entry_bootversion, char **out_osname,
-                char **out_bootcsum, int *out_treebootserial, GError **error)
+// Parse the kernel argument ostree=
+gboolean
+_ostree_sysroot_parse_bootlink (const char *bootlink, int *out_entry_bootversion, char **out_osname,
+                                char **out_bootcsum, int *out_treebootserial, GError **error)
 {
   static gsize regex_initialized;
   static GRegex *regex;
@@ -740,10 +744,14 @@ parse_bootlink (const char *bootlink, int *out_entry_bootversion, char **out_osn
 
   g_autofree char *bootversion_str = g_match_info_fetch (match, 1);
   g_autofree char *treebootserial_str = g_match_info_fetch (match, 4);
-  *out_entry_bootversion = (int)g_ascii_strtoll (bootversion_str, NULL, 10);
-  *out_osname = g_match_info_fetch (match, 2);
-  *out_bootcsum = g_match_info_fetch (match, 3);
-  *out_treebootserial = (int)g_ascii_strtoll (treebootserial_str, NULL, 10);
+  if (out_entry_bootversion)
+    *out_entry_bootversion = (int)g_ascii_strtoll (bootversion_str, NULL, 10);
+  if (out_osname)
+    *out_osname = g_match_info_fetch (match, 2);
+  if (out_bootcsum)
+    *out_bootcsum = g_match_info_fetch (match, 3);
+  if (out_treebootserial)
+    *out_treebootserial = (int)g_ascii_strtoll (treebootserial_str, NULL, 10);
   return TRUE;
 }
 
@@ -766,7 +774,8 @@ parse_deployment (OstreeSysroot *self, const char *boot_link, OstreeDeployment *
   g_autofree char *osname = NULL;
   g_autofree char *bootcsum = NULL;
   int treebootserial = -1;
-  if (!parse_bootlink (boot_link, &entry_boot_version, &osname, &bootcsum, &treebootserial, error))
+  if (!_ostree_sysroot_parse_bootlink (boot_link, &entry_boot_version, &osname, &bootcsum,
+                                       &treebootserial, error))
     return FALSE;
 
   g_autofree char *errprefix
@@ -956,6 +965,8 @@ ostree_sysroot_load (OstreeSysroot *self, GCancellable *cancellable, GError **er
 static gboolean
 ensure_repo (OstreeSysroot *self, GError **error)
 {
+  GLNX_AUTO_PREFIX_ERROR ("Opening sysroot repo", error);
+
   if (self->repo != NULL)
     return TRUE;
   if (!ensure_sysroot_fd (self, error))
@@ -994,6 +1005,8 @@ ensure_repo (OstreeSysroot *self, GError **error)
 gboolean
 ostree_sysroot_initialize (OstreeSysroot *self, GError **error)
 {
+  GLNX_AUTO_PREFIX_ERROR ("Initializing sysroot", error);
+
   if (!ensure_sysroot_fd (self, error))
     return FALSE;
 

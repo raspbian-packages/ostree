@@ -32,7 +32,9 @@
 
 #include "ostree-cmd-private.h"
 #include "ostree-core-private.h"
-#include "ostree.h"
+#include "ostree-mount-util.h"
+#include "ostree-sysroot-private.h"
+#include "otcore.h"
 
 #ifdef HAVE_LIBMOUNT
 typedef FILE OtLibMountFile;
@@ -85,29 +87,6 @@ path_kill_slashes (char *path)
   return path;
 }
 
-/* Written by ostree-sysroot-deploy.c. We parse out the stateroot here since we
- * need to know it to mount /var. Unfortunately we can't easily use the
- * libostree API to find the booted deployment since /boot might not have been
- * mounted yet.
- */
-static char *
-stateroot_from_ostree_cmdline (const char *ostree_cmdline, GError **error)
-{
-  static GRegex *regex;
-  static gsize regex_initialized;
-  if (g_once_init_enter (&regex_initialized))
-    {
-      regex = g_regex_new ("^/ostree/boot.[01]/([^/]+)/", 0, 0, NULL);
-      g_assert (regex);
-      g_once_init_leave (&regex_initialized, 1);
-    }
-
-  g_autoptr (GMatchInfo) match = NULL;
-  if (!g_regex_match (regex, ostree_cmdline, 0, &match))
-    return glnx_null_throw (error, "Failed to parse %s", ostree_cmdline);
-
-  return g_match_info_fetch (match, 1);
-}
 #endif
 
 /* Forcibly enable our internal units, since we detected ostree= on the kernel cmdline */
@@ -159,10 +138,14 @@ fstab_generator (const char *ostree_cmdline, const char *normal_dir, const char 
   static const char fstab_path[] = "/etc/fstab";
   static const char var_path[] = "/var";
 
-  /* ostree-prepare-root was patched to write the stateroot to this file */
-  g_autofree char *stateroot = stateroot_from_ostree_cmdline (ostree_cmdline, error);
-  if (!stateroot)
-    return FALSE;
+  /* Written by ostree-sysroot-deploy.c. We parse out the stateroot here since we
+   * need to know it to mount /var. Unfortunately we can't easily use the
+   * libostree API to find the booted deployment since /boot might not have been
+   * mounted yet.
+   */
+  g_autofree char *stateroot = NULL;
+  if (!_ostree_sysroot_parse_bootlink (ostree_cmdline, NULL, &stateroot, NULL, NULL, error))
+    return glnx_prefix_error (error, "Parsing stateroot");
 
   /* Load /etc/fstab if it exists, and look for a /var mount */
   g_autoptr (OtLibMountFile) fstab = setmntent (fstab_path, "re");
@@ -260,9 +243,27 @@ fstab_generator (const char *ostree_cmdline, const char *normal_dir, const char 
 
 /* Implementation of ostree-system-generator */
 gboolean
-_ostree_impl_system_generator (const char *ostree_cmdline, const char *normal_dir,
-                               const char *early_dir, const char *late_dir, GError **error)
+_ostree_impl_system_generator (const char *normal_dir, const char *early_dir, const char *late_dir,
+                               GError **error)
 {
+  /* We conflict with the magic ostree-mount-deployment-var file for ostree-prepare-root.
+   * If this file is present, we have nothing to do! */
+  if (unlinkat (AT_FDCWD, INITRAMFS_MOUNT_VAR, 0) == 0)
+    return TRUE;
+
+  g_autofree char *cmdline = read_proc_cmdline ();
+  if (!cmdline)
+    return glnx_throw (error, "Failed to read /proc/cmdline");
+
+  /* If we're installed on a system which isn't using OSTree for boot (e.g.
+   * package installed as a dependency for flatpak or whatever), silently
+   * exit so that we don't error, but at the same time work where switchroot
+   * is PID 1 (and so hasn't created /run/ostree-booted).
+   */
+  g_autofree char *ostree_cmdline = otcore_find_proc_cmdline_key (cmdline, "ostree");
+  if (!ostree_cmdline)
+    return TRUE;
+
   if (!require_internal_units (normal_dir, early_dir, late_dir, error))
     return FALSE;
   if (!fstab_generator (ostree_cmdline, normal_dir, early_dir, late_dir, error))
