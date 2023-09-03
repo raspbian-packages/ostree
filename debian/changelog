@@ -1,3 +1,11 @@
+ostree (2023.6-2) unstable; urgency=medium
+
+  * d/rules: Disable composefs for now.
+    Official buildds don't seem to support fsetxattr on the filesystem used
+    for /var/tmp, which is required for the composefs tests.
+
+ -- Simon McVittie <smcv@debian.org>  Sun, 03 Sep 2023 12:06:27 +0100
+
 ostree (2023.6-1) unstable; urgency=medium
 
   * New upstream release
