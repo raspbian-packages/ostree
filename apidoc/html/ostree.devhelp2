@@ -581,6 +581,7 @@
     <keyword type="constant" name="OSTREE_REPO_COMMIT_MODIFIER_FLAGS_ERROR_ON_UNLABELED" link="ostree-OstreeRepo.html#OSTREE-REPO-COMMIT-MODIFIER-FLAGS-ERROR-ON-UNLABELED:CAPS"/>
     <keyword type="constant" name="OSTREE_REPO_COMMIT_MODIFIER_FLAGS_CONSUME" link="ostree-OstreeRepo.html#OSTREE-REPO-COMMIT-MODIFIER-FLAGS-CONSUME:CAPS"/>
     <keyword type="constant" name="OSTREE_REPO_COMMIT_MODIFIER_FLAGS_DEVINO_CANONICAL" link="ostree-OstreeRepo.html#OSTREE-REPO-COMMIT-MODIFIER-FLAGS-DEVINO-CANONICAL:CAPS"/>
+    <keyword type="constant" name="OSTREE_REPO_COMMIT_MODIFIER_FLAGS_SELINUX_LABEL_V1" link="ostree-OstreeRepo.html#OSTREE-REPO-COMMIT-MODIFIER-FLAGS-SELINUX-LABEL-V1:CAPS"/>
     <keyword type="constant" name="OSTREE_REPO_CHECKOUT_MODE_NONE" link="ostree-OstreeRepo.html#OSTREE-REPO-CHECKOUT-MODE-NONE:CAPS"/>
     <keyword type="constant" name="OSTREE_REPO_CHECKOUT_MODE_USER" link="ostree-OstreeRepo.html#OSTREE-REPO-CHECKOUT-MODE-USER:CAPS"/>
     <keyword type="constant" name="OSTREE_REPO_CHECKOUT_OVERWRITE_NONE" link="ostree-OstreeRepo.html#OSTREE-REPO-CHECKOUT-OVERWRITE-NONE:CAPS"/>

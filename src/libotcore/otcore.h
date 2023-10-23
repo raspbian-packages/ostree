@@ -46,6 +46,8 @@ gboolean otcore_validate_ed25519_signature (GBytes *data, GBytes *pubkey, GBytes
 char *otcore_find_proc_cmdline_key (const char *cmdline, const char *key);
 gboolean otcore_get_ostree_target (const char *cmdline, char **out_target, GError **error);
 
+GKeyFile *otcore_load_config (int rootfs, const char *filename, GError **error);
+
 // Our directory with transient state (eventually /run/ostree-booted should be a link to
 // /run/ostree/booted)
 #define OTCORE_RUN_OSTREE "/run/ostree"
@@ -70,3 +72,5 @@ gboolean otcore_get_ostree_target (const char *cmdline, char **out_target, GErro
 #define OTCORE_RUN_BOOTED_KEY_COMPOSEFS_SIGNATURE "composefs.signed"
 // This key will be present if the sysroot-ro flag was found
 #define OTCORE_RUN_BOOTED_KEY_SYSROOT_RO "sysroot-ro"
+
+#define OTCORE_RUN_BOOTED_KEY_TRANSIENT_ETC "transient-etc"

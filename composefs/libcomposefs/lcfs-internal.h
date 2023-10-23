@@ -17,9 +17,39 @@
 #ifndef _LCFS_INTERNAL_H
 #define _LCFS_INTERNAL_H
 
+#include <endian.h>
+
 #include "lcfs-writer.h"
 #include "lcfs-fsverity.h"
 #include "hash.h"
+
+/* When using LCFS_BUILD_INLINE_SMALL in lcfs_load_node_from_file() inline files below this size
+ * We pick 64 which is the size of a sha256 digest that would otherwise be used as a redirect
+ * xattr, so the inlined file is smaller.
+ */
+#define LCFS_BUILD_INLINE_FILE_SIZE_LIMIT 64
+
+#define OVERLAY_XATTR_USER_PREFIX "user."
+#define OVERLAY_XATTR_TRUSTED_PREFIX "trusted."
+#define OVERLAY_XATTR_PARTIAL_PREFIX "overlay."
+#define OVERLAY_XATTR_PREFIX                                                   \
+	OVERLAY_XATTR_TRUSTED_PREFIX OVERLAY_XATTR_PARTIAL_PREFIX
+#define OVERLAY_XATTR_USERXATTR_PREFIX                                         \
+	OVERLAY_XATTR_USER_PREFIX OVERLAY_XATTR_PARTIAL_PREFIX
+#define OVERLAY_XATTR_ESCAPE_PREFIX OVERLAY_XATTR_PREFIX "overlay."
+#define OVERLAY_XATTR_METACOPY OVERLAY_XATTR_PREFIX "metacopy"
+#define OVERLAY_XATTR_REDIRECT OVERLAY_XATTR_PREFIX "redirect"
+#define OVERLAY_XATTR_WHITEOUT OVERLAY_XATTR_PREFIX "whiteout"
+#define OVERLAY_XATTR_WHITEOUTS OVERLAY_XATTR_PREFIX "whiteouts"
+#define OVERLAY_XATTR_OPAQUE OVERLAY_XATTR_PREFIX "opaque"
+
+#define OVERLAY_XATTR_ESCAPED_WHITEOUT OVERLAY_XATTR_ESCAPE_PREFIX "whiteout"
+#define OVERLAY_XATTR_ESCAPED_WHITEOUTS OVERLAY_XATTR_ESCAPE_PREFIX "whiteouts"
+
+#define OVERLAY_XATTR_USERXATTR_WHITEOUT                                       \
+	OVERLAY_XATTR_USERXATTR_PREFIX "whiteout"
+#define OVERLAY_XATTR_USERXATTR_WHITEOUTS                                      \
+	OVERLAY_XATTR_USERXATTR_PREFIX "whiteouts"
 
 #define ALIGN_TO(_offset, _align_size)                                         \
 	(((_offset) + _align_size - 1) & ~(_align_size - 1))
@@ -96,6 +126,8 @@ struct lcfs_node_s {
 	char *name;
 	char *payload; /* backing file or symlink target */
 
+	uint8_t *content;
+
 	struct lcfs_xattr_s *xattrs;
 	size_t n_xattrs;
 
@@ -137,6 +169,15 @@ struct lcfs_ctx_s {
 	void (*finalize)(struct lcfs_ctx_s *ctx);
 };
 
+static inline void lcfs_node_unrefp(struct lcfs_node_s **nodep)
+{
+	if (*nodep != NULL) {
+		lcfs_node_unref(*nodep);
+		*nodep = NULL;
+	}
+}
+#define cleanup_node __attribute__((cleanup(lcfs_node_unrefp)))
+
 /* lcfs-writer.c */
 size_t hash_memory(const char *string, size_t len, size_t n_buckets);
 int lcfs_write(struct lcfs_ctx_s *ctx, void *_data, size_t data_len);
@@ -147,6 +188,9 @@ int lcfs_clone_root(struct lcfs_ctx_s *ctx);
 char *maybe_join_path(const char *a, const char *b);
 struct lcfs_node_s *follow_links(struct lcfs_node_s *node);
 int node_get_dtype(struct lcfs_node_s *node);
+
+int lcfs_node_rename_xattr(struct lcfs_node_s *node, size_t index,
+			   const char *new_name);
 
 /* lcfs-writer-erofs.c */
 

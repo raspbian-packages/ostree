@@ -7130,7 +7130,7 @@ the composefs mount tooling.</p>
 <a name="ostree-repo-checkout-at-options-set-devino"></a><h3>ostree_repo_checkout_at_options_set_devino ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>
 ostree_repo_checkout_at_options_set_devino
-                               (<em class="parameter"><code><a href="/usr/share/gtk-doc/html/ostree/ostree-OstreeRepo.html#OstreeRepoCheckoutAtOptions"><span class="type">OstreeRepoCheckoutAtOptions</span></a> *opts</code></em>,
+                               (<em class="parameter"><code><span class="type">OstreeRepoCheckoutAtOptions</span> *opts</code></em>,
                                 <em class="parameter"><code><span class="type">OstreeRepoDevInoCache</span> *cache</code></em>);</pre>
 <p>This function simply assigns <em class="parameter"><code>cache</code></em>
  to the <code class="literal">devino_to_csum_cache</code> member of
@@ -7312,7 +7312,7 @@ cache.</p>
 <a name="ostree-repo-checkout-at"></a><h3>ostree_repo_checkout_at ()</h3>
 <pre class="programlisting"><span class="returnvalue">gboolean</span>
 ostree_repo_checkout_at (<em class="parameter"><code><a class="link" href="ostree-OstreeRepo.html#OstreeRepo" title="OstreeRepo"><span class="type">OstreeRepo</span></a> *self</code></em>,
-                         <em class="parameter"><code><a href="/usr/share/gtk-doc/html/ostree/ostree-OstreeRepo.html#OstreeRepoCheckoutAtOptions"><span class="type">OstreeRepoCheckoutAtOptions</span></a> *options</code></em>,
+                         <em class="parameter"><code><span class="type">OstreeRepoCheckoutAtOptions</span> *options</code></em>,
                          <em class="parameter"><code><span class="type">int</span> destination_dfd</code></em>,
                          <em class="parameter"><code>const <span class="type">char</span> *destination_path</code></em>,
                          <em class="parameter"><code>const <span class="type">char</span> *commit</code></em>,
@@ -8989,6 +8989,13 @@ fetches</p></li>
 <li class="listitem"><p><code class="literal">n-network-retries</code> (<code class="literal">u</code>): Number of times to retry each download on receiving
 a transient network error, such as a socket timeout; default is 5, 0
 means return errors without retrying. Since: 2018.6</p></li>
+<li class="listitem"><p><code class="literal">low-speed-limit-bytes</code> (<code class="literal">u</code>): The average transfer speed per second of a transfer
+ during the time set via "low-speed-time-seconds" for libcurl to abort.</p></li>
+<li class="listitem"><p><code class="literal">low-speed-time-seconds</code> (<code class="literal">u</code>): The time in number seconds that the transfer
+ speed should be below the "low-speed-limit-bytes" setting for libcurl to abort.</p></li>
+<li class="listitem"><p><code class="literal">retry-all-network-errors</code> (<code class="literal">b</code>): Retry when network issues happen, instead of
+ failing automatically. Currently only affects libcurl. (Default set to true)</p></li>
+<li class="listitem"><p><code class="literal">max-outstanding-fetcher-requests</code> (<code class="literal">u</code>): The max amount of concurrent connections allowed.</p></li>
 <li class="listitem"><p><code class="literal">ref-keyring-map</code> (<code class="literal">a(sss)</code>): Array of (collection ID, ref name, keyring
 remote name) tuples specifying which remote's keyring should be used when
 doing GPG verification of each collection-ref. This is useful to prevent a
@@ -10291,6 +10298,14 @@ policy does not provide a label</p>
 <td class="enum_member_description">
 <p>If a devino cache hit is found, skip
 modifier filters (non-directories only); Since: 2017.14</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="OSTREE-REPO-COMMIT-MODIFIER-FLAGS-SELINUX-LABEL-V1:CAPS"></a>OSTREE_REPO_COMMIT_MODIFIER_FLAGS_SELINUX_LABEL_V1</p></td>
+<td class="enum_member_description">
+<p>For SELinux and other systems, label
+/usr/etc as if it was /etc.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>

@@ -33,7 +33,6 @@ G_BEGIN_DECLS
 #define _OSTREE_SUMMARY_CACHE_DIR "summaries"
 #define _OSTREE_CACHE_DIR "cache"
 
-#define _OSTREE_MAX_OUTSTANDING_FETCHER_REQUESTS 8
 #define _OSTREE_MAX_OUTSTANDING_DELTAPART_REQUESTS 2
 
 /* We want some parallelism with disk writes, but we also
@@ -142,6 +141,13 @@ typedef enum
   CFG_SYSROOT_BOOTLOADER_OPT_ABOOT,
   /* Non-exhaustive */
 } OstreeCfgSysrootBootloaderOpt;
+
+#if !defined(__s390x__)
+#define CFG_SYSROOT_BOOTLOADER_DEFAULT_STR "auto"
+#else
+// There's nothing else on s390x.
+#define CFG_SYSROOT_BOOTLOADER_DEFAULT_STR "zipl"
+#endif
 
 static const char *const CFG_SYSROOT_BOOTLOADER_OPTS_STR[] = {
   /* This must be kept in the same order as the enum */
