@@ -14,6 +14,7 @@ Build-Depends:
  bsdextrautils <!nocheck>,
  ca-certificates,
  cpio,
+ debhelper (>= 13.11.6~),
  debhelper-compat (= 13),
  docbook-xml <!nodoc>,
  docbook-xsl <!nodoc>,

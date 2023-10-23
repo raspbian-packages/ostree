@@ -23,8 +23,8 @@ configure_options = \
 	--with-modern-grub \
 	--with-soup3 \
 	--with-selinux \
-	--with-systemdsystemgeneratordir=/lib/systemd/system-generators \
-	--with-systemdsystemunitdir=/lib/systemd/system \
+	--with-systemdsystemgeneratordir=/usr/lib/systemd/system-generators \
+	--with-systemdsystemunitdir=/usr/lib/systemd/system \
 	--without-composefs \
 	--without-smack \
 	$(NULL)
