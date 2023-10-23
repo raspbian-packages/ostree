@@ -61,6 +61,10 @@
  * _ostree_fetcher_should_retry_request(). This is the default value for the
  * `n-network-retries` pull option. */
 #define DEFAULT_N_NETWORK_RETRIES 5
+#define OPT_LOWSPEEDLIMIT_DEFAULT 1000
+#define OPT_LOWSPEEDTIME_DEFAULT 30
+#define OPT_RETRYALL_DEFAULT TRUE
+#define OPT_OSTREE_MAX_OUTSTANDING_FETCHER_REQUESTS_DEFAULT 8
 
 typedef struct
 {
@@ -210,7 +214,7 @@ update_progress (gpointer user_data)
       pull_data->fetched_deltapart_size, "total-delta-part-size", "t",
       pull_data->total_deltapart_size, "total-delta-part-usize", "t",
       pull_data->total_deltapart_usize, "total-delta-superblocks", "u",
-      pull_data->static_delta_superblocks->len,
+      g_hash_table_size (pull_data->static_delta_targets),
       /* We fetch metadata before content.  These allow us to report metadata fetch progress
          specifically. */
       "outstanding-metadata-fetches", "u", pull_data->n_outstanding_metadata_fetches,
@@ -376,7 +380,7 @@ fetcher_queue_is_full (OtPullData *pull_data)
   const gboolean fetch_full
       = ((pull_data->n_outstanding_metadata_fetches + pull_data->n_outstanding_content_fetches
           + pull_data->n_outstanding_deltapart_fetches)
-         == _OSTREE_MAX_OUTSTANDING_FETCHER_REQUESTS);
+         == pull_data->max_outstanding_fetcher_requests);
   const gboolean deltas_full
       = (pull_data->n_outstanding_deltapart_fetches == _OSTREE_MAX_OUTSTANDING_DELTAPART_REQUESTS);
   const gboolean writes_full = ((pull_data->n_outstanding_metadata_write_requests
@@ -784,7 +788,7 @@ fetch_ref_contents (OtPullData *pull_data, const char *main_collection_id,
                                                   filename, pull_data->n_network_retries,
                                                   &ret_contents, cancellable, error))
         return FALSE;
-
+      g_assert (ret_contents);
       g_strchomp (ret_contents);
     }
 
@@ -1069,6 +1073,7 @@ meta_fetch_on_complete (GObject *object, GAsyncResult *result, gpointer user_dat
   g_autoptr (GError) local_error = NULL;
   GError **error = &local_error;
   gboolean free_fetch_data = TRUE;
+  gboolean was_enoent = FALSE;
 
   ostree_object_name_deserialize (fetch_data->object, &checksum, &objtype);
   checksum_obj = ostree_object_to_string (checksum, objtype);
@@ -1079,6 +1084,7 @@ meta_fetch_on_complete (GObject *object, GAsyncResult *result, gpointer user_dat
     {
       if (g_error_matches (local_error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND))
         {
+          was_enoent = TRUE;
           if (fetch_data->is_detached_meta)
             {
               /* There isn't any detached metadata, just fetch the commit */
@@ -1195,7 +1201,7 @@ out:
   g_assert (pull_data->n_outstanding_metadata_fetches > 0);
   pull_data->n_outstanding_metadata_fetches--;
 
-  if (local_error == NULL)
+  if (local_error == NULL && !was_enoent)
     pull_data->n_fetched_metadata++;
 
   if (_ostree_fetcher_should_retry_request (local_error, fetch_data->n_retries_remaining--))
@@ -1609,9 +1615,10 @@ scan_commit_object (OtPullData *pull_data, const char *checksum, guint recursion
 
   /* We only recurse to looking whether we need dirtree/dirmeta
    * objects if the commit is partial, and we're not doing a
-   * commit-only fetch.
+   * commit-only fetch nor is it the target of a static delta.
    */
-  if (is_partial && !pull_data->is_commit_only)
+  if (is_partial && !pull_data->is_commit_only
+      && !g_hash_table_contains (pull_data->static_delta_targets, checksum))
     {
       g_autoptr (GVariant) tree_contents_csum = NULL;
       g_autoptr (GVariant) tree_meta_csum = NULL;
@@ -1951,6 +1958,7 @@ load_remote_repo_config (OtPullData *pull_data, GKeyFile **out_keyfile, GCancell
                                               "config", pull_data->n_network_retries, &contents,
                                               cancellable, error))
     return FALSE;
+  g_assert (contents);
 
   g_autoptr (GKeyFile) ret_keyfile = g_key_file_new ();
   if (!g_key_file_load_from_data (ret_keyfile, contents, strlen (contents), 0, error))
@@ -2465,7 +2473,7 @@ on_superblock_fetched (GObject *src, GAsyncResult *res, gpointer data)
       delta_superblock = g_variant_ref_sink (g_variant_new_from_bytes (
           (GVariantType *)OSTREE_STATIC_DELTA_SUPERBLOCK_FORMAT, delta_superblock_data, FALSE));
 
-      g_ptr_array_add (pull_data->static_delta_superblocks, g_variant_ref (delta_superblock));
+      g_hash_table_add (pull_data->static_delta_targets, g_strdup (to_revision));
       if (!process_one_static_delta (pull_data, from_revision, to_revision, delta_superblock,
                                      fetch_data->requested_ref, pull_data->cancellable, error))
         goto out;
@@ -2927,6 +2935,8 @@ _ostree_repo_cache_summary (OstreeRepo *self, const char *remote, GBytes *summar
 static OstreeFetcher *
 _ostree_repo_remote_new_fetcher (OstreeRepo *self, const char *remote_name, gboolean gzip,
                                  GVariant *extra_headers, const char *append_user_agent,
+                                 guint32 low_speed_limit, guint32 low_speed_time,
+                                 gboolean retry_all, guint32 max_outstanding_fetcher_requests,
                                  OstreeFetcherSecurityState *out_state, GError **error)
 {
   OstreeFetcher *fetcher = NULL;
@@ -2993,6 +3003,11 @@ _ostree_repo_remote_new_fetcher (OstreeRepo *self, const char *remote_name, gboo
         _ostree_fetcher_set_client_cert (fetcher, tls_client_cert_path, tls_client_key_path);
       }
   }
+
+  _ostree_fetcher_set_low_speed_limit (fetcher, low_speed_limit);
+  _ostree_fetcher_set_low_speed_time (fetcher, low_speed_time);
+  _ostree_fetcher_set_retry_all (fetcher, retry_all);
+  _ostree_fetcher_set_max_outstanding_fetcher_requests (fetcher, max_outstanding_fetcher_requests);
 
   {
     g_autofree char *tls_ca_path = NULL;
@@ -3220,7 +3235,8 @@ reinitialize_fetcher (OtPullData *pull_data, const char *remote_name, GError **e
   g_clear_object (&pull_data->fetcher);
   pull_data->fetcher = _ostree_repo_remote_new_fetcher (
       pull_data->repo, remote_name, FALSE, pull_data->extra_headers, pull_data->append_user_agent,
-      &pull_data->fetcher_security_state, error);
+      pull_data->low_speed_limit, pull_data->low_speed_time, pull_data->retry_all,
+      pull_data->max_outstanding_fetcher_requests, &pull_data->fetcher_security_state, error);
   if (pull_data->fetcher == NULL)
     return FALSE;
 
@@ -3449,6 +3465,13 @@ all_requested_refs_have_commit (
  *   * `n-network-retries` (`u`): Number of times to retry each download on receiving
  *     a transient network error, such as a socket timeout; default is 5, 0
  *     means return errors without retrying. Since: 2018.6
+ *   * `low-speed-limit-bytes` (`u`): The average transfer speed per second of a transfer
+ *      during the time set via "low-speed-time-seconds" for libcurl to abort.
+ *   * `low-speed-time-seconds` (`u`): The time in number seconds that the transfer
+ *      speed should be below the "low-speed-limit-bytes" setting for libcurl to abort.
+ *   * `retry-all-network-errors` (`b`): Retry when network issues happen, instead of
+ *      failing automatically. Currently only affects libcurl. (Default set to true)
+ *   * `max-outstanding-fetcher-requests` (`u`): The max amount of concurrent connections allowed.
  *   * `ref-keyring-map` (`a(sss)`): Array of (collection ID, ref name, keyring
  *     remote name) tuples specifying which remote's keyring should be used when
  *     doing GPG verification of each collection-ref. This is useful to prevent a
@@ -3505,6 +3528,10 @@ ostree_repo_pull_with_options (OstreeRepo *self, const char *remote_name_or_base
   gboolean opt_gpg_verify_summary_set = FALSE;
   gboolean opt_collection_refs_set = FALSE;
   gboolean opt_n_network_retries_set = FALSE;
+  gboolean opt_low_speed_limit_set = FALSE;
+  gboolean opt_low_speed_time_set = FALSE;
+  gboolean opt_retry_all_set = FALSE;
+  gboolean opt_max_outstanding_fetcher_requests_set = FALSE;
   gboolean opt_ref_keyring_map_set = FALSE;
   gboolean disable_sign_verify = FALSE;
   gboolean disable_sign_verify_summary = FALSE;
@@ -3569,6 +3596,15 @@ ostree_repo_pull_with_options (OstreeRepo *self, const char *remote_name_or_base
                               &pull_data->timestamp_check_from_rev);
       (void)g_variant_lookup (options, "max-metadata-size", "t", &pull_data->max_metadata_size);
       (void)g_variant_lookup (options, "append-user-agent", "s", &pull_data->append_user_agent);
+      opt_low_speed_limit_set
+          = g_variant_lookup (options, "low-speed-limit-bytes", "u", &pull_data->low_speed_limit);
+      opt_low_speed_time_set
+          = g_variant_lookup (options, "low-speed-time-seconds", "u", &pull_data->low_speed_time);
+      opt_retry_all_set
+          = g_variant_lookup (options, "retry-all-network-errors", "b", &pull_data->retry_all);
+      opt_max_outstanding_fetcher_requests_set
+          = g_variant_lookup (options, "max-outstanding-fetcher-requests", "b",
+                              &pull_data->max_outstanding_fetcher_requests);
       opt_n_network_retries_set
           = g_variant_lookup (options, "n-network-retries", "u", &pull_data->n_network_retries);
       opt_ref_keyring_map_set
@@ -3643,6 +3679,15 @@ ostree_repo_pull_with_options (OstreeRepo *self, const char *remote_name_or_base
 
   if (!opt_n_network_retries_set)
     pull_data->n_network_retries = DEFAULT_N_NETWORK_RETRIES;
+  if (!opt_low_speed_limit_set)
+    pull_data->low_speed_limit = OPT_LOWSPEEDLIMIT_DEFAULT;
+  if (!opt_low_speed_time_set)
+    pull_data->low_speed_time = OPT_LOWSPEEDTIME_DEFAULT;
+  if (!opt_retry_all_set)
+    pull_data->retry_all = OPT_RETRYALL_DEFAULT;
+  if (!opt_max_outstanding_fetcher_requests_set)
+    pull_data->max_outstanding_fetcher_requests
+        = OPT_OSTREE_MAX_OUTSTANDING_FETCHER_REQUESTS_DEFAULT;
 
   pull_data->repo = self;
   pull_data->progress = progress;
@@ -4047,8 +4092,8 @@ ostree_repo_pull_with_options (OstreeRepo *self, const char *remote_name_or_base
         need_summary = TRUE;
     }
 
-  pull_data->static_delta_superblocks
-      = g_ptr_array_new_with_free_func ((GDestroyNotify)g_variant_unref);
+  pull_data->static_delta_targets
+      = g_hash_table_new_full (g_str_hash, g_str_equal, (GDestroyNotify)g_free, NULL);
 
   if (need_summary)
     {
@@ -4903,7 +4948,7 @@ out:
   g_clear_pointer (&pull_data->summary_data_sig, g_bytes_unref);
   g_clear_pointer (&pull_data->summary_sig_etag, g_free);
   g_clear_pointer (&pull_data->summary, g_variant_unref);
-  g_clear_pointer (&pull_data->static_delta_superblocks, g_ptr_array_unref);
+  g_clear_pointer (&pull_data->static_delta_targets, g_hash_table_unref);
   g_clear_pointer (&pull_data->commit_to_depth, g_hash_table_unref);
   g_clear_pointer (&pull_data->expected_commit_sizes, g_hash_table_unref);
   g_clear_pointer (&pull_data->scanned_metadata, g_hash_table_unref);
@@ -5692,7 +5737,7 @@ find_remotes_cb (GObject *obj, GAsyncResult *async_result, gpointer user_data)
                 goto error;
 
               fetcher = _ostree_repo_remote_new_fetcher (self, result->remote->name, TRUE, NULL,
-                                                         NULL, NULL, &error);
+                                                         NULL, 0, 0, TRUE, 0, NULL, &error);
               if (fetcher == NULL)
                 goto error;
 
@@ -6306,6 +6351,10 @@ ostree_repo_remote_fetch_summary_with_options (OstreeRepo *self, const char *nam
   g_autoptr (GVariant) extra_headers = NULL;
   g_autoptr (GPtrArray) mirrorlist = NULL;
   const char *append_user_agent = NULL;
+  guint32 low_speed_limit = OPT_LOWSPEEDLIMIT_DEFAULT;
+  guint32 low_speed_time = OPT_LOWSPEEDTIME_DEFAULT;
+  gboolean retry_all = OPT_RETRYALL_DEFAULT;
+  guint32 max_outstanding_fetcher_requests = OPT_OSTREE_MAX_OUTSTANDING_FETCHER_REQUESTS_DEFAULT;
   guint n_network_retries = DEFAULT_N_NETWORK_RETRIES;
   gboolean summary_sig_not_modified = FALSE;
   g_autofree char *summary_sig_if_none_match = NULL;
@@ -6330,6 +6379,11 @@ ostree_repo_remote_fetch_summary_with_options (OstreeRepo *self, const char *nam
       (void)g_variant_lookup (options, "http-headers", "@a(ss)", &extra_headers);
       (void)g_variant_lookup (options, "append-user-agent", "&s", &append_user_agent);
       (void)g_variant_lookup (options, "n-network-retries", "u", &n_network_retries);
+      (void)g_variant_lookup (options, "low-speed-limit-bytes", "u", &low_speed_limit);
+      (void)g_variant_lookup (options, "low-speed-time-seconds", "u", &low_speed_time);
+      (void)g_variant_lookup (options, "retry-all-network-errors", "b", &retry_all);
+      (void)g_variant_lookup (options, "max-outstanding-fetcher-requests", "b",
+                              &max_outstanding_fetcher_requests);
     }
 
   if (!ostree_repo_remote_get_gpg_verify_summary (self, name, &gpg_verify_summary, error))
@@ -6339,9 +6393,11 @@ ostree_repo_remote_fetch_summary_with_options (OstreeRepo *self, const char *nam
     return FALSE;
 
   mainctx = _ostree_main_context_new_default ();
+  (void)mainctx; // Used for autocleanup
 
   fetcher = _ostree_repo_remote_new_fetcher (self, name, TRUE, extra_headers, append_user_agent,
-                                             NULL, error);
+                                             low_speed_limit, low_speed_time, retry_all,
+                                             max_outstanding_fetcher_requests, NULL, error);
   if (fetcher == NULL)
     return FALSE;
 

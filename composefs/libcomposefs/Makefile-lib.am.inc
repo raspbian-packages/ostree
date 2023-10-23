@@ -8,6 +8,7 @@ libcomposefs_la_SOURCES = \
                         composefs/libcomposefs/hash.h \
                         composefs/libcomposefs/lcfs-internal.h \
                         composefs/libcomposefs/lcfs-erofs.h \
+                        composefs/libcomposefs/lcfs-erofs-internal.h \
                         composefs/libcomposefs/lcfs-fsverity.c \
                         composefs/libcomposefs/lcfs-fsverity.h \
                         composefs/libcomposefs/lcfs-writer-erofs.c \

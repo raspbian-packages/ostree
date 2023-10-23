@@ -38,7 +38,7 @@ orig_composefs_digest=$($OSTREE show --print-hex --print-metadata-key ostree.com
 $OSTREE commit ${COMMIT_ARGS} -b test-composefs2 --generate-composefs-metadata test2-co
 new_composefs_digest=$($OSTREE show --print-hex --print-metadata-key ostree.composefs.digest.v0 test-composefs2)
 assert_streq "${orig_composefs_digest}" "${new_composefs_digest}"
-assert_streq "${new_composefs_digest}" "4d97f295ac9d379b7b3c42ddec49cc55b570c5b8b2a6f3f835f473854b0ad0cd"
+assert_streq "${new_composefs_digest}" "be956966c70970ea23b1a8043bca58cfb0d011d490a35a7817b36d04c0210954"
 tap_ok "composefs metadata"
 
 tap_end

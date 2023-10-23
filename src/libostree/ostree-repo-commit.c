@@ -28,6 +28,7 @@
 #include <gio/gunixoutputstream.h>
 #include <glib-unix.h>
 #include <glib/gprintf.h>
+#include <stdbool.h>
 #include <sys/ioctl.h>
 #include <sys/statvfs.h>
 #include <sys/xattr.h>
@@ -454,6 +455,7 @@ throw_min_free_space_error (OstreeRepo *self, guint64 bytes_required, GError **e
     }
   else
     err_msg = "would be exceeded";
+  (void)err_msg_owned; // Conditional ownership
 
   if (self->min_free_space_mb > 0)
     return glnx_throw (error, "min-free-space-size %" G_GUINT64_FORMAT "MB %s",
@@ -908,6 +910,8 @@ write_content_object (OstreeRepo *self, const char *expected_checksum, GInputStr
   else
     file_input = input;
 
+  (void)file_input_owned; // Conditionally owned
+
   gboolean phys_object_is_symlink = FALSE;
   switch (object_file_type)
     {
@@ -937,6 +941,8 @@ write_content_object (OstreeRepo *self, const char *expected_checksum, GInputStr
     size = g_file_info_get_size (file_info);
   else
     size = 0;
+
+  (void)file_input_owned; // Conditionally owned
 
   /* Free space check; only applies during transactions */
   if ((self->min_free_space_percent > 0 || self->min_free_space_mb > 0) && self->in_transaction)
@@ -1052,6 +1058,7 @@ write_content_object (OstreeRepo *self, const char *expected_checksum, GInputStr
                                                 actual_checksum, error))
             return FALSE;
         }
+      (void)actual_checksum_owned; // Just used to autofree
 
       if (checksum_payload_input)
         actual_payload_checksum = ot_checksum_instream_get_string (checksum_payload_input);
@@ -2850,14 +2857,6 @@ ostree_repo_write_content_finish (OstreeRepo *self, GAsyncResult *result, guchar
   return TRUE;
 }
 
-static GVariant *
-create_empty_gvariant_dict (void)
-{
-  GVariantBuilder builder;
-  g_variant_builder_init (&builder, G_VARIANT_TYPE ("a{sv}"));
-  return g_variant_builder_end (&builder);
-}
-
 /**
  * ostree_repo_write_commit:
  * @self: Repo
@@ -2951,7 +2950,7 @@ ostree_repo_write_commit_with_time (OstreeRepo *self, const char *parent, const 
     return FALSE;
 
   g_autoptr (GVariant) commit = g_variant_new (
-      "(@a{sv}@ay@a(say)sst@ay@ay)", new_metadata ? new_metadata : create_empty_gvariant_dict (),
+      "(@a{sv}@ay@a(say)sst@ay@ay)", new_metadata,
       parent ? ostree_checksum_to_bytes_v (parent) : ot_gvariant_new_bytearray (NULL, 0),
       g_variant_new_array (G_VARIANT_TYPE ("(say)"), NULL, 0), subject ? subject : "",
       body ? body : "", GUINT64_TO_BE (time),
@@ -3274,8 +3273,14 @@ get_final_xattrs (OstreeRepo *self, OstreeRepoCommitModifier *modifier, const ch
   if (modifier && modifier->sepolicy)
     {
       g_autofree char *label = NULL;
+      const char *path_for_labeling = relpath;
 
-      if (!ostree_sepolicy_get_label (modifier->sepolicy, relpath,
+      bool using_v1 = (modifier->flags & OSTREE_REPO_COMMIT_MODIFIER_FLAGS_SELINUX_LABEL_V1) > 0;
+      bool is_usretc = g_str_equal (relpath, "/usr/etc") || g_str_has_prefix (relpath, "/usr/etc/");
+      if (using_v1 && is_usretc)
+        path_for_labeling += strlen ("/usr");
+
+      if (!ostree_sepolicy_get_label (modifier->sepolicy, path_for_labeling,
                                       g_file_info_get_attribute_uint32 (file_info, "unix::mode"),
                                       &label, cancellable, error))
         return FALSE;

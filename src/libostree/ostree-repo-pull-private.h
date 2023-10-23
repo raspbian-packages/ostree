@@ -54,6 +54,10 @@ typedef struct
 
   GVariant *extra_headers;
   char *append_user_agent;
+  guint32 low_speed_limit;
+  guint32 low_speed_time;
+  gboolean retry_all;
+  guint32 max_outstanding_fetcher_requests;
 
   gboolean dry_run;
   gboolean dry_run_emitted_progress;
@@ -88,7 +92,9 @@ typedef struct
   GHashTable *signapi_verified_commits; /* Map<checksum,verification> of commits that have been
                                            signapi verified */
   GHashTable *ref_keyring_map;          /* Maps OstreeCollectionRef to keyring remote name */
-  GPtrArray *static_delta_superblocks;
+
+  GHashTable *static_delta_targets; /* Set<checksum> of commits fetched via static delta */
+
   GHashTable *expected_commit_sizes;           /* Maps commit checksum to known size */
   GHashTable *commit_to_depth;                 /* Maps parent commit checksum maximum depth */
   GHashTable *scanned_metadata;                /* Maps object name to itself */

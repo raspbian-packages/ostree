@@ -76,8 +76,6 @@
 #include "ot-keyfile-utils.h"
 #include "otcore.h"
 
-// The path to the config file for this binary
-const char *config_roots[] = { "/usr/lib", "/etc" };
 #define PREPARE_ROOT_CONFIG_PATH "ostree/prepare-root.conf"
 
 // This key is used by default if present in the initramfs to verify
@@ -88,6 +86,9 @@ const char *config_roots[] = { "/usr/lib", "/etc" };
 
 #define SYSROOT_KEY "sysroot"
 #define READONLY_KEY "readonly"
+
+#define ETC_KEY "etc"
+#define TRANSIENT_KEY "transient"
 
 #define COMPOSEFS_KEY "composefs"
 #define ENABLED_KEY "enabled"
@@ -105,35 +106,6 @@ const char *config_roots[] = { "/usr/lib", "/etc" };
 #endif
 
 #include "ostree-mount-util.h"
-
-// Load our config file; if it doesn't exist, we return an empty configuration.
-// NULL will be returned if we caught an error.
-static GKeyFile *
-load_config (GError **error)
-{
-  g_autoptr (GKeyFile) ret = g_key_file_new ();
-
-  for (guint i = 0; i < G_N_ELEMENTS (config_roots); i++)
-    {
-      glnx_autofd int fd = -1;
-      g_autofree char *path = g_build_filename (config_roots[i], PREPARE_ROOT_CONFIG_PATH, NULL);
-      if (!ot_openat_ignore_enoent (AT_FDCWD, path, &fd, error))
-        return NULL;
-      /* If the config file doesn't exist, that's OK */
-      if (fd == -1)
-        continue;
-
-      g_print ("Loading %s\n", path);
-
-      g_autofree char *buf = glnx_fd_readall_utf8 (fd, NULL, NULL, error);
-      if (!buf)
-        return NULL;
-      if (!g_key_file_load_from_data (ret, buf, -1, 0, error))
-        return NULL;
-    }
-
-  return g_steal_pointer (&ret);
-}
 
 static bool
 sysroot_is_configured_ro (const char *sysroot)
@@ -264,6 +236,24 @@ validate_signature (GBytes *data, GVariant *signatures, GPtrArray *pubkeys)
 
   return FALSE;
 }
+
+// Output a friendly message based on an errno for common cases
+static const char *
+composefs_error_message (int errsv)
+{
+  switch (errsv)
+    {
+    case ENOVERITY:
+      return "fsverity not enabled on composefs image";
+    case EWRONGVERITY:
+      return "Wrong fsverity digest in composefs image";
+    case ENOSIGNATURE:
+      return "Missing signature for fsverity in composefs image";
+    default:
+      return strerror (errsv);
+    }
+}
+
 #endif
 
 typedef struct
@@ -278,8 +268,8 @@ static void
 free_composefs_config (ComposefsConfig *config)
 {
   g_ptr_array_unref (config->pubkeys);
-  free (config->signature_pubkey);
-  free (config);
+  g_free (config->signature_pubkey);
+  g_free (config);
 }
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (ComposefsConfig, free_composefs_config)
@@ -350,7 +340,14 @@ main (int argc, char *argv[])
     err (EXIT_FAILURE, "usage: ostree-prepare-root SYSROOT");
   const char *root_arg = argv[1];
 
-  g_autoptr (GKeyFile) config = load_config (&error);
+  // Since several APIs want to operate in terms of file descriptors, let's
+  // open the initramfs now.  Currently this is just used for the config parser.
+  glnx_autofd int initramfs_rootfs_fd = -1;
+  if (!glnx_opendirat (AT_FDCWD, "/", FALSE, &initramfs_rootfs_fd, &error))
+    errx (EXIT_FAILURE, "Failed to open /: %s", error->message);
+
+  g_autoptr (GKeyFile) config
+      = otcore_load_config (initramfs_rootfs_fd, PREPARE_ROOT_CONFIG_PATH, &error);
   if (!config)
     errx (EXIT_FAILURE, "Failed to parse config: %s", error->message);
 
@@ -436,6 +433,11 @@ main (int argc, char *argv[])
         1,
       };
 
+      cfs_options.flags = LCFS_MOUNT_FLAGS_READONLY;
+      cfs_options.image_mountdir = OSTREE_COMPOSEFS_LOWERMNT;
+      if (mkdirat (AT_FDCWD, OSTREE_COMPOSEFS_LOWERMNT, 0700) < 0)
+        err (EXIT_FAILURE, "Failed to create %s", OSTREE_COMPOSEFS_LOWERMNT);
+
       g_autofree char *expected_digest = NULL;
 
       if (composefs_config->is_signed)
@@ -474,26 +476,10 @@ main (int argc, char *argv[])
 
           expected_digest = g_malloc (OSTREE_SHA256_STRING_LEN + 1);
           ot_bin2hex (expected_digest, cfs_digest_buf, g_variant_get_size (cfs_digest_v));
-        }
 
-      cfs_options.flags = LCFS_MOUNT_FLAGS_READONLY;
-      cfs_options.image_mountdir = OSTREE_COMPOSEFS_LOWERMNT;
-      if (mkdirat (AT_FDCWD, OSTREE_COMPOSEFS_LOWERMNT, 0700) < 0)
-        err (EXIT_FAILURE, "Failed to create %s", OSTREE_COMPOSEFS_LOWERMNT);
-
-      if (expected_digest != NULL)
-        {
           cfs_options.flags |= LCFS_MOUNT_FLAGS_REQUIRE_VERITY;
           g_print ("composefs: Verifying digest: %s\n", expected_digest);
           cfs_options.expected_fsverity_digest = expected_digest;
-        }
-      else
-        {
-          // If we're not verifying a digest, then we *must* also have signatures disabled.
-          // Or stated in reverse: if signature verification is enabled, then digest verification
-          // must also be.
-          g_assert (!composefs_config->is_signed);
-          g_print ("composefs: Mounting with no digest or signature check\n");
         }
 
       if (lcfs_mount_image (OSTREE_COMPOSEFS_NAME, TMP_SYSROOT, &cfs_options) == 0)
@@ -506,29 +492,14 @@ main (int argc, char *argv[])
       else
         {
           int errsv = errno;
-          const char *errmsg;
-          switch (errsv)
+          g_assert (composefs_config->enabled != OT_TRISTATE_NO);
+          if (composefs_config->enabled == OT_TRISTATE_MAYBE && errsv == ENOENT)
             {
-            case ENOVERITY:
-              errmsg = "fsverity not enabled on composefs image";
-              break;
-            case EWRONGVERITY:
-              errmsg = "Wrong fsverity digest in composefs image";
-              break;
-            case ENOSIGNATURE:
-              errmsg = "Missing signature for fsverity in composefs image";
-              break;
-            default:
-              errmsg = strerror (errno);
-              break;
-            }
-          if (composefs_config->enabled == OT_TRISTATE_MAYBE)
-            {
-              g_print ("composefs: optional support failed: %s\n", errmsg);
+              g_print ("composefs: No image present\n");
             }
           else
             {
-              g_assert (composefs_config->enabled == OT_TRISTATE_YES);
+              const char *errmsg = composefs_error_message (errsv);
               errx (EXIT_FAILURE, "composefs: failed to mount: %s", errmsg);
             }
         }
@@ -579,13 +550,51 @@ main (int argc, char *argv[])
    * the deployment needs to be created and remounted as read/write. */
   if (sysroot_readonly || using_composefs)
     {
-      /* Bind-mount /etc (at deploy path), and remount as writable. */
-      if (mount ("etc", TMP_SYSROOT "/etc", NULL, MS_BIND | MS_SILENT, NULL) < 0)
-        err (EXIT_FAILURE, "failed to prepare /etc bind-mount at /sysroot.tmp/etc");
-      if (mount (TMP_SYSROOT "/etc", TMP_SYSROOT "/etc", NULL, MS_BIND | MS_REMOUNT | MS_SILENT,
-                 NULL)
-          < 0)
-        err (EXIT_FAILURE, "failed to make writable /etc bind-mount at /sysroot.tmp/etc");
+      gboolean etc_transient = FALSE;
+      if (!ot_keyfile_get_boolean_with_default (config, ETC_KEY, TRANSIENT_KEY, FALSE,
+                                                &etc_transient, &error))
+        errx (EXIT_FAILURE, "Failed to parse etc.transient value: %s", error->message);
+
+      if (etc_transient)
+        {
+          char *ovldir = "/run/ostree/transient-etc";
+
+          g_variant_builder_add (&metadata_builder, "{sv}", OTCORE_RUN_BOOTED_KEY_TRANSIENT_ETC,
+                                 g_variant_new_string (ovldir));
+
+          char *lowerdir = "usr/etc";
+          if (using_composefs)
+            lowerdir = TMP_SYSROOT "/usr/etc";
+
+          g_autofree char *upperdir = g_build_filename (ovldir, "upper", NULL);
+          g_autofree char *workdir = g_build_filename (ovldir, "work", NULL);
+
+          struct
+          {
+            const char *path;
+            int mode;
+          } subdirs[] = { { ovldir, 0700 }, { upperdir, 0755 }, { workdir, 0755 } };
+          for (int i = 0; i < G_N_ELEMENTS (subdirs); i++)
+            {
+              if (mkdirat (AT_FDCWD, subdirs[i].path, subdirs[i].mode) < 0)
+                err (EXIT_FAILURE, "Failed to create dir %s", subdirs[i].path);
+            }
+
+          g_autofree char *ovl_options
+              = g_strdup_printf ("lowerdir=%s,upperdir=%s,workdir=%s", lowerdir, upperdir, workdir);
+          if (mount ("overlay", TMP_SYSROOT "/etc", "overlay", MS_SILENT, ovl_options) < 0)
+            err (EXIT_FAILURE, "failed to mount transient etc overlayfs");
+        }
+      else
+        {
+          /* Bind-mount /etc (at deploy path), and remount as writable. */
+          if (mount ("etc", TMP_SYSROOT "/etc", NULL, MS_BIND | MS_SILENT, NULL) < 0)
+            err (EXIT_FAILURE, "failed to prepare /etc bind-mount at /sysroot.tmp/etc");
+          if (mount (TMP_SYSROOT "/etc", TMP_SYSROOT "/etc", NULL, MS_BIND | MS_REMOUNT | MS_SILENT,
+                     NULL)
+              < 0)
+            err (EXIT_FAILURE, "failed to make writable /etc bind-mount at /sysroot.tmp/etc");
+        }
     }
 
   /* Prepare /usr.
