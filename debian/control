@@ -41,6 +41,7 @@ Build-Depends:
  libsoup-3.0-dev (>= 3.0.0),
  libsystemd-dev,
  libtool,
+ pkgconf,
  procps,
  python3 <!nocheck>,
  python3-yaml <!nocheck>,
@@ -100,7 +101,7 @@ Depends:
  gir1.2-ostree-1.0 (= ${binary:Version}),
  libglib2.0-dev (>= 2.66.0),
  libostree-1-1 (= ${binary:Version}),
- pkg-config,
+ pkgconf,
  ${misc:Depends},
 Suggests:
  libostree-doc,
