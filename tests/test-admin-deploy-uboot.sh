@@ -20,6 +20,11 @@
 
 set -euo pipefail
 
+if [ "${DEB_HOST_ARCH-}" = s390x ]; then
+  echo "1..0 # SKIP uBoot not supported on s390x"
+  exit 0
+fi
+
 . $(dirname $0)/libtest.sh
 
 # Exports OSTREE_SYSROOT so --sysroot not needed.
