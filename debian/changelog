@@ -1,3 +1,15 @@
+ostree (2023.7-2) unstable; urgency=medium
+
+  * d/p/bootloader-zipl-No-op-if-run-as-non-root.patch:
+    Add patch from upstream to avoid build-time test failure on s390x
+  * d/p/debian/Skip-test-admin-deploy-uboot.sh-on-s390x.patch:
+    Add patch to avoid another test failure on s390x
+  * libostree-1-dev Provides gir1.2-ostree-1.0-dev.
+    This is likely to be useful in the migration path to being able to turn
+    off GObject-Introspection bindings when bootstrapping or cross-compiling.
+
+ -- Simon McVittie <smcv@debian.org>  Thu, 26 Oct 2023 11:33:28 +0100
+
 ostree (2023.7-1) unstable; urgency=medium
 
   * New upstream release
