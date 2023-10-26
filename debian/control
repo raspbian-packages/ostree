@@ -105,6 +105,8 @@ Depends:
  ${misc:Depends},
 Suggests:
  libostree-doc,
+Provides:
+ gir1.2-ostree-1.0-dev (= ${binary:Version}),
 Description: Development files for the libostree library
  libostree is a library for managing bootable, immutable, versioned
  filesystem trees. It is like git in that it checksums individual files
