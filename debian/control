@@ -23,20 +23,20 @@ Build-Depends:
  fuse3,
  gjs [!alpha !hppa !ia64 !m68k !sh4 !sparc64 !x32],
  gnupg <!nocheck>,
- gobject-introspection (>= 1.51.5),
+ gobject-introspection,
  gtk-doc-tools <!nodoc>,
  libarchive-dev,
  libattr1-dev,
- libavahi-client-dev (>= 0.6.31),
- libavahi-glib-dev (>= 0.6.31),
+ libavahi-client-dev,
+ libavahi-glib-dev,
  libcap-dev,
  libcurl4-gnutls-dev | libcurl-dev,
  libfuse3-dev,
- libgirepository1.0-dev (>= 1.51.5),
- libglib2.0-dev (>= 2.66.0),
+ libgirepository1.0-dev,
+ libglib2.0-dev,
  libgpgme-dev,
  liblzma-dev,
- libmount-dev (>= 2.23),
+ libmount-dev,
  libselinux1-dev,
  libsoup-3.0-dev (>= 3.0.0),
  libsystemd-dev,
@@ -78,8 +78,6 @@ Depends:
  ${shlibs:Depends},
 Pre-Depends:
  ${misc:Pre-Depends},
-Breaks:
- flatpak (<< 0.8.7-2~),
 Multi-Arch: same
 Description: content-addressed filesystem for operating system binaries (library)
  libostree is a library for managing bootable, immutable, versioned
@@ -99,7 +97,7 @@ Multi-Arch: same
 Section: libdevel
 Depends:
  gir1.2-ostree-1.0 (= ${binary:Version}),
- libglib2.0-dev (>= 2.66.0),
+ libglib2.0-dev,
  libostree-1-1 (= ${binary:Version}),
  pkgconf,
  ${misc:Depends},
