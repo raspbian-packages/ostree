@@ -12,14 +12,14 @@ Forwarded: no
  1 file changed, 5 insertions(+)
 
 diff --git a/tests/test-admin-deploy-uboot.sh b/tests/test-admin-deploy-uboot.sh
-index 9a4d773..2f1809f 100755
+index 9a4d773..772e51d 100755
 --- a/tests/test-admin-deploy-uboot.sh
 +++ b/tests/test-admin-deploy-uboot.sh
 @@ -20,6 +20,11 @@
  
  set -euo pipefail
  
-+if [ "${DEB_HOST_ARCH-}" = s390x ]; then
++if [ "${DEB_HOST_ARCH-$(dpkg --print-architecture)}" = s390x ]; then
 +  echo "1..0 # SKIP uBoot not supported on s390x"
 +  exit 0
 +fi
