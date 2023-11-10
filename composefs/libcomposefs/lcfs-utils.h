@@ -19,10 +19,40 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 #include <errno.h>
 #include <unistd.h>
 
 #define max(a, b) ((a > b) ? (a) : (b))
+#define min(a, b) (((a) < (b)) ? (a) : (b))
+
+static inline bool str_has_prefix(const char *str, const char *prefix)
+{
+	return strncmp(str, prefix, strlen(prefix)) == 0;
+}
+
+static inline char *memdup(const char *s, size_t len)
+{
+	char *s2 = malloc(len);
+	if (s2 == NULL) {
+		errno = ENOMEM;
+		return NULL;
+	}
+	memcpy(s2, s, len);
+	return s2;
+}
+
+static inline char *str_join(const char *a, const char *b)
+{
+	size_t a_len = strlen(a);
+	size_t b_len = strlen(b);
+	char *res = malloc(a_len + b_len + 1);
+	if (res) {
+		memcpy(res, a, a_len);
+		memcpy(res + a_len, b, b_len + 1);
+	}
+	return res;
+}
 
 static inline void _lcfs_reset_errno_(int *saved_errno)
 {
@@ -45,6 +75,9 @@ static inline void cleanup_freep(void *p)
 		free(*pp);
 }
 
+// A wrapper around close() that takes a pointer to a file descriptor (integer):
+// - Never returns an error (and preserves errno)
+// - Sets the value to -1 after closing to make cleanup idempotent
 static inline void cleanup_fdp(int *fdp)
 {
 	PROTECT_ERRNO;
@@ -55,6 +88,7 @@ static inline void cleanup_fdp(int *fdp)
 	fd = *fdp;
 	if (fd != -1)
 		(void)close(fd);
+	*fdp = -1;
 }
 
 #define cleanup_free __attribute__((cleanup(cleanup_freep)))

@@ -34,6 +34,7 @@
 #include <sys/xattr.h>
 #include <sys/param.h>
 #include <assert.h>
+#include <sys/mman.h>
 
 static void lcfs_node_remove_all_children(struct lcfs_node_s *node);
 static void lcfs_node_destroy(struct lcfs_node_s *node);
@@ -59,17 +60,6 @@ char *maybe_join_path(const char *a, const char *b)
 		}
 	}
 	return res;
-}
-
-static char *memdup(const char *s, size_t len)
-{
-	char *s2 = malloc(len);
-	if (s2 == NULL) {
-		errno = ENOMEM;
-		return NULL;
-	}
-	memcpy(s2, s, len);
-	return s2;
 }
 
 size_t hash_memory(const char *string, size_t len, size_t n_buckets)
@@ -187,8 +177,6 @@ int lcfs_compute_tree(struct lcfs_ctx_s *ctx, struct lcfs_node_s *root)
 	ctx->min_mtim_sec = root->inode.st_mtim_sec;
 	ctx->min_mtim_nsec = root->inode.st_mtim_nsec;
 	ctx->has_acl = false;
-
-	node = root;
 
 	for (node = root, index = 0; node != NULL; node = node->next, index++) {
 		if ((node->inode.st_mode & S_IFMT) != S_IFDIR &&
@@ -542,15 +530,40 @@ int lcfs_node_set_fsverity_from_fd(struct lcfs_node_s *node, int fd)
 	return lcfs_node_set_fsverity_from_content(node, &_fd, fsverity_read_cb);
 }
 
+static int read_content(int fd, size_t size, uint8_t *buf)
+{
+	int bytes_read;
+
+	while (size > 0) {
+		do
+			bytes_read = read(fd, buf, size);
+		while (bytes_read < 0 && errno == EINTR);
+
+		if (bytes_read == 0)
+			break;
+
+		size -= bytes_read;
+		buf += bytes_read;
+	}
+
+	if (size > 0) {
+		errno = ENODATA;
+		return -1;
+	}
+
+	return 0;
+}
+
 struct lcfs_node_s *lcfs_load_node_from_file(int dirfd, const char *fname,
 					     int buildflags)
 {
-	struct lcfs_node_s *ret;
+	cleanup_node struct lcfs_node_s *ret = NULL;
 	struct stat sb;
 	int r;
 
 	if (buildflags & ~(LCFS_BUILD_SKIP_XATTRS | LCFS_BUILD_USE_EPOCH |
-			   LCFS_BUILD_SKIP_DEVICES | LCFS_BUILD_COMPUTE_DIGEST)) {
+			   LCFS_BUILD_SKIP_DEVICES | LCFS_BUILD_COMPUTE_DIGEST |
+			   LCFS_BUILD_NO_INLINE)) {
 		errno = EINVAL;
 		return NULL;
 	}
@@ -570,17 +583,34 @@ struct lcfs_node_s *lcfs_load_node_from_file(int dirfd, const char *fname,
 	ret->inode.st_size = sb.st_size;
 
 	if ((sb.st_mode & S_IFMT) == S_IFREG) {
-		if (sb.st_size != 0 && (buildflags & LCFS_BUILD_COMPUTE_DIGEST) != 0) {
-			int fd = openat(dirfd, fname, O_RDONLY | O_CLOEXEC);
-			if (fd < 0) {
-				lcfs_node_unref(ret);
+		bool compute_digest = (buildflags & LCFS_BUILD_COMPUTE_DIGEST) != 0;
+		bool no_inline = (buildflags & LCFS_BUILD_NO_INLINE) != 0;
+		bool is_zerosized = sb.st_size == 0;
+		bool do_digest = !is_zerosized && compute_digest;
+		bool do_inline = !is_zerosized && !no_inline &&
+				 sb.st_size <= LCFS_BUILD_INLINE_FILE_SIZE_LIMIT;
+
+		if (do_digest || do_inline) {
+			cleanup_fd int fd =
+				openat(dirfd, fname, O_RDONLY | O_CLOEXEC);
+			if (fd < 0)
 				return NULL;
+			if (do_digest) {
+				r = lcfs_node_set_fsverity_from_fd(ret, fd);
+				if (r < 0)
+					return NULL;
+				/* In case we re-read below */
+				lseek(fd, 0, SEEK_SET);
 			}
-			r = lcfs_node_set_fsverity_from_fd(ret, fd);
-			close(fd);
-			if (r < 0) {
-				lcfs_node_unref(ret);
-				return NULL;
+			if (do_inline) {
+				uint8_t buf[LCFS_BUILD_INLINE_FILE_SIZE_LIMIT];
+
+				r = read_content(fd, sb.st_size, buf);
+				if (r < 0)
+					return NULL;
+				r = lcfs_node_set_content(ret, buf, sb.st_size);
+				if (r < 0)
+					return NULL;
 			}
 		}
 	}
@@ -592,24 +622,63 @@ struct lcfs_node_s *lcfs_load_node_from_file(int dirfd, const char *fname,
 
 	if ((buildflags & LCFS_BUILD_SKIP_XATTRS) == 0) {
 		r = read_xattrs(ret, dirfd, fname);
-		if (r < 0) {
-			lcfs_node_unref(ret);
+		if (r < 0)
 			return NULL;
-		}
 	}
 
-	return ret;
+	return steal_pointer(&ret);
+}
+
+struct lcfs_node_s *lcfs_load_node_from_fd(int fd)
+{
+	struct lcfs_node_s *node;
+	uint8_t *image_data;
+	size_t image_data_size;
+	struct stat s;
+	int errsv;
+	int r;
+
+	r = fstat(fd, &s);
+	if (r < 0) {
+		return NULL;
+	}
+
+	image_data_size = s.st_size;
+
+	image_data = mmap(0, image_data_size, PROT_READ, MAP_PRIVATE, fd, 0);
+	if (image_data == MAP_FAILED) {
+		return NULL;
+	}
+
+	node = lcfs_load_node_from_image(image_data, image_data_size);
+	if (node == NULL) {
+		errsv = errno;
+		munmap(image_data, image_data_size);
+		errno = errsv;
+		return NULL;
+	}
+
+	munmap(image_data, image_data_size);
+
+	return node;
 }
 
 int lcfs_node_set_payload(struct lcfs_node_s *node, const char *payload)
 {
-	node->payload = strdup(payload);
-	if (node->payload == NULL) {
+	char *dup = strdup(payload);
+	if (dup == NULL) {
 		errno = ENOMEM;
 		return -1;
 	}
+	free(node->payload);
+	node->payload = dup;
 
 	return 0;
+}
+
+const char *lcfs_node_get_payload(struct lcfs_node_s *node)
+{
+	return node->payload;
 }
 
 const uint8_t *lcfs_node_get_fsverity_digest(struct lcfs_node_s *node)
@@ -625,6 +694,31 @@ void lcfs_node_set_fsverity_digest(struct lcfs_node_s *node,
 {
 	node->digest_set = true;
 	memcpy(node->digest, digest, LCFS_DIGEST_SIZE);
+}
+
+int lcfs_node_set_content(struct lcfs_node_s *node, const uint8_t *data,
+			  size_t data_size)
+{
+	uint8_t *dup = NULL;
+
+	if (data && data_size != 0) {
+		dup = malloc(data_size);
+		if (dup == NULL) {
+			errno = ENOMEM;
+			return -1;
+		}
+		memcpy(dup, data, data_size);
+	}
+	free(node->content);
+	node->content = dup;
+	node->inode.st_size = data_size;
+
+	return 0;
+}
+
+const uint8_t *lcfs_node_get_content(struct lcfs_node_s *node)
+{
+	return node->content;
 }
 
 const char *lcfs_node_get_name(struct lcfs_node_s *node)
@@ -699,8 +793,14 @@ uint64_t lcfs_node_get_size(struct lcfs_node_s *node)
 	return node->inode.st_size;
 }
 
+/* Clears content if size changes */
 void lcfs_node_set_size(struct lcfs_node_s *node, uint64_t size)
 {
+	if (size == node->inode.st_size)
+		return;
+
+	free(node->content);
+	node->content = NULL;
 	node->inode.st_size = size;
 }
 
@@ -740,6 +840,11 @@ void lcfs_node_make_hardlink(struct lcfs_node_s *node, struct lcfs_node_s *targe
 	target = follow_links(target);
 	node->link_to = lcfs_node_ref(target);
 	target->inode.st_nlink++;
+}
+
+struct lcfs_node_s *lcfs_node_get_hardlink_target(struct lcfs_node_s *node)
+{
+	return node->link_to;
 }
 
 int lcfs_node_add_child(struct lcfs_node_s *parent, struct lcfs_node_s *child,
@@ -824,6 +929,7 @@ void lcfs_node_unref(struct lcfs_node_s *node)
 
 	free(node->name);
 	free(node->payload);
+	free(node->content);
 
 	for (i = 0; i < node->n_xattrs; i++) {
 		free(node->xattrs[i].key);
@@ -857,7 +963,9 @@ static void lcfs_node_destroy(struct lcfs_node_s *node)
 
 struct lcfs_node_s *lcfs_node_clone(struct lcfs_node_s *node)
 {
-	struct lcfs_node_s *new = lcfs_node_new();
+	cleanup_node struct lcfs_node_s *new = lcfs_node_new();
+	if (new == NULL)
+		return NULL;
 
 	/* Note: This copies only data, not structure like name or children */
 
@@ -869,13 +977,22 @@ struct lcfs_node_s *lcfs_node_clone(struct lcfs_node_s *node)
 	if (node->payload) {
 		new->payload = strdup(node->payload);
 		if (new->payload == NULL)
-			goto fail;
+			return NULL;
+		;
+	}
+
+	if (node->content) {
+		new->content = malloc(node->inode.st_size);
+		if (new->content == NULL)
+			return NULL;
+		;
+		memcpy(new->content, node->content, node->inode.st_size);
 	}
 
 	if (node->n_xattrs > 0) {
 		new->xattrs = malloc(sizeof(struct lcfs_xattr_s) * node->n_xattrs);
 		if (new->xattrs == NULL)
-			goto fail;
+			return NULL;
 		for (size_t i = 0; i < node->n_xattrs; i++) {
 			char *key = strdup(node->xattrs[i].key);
 			char *value = memdup(node->xattrs[i].value,
@@ -883,7 +1000,7 @@ struct lcfs_node_s *lcfs_node_clone(struct lcfs_node_s *node)
 			if (key == NULL || value == NULL) {
 				free(key);
 				free(value);
-				goto fail;
+				return NULL;
 			}
 			new->xattrs[i].key = key;
 			new->xattrs[i].value = value;
@@ -896,11 +1013,7 @@ struct lcfs_node_s *lcfs_node_clone(struct lcfs_node_s *node)
 	memcpy(new->digest, node->digest, LCFS_DIGEST_SIZE);
 	new->inode = node->inode;
 
-	return new;
-
-fail:
-	lcfs_node_unref(new);
-	return NULL;
+	return steal_pointer(&new);
 }
 
 struct lcfs_node_mapping_s {
@@ -917,7 +1030,9 @@ struct lcfs_clone_data {
 static struct lcfs_node_s *_lcfs_node_clone_deep(struct lcfs_node_s *node,
 						 struct lcfs_clone_data *data)
 {
-	struct lcfs_node_s *new = lcfs_node_clone(node);
+	cleanup_node struct lcfs_node_s *new = lcfs_node_clone(node);
+	if (new == NULL)
+		return NULL;
 
 	if (data->n_mappings >= data->allocated_mappings) {
 		struct lcfs_node_mapping_s *new_mapping;
@@ -928,7 +1043,7 @@ static struct lcfs_node_s *_lcfs_node_clone_deep(struct lcfs_node_s *node,
 					   sizeof(struct lcfs_node_mapping_s),
 					   data->allocated_mappings);
 		if (new_mapping == NULL)
-			goto fail;
+			return NULL;
 		data->mapping = new_mapping;
 	}
 
@@ -940,17 +1055,13 @@ static struct lcfs_node_s *_lcfs_node_clone_deep(struct lcfs_node_s *node,
 		struct lcfs_node_s *child = node->children[i];
 		struct lcfs_node_s *new_child = _lcfs_node_clone_deep(child, data);
 		if (new_child == NULL)
-			goto fail;
+			return NULL;
 
 		if (lcfs_node_add_child(new, new_child, child->name) < 0)
-			goto fail;
+			return NULL;
 	}
 
-	return new;
-
-fail:
-	lcfs_node_unref(new);
-	return NULL;
+	return steal_pointer(&new);
 }
 
 /* Rewrite all hardlinks according to mapping */
@@ -1199,5 +1310,29 @@ int lcfs_node_set_xattr(struct lcfs_node_s *node, const char *name,
 	xattrs[node->n_xattrs].value_len = value_len;
 	node->n_xattrs++;
 
+	return 0;
+}
+
+/* This is an internal function.
+ * Be careful to not cause duplicates if new_name already exist */
+int lcfs_node_rename_xattr(struct lcfs_node_s *node, size_t index, const char *new_name)
+{
+	struct lcfs_xattr_s *xattr;
+	cleanup_free char *dup = NULL;
+
+	dup = strdup(new_name);
+	if (dup == NULL) {
+		errno = ENOMEM;
+		return -1;
+	}
+
+	if (index >= node->n_xattrs) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	xattr = &node->xattrs[index];
+	free(xattr->key);
+	xattr->key = steal_pointer(&dup);
 	return 0;
 }

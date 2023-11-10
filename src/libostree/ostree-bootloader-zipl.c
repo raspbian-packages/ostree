@@ -63,10 +63,11 @@ static gboolean
 _ostree_bootloader_zipl_query (OstreeBootloader *bootloader, gboolean *out_is_active,
                                GCancellable *cancellable, GError **error)
 {
-  /* We don't auto-detect this one; should be explicitly chosen right now.
-   * see also https://github.com/coreos/coreos-assembler/pull/849
-   */
+#if defined(__s390x__)
+  *out_is_active = TRUE;
+#else
   *out_is_active = FALSE;
+#endif
   return TRUE;
 }
 
@@ -379,6 +380,12 @@ _ostree_bootloader_zipl_post_bls_sync (OstreeBootloader *bootloader, int bootver
                                        GCancellable *cancellable, GError **error)
 {
   OstreeBootloaderZipl *self = OSTREE_BOOTLOADER_ZIPL (bootloader);
+
+  // This can happen in a unit testing environment; at some point what we want to do here
+  // is move all of the zipl logic to a systemd unit instead that's keyed of
+  // ostree-finalize-staged.service.
+  if (getuid () != 0)
+    return TRUE;
 
   /* Note that unlike the grub2-mkconfig backend, we make no attempt to
    * chroot().

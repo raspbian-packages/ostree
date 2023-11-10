@@ -1,9 +1,41 @@
-ostree (2023.6-2+rpi1) trixie-staging; urgency=medium
+ostree (2023.7-3+rpi1) trixie-staging; urgency=medium
 
   [changes brought forward from 2020.8-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Tue, 15 Dec 2020 11:54:45 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Wed, 20 Sep 2023 18:46:46 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Fri, 10 Nov 2023 22:59:44 +0000
+
+ostree (2023.7-3) unstable; urgency=medium
+
+  * Remove version constraints unnecessary since bullseye
+  * Remove maintscript entries unnecessary since bullseye
+  * d/p/debian/Skip-test-admin-deploy-uboot.sh-on-s390x.patch:
+    Really skip test-admin-deploy-uboot.sh on s390x
+
+ -- Simon McVittie <smcv@debian.org>  Mon, 06 Nov 2023 09:45:08 +0000
+
+ostree (2023.7-2) unstable; urgency=medium
+
+  * d/p/bootloader-zipl-No-op-if-run-as-non-root.patch:
+    Add patch from upstream to avoid build-time test failure on s390x
+  * d/p/debian/Skip-test-admin-deploy-uboot.sh-on-s390x.patch:
+    Add patch to avoid another test failure on s390x
+  * libostree-1-dev Provides gir1.2-ostree-1.0-dev.
+    This is likely to be useful in the migration path to being able to turn
+    off GObject-Introspection bindings when bootstrapping or cross-compiling.
+
+ -- Simon McVittie <smcv@debian.org>  Thu, 26 Oct 2023 11:33:28 +0100
+
+ostree (2023.7-1) unstable; urgency=medium
+
+  * New upstream release
+  * Install systemd system units into /usr/lib/systemd/system.
+    This was allowed by TC resolution #1053901. Build-depend on debhelper
+    13.11.6~ to ensure that the units are still picked up by
+    dh_installsystemd.
+  * Depend on pkgconf in preference to pkg-config
+
+ -- Simon McVittie <smcv@debian.org>  Mon, 23 Oct 2023 10:36:48 +0100
 
 ostree (2023.6-2) unstable; urgency=medium
 

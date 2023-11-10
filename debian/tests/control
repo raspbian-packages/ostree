@@ -12,4 +12,4 @@ Depends: gnome-desktop-testing, ostree-tests
 
 Tests: build
 Restrictions: superficial
-Depends: build-essential, libostree-dev, pkg-config
+Depends: build-essential, libostree-dev, pkgconf

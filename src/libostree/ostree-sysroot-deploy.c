@@ -820,6 +820,7 @@ static gboolean
 selinux_relabel_var_if_needed (OstreeSysroot *sysroot, OstreeSePolicy *sepolicy, int os_deploy_dfd,
                                GCancellable *cancellable, GError **error)
 {
+  GLNX_AUTO_PREFIX_ERROR ("Relabeling /var", error);
   /* This is a bit of a hack; we should change the code at some
    * point in the distant future to only create (and label) /var
    * when doing a deployment.
@@ -1634,43 +1635,7 @@ typedef struct
 {
   guint64 root_syncfs_msec;
   guint64 boot_syncfs_msec;
-  guint64 extra_syncfs_msec;
 } SyncStats;
-
-typedef struct
-{
-  int ref_count; /* atomic */
-  bool success;
-  GMutex mutex;
-  GCond cond;
-} SyncData;
-
-static void
-sync_data_unref (SyncData *data)
-{
-  if (!g_atomic_int_dec_and_test (&data->ref_count))
-    return;
-  g_mutex_clear (&data->mutex);
-  g_cond_clear (&data->cond);
-  g_free (data);
-}
-
-// An asynchronous sync() call.  See below.
-static void *
-sync_in_thread (void *ptr)
-{
-  SyncData *syncdata = ptr;
-  ot_journal_print (LOG_INFO, "Starting global sync()");
-  sync ();
-  ot_journal_print (LOG_INFO, "Completed global sync()");
-  g_mutex_lock (&syncdata->mutex);
-  // Signal success
-  syncdata->success = true;
-  g_cond_broadcast (&syncdata->cond);
-  g_mutex_unlock (&syncdata->mutex);
-  sync_data_unref (syncdata);
-  return NULL;
-}
 
 /* First, sync the root directory as well as /var and /boot which may
  * be separate mount points.  Then *in addition*, do a global
@@ -1681,72 +1646,29 @@ full_system_sync (OstreeSysroot *self, SyncStats *out_stats, GCancellable *cance
                   GError **error)
 {
   GLNX_AUTO_PREFIX_ERROR ("Full sync", error);
-  guint64 start_msec = g_get_monotonic_time () / 1000;
   ot_journal_print (LOG_INFO, "Starting syncfs() for system root");
+  guint64 start_msec = g_get_monotonic_time () / 1000;
   if (syncfs (self->sysroot_fd) != 0)
     return glnx_throw_errno_prefix (error, "syncfs(sysroot)");
-  ot_journal_print (LOG_INFO, "Completed syncfs() for system root");
   guint64 end_msec = g_get_monotonic_time () / 1000;
+  ot_journal_print (LOG_INFO, "Completed syncfs() for system root in %" G_GUINT64_FORMAT " ms",
+                    end_msec - start_msec);
 
   out_stats->root_syncfs_msec = (end_msec - start_msec);
 
   if (!_ostree_sysroot_ensure_boot_fd (self, error))
     return FALSE;
 
-  start_msec = g_get_monotonic_time () / 1000;
   g_assert_cmpint (self->boot_fd, !=, -1);
   ot_journal_print (LOG_INFO, "Starting freeze/thaw cycle for system root");
+  start_msec = g_get_monotonic_time () / 1000;
   if (!fsfreeze_thaw_cycle (self, self->boot_fd, cancellable, error))
     return FALSE;
-  ot_journal_print (LOG_INFO, "Completed freeze/thaw cycle for system root");
   end_msec = g_get_monotonic_time () / 1000;
+  ot_journal_print (LOG_INFO,
+                    "Completed freeze/thaw cycle for system root in %" G_GUINT64_FORMAT " ms",
+                    end_msec - start_msec);
   out_stats->boot_syncfs_msec = (end_msec - start_msec);
-
-  /* And now out of an excess of conservativism, we still invoke
-   * sync().  The advantage of still using `syncfs()` above is that we
-   * actually get error codes out of that API, and we more clearly
-   * delineate what we actually want to sync in the future when this
-   * global sync call is removed.
-   *
-   * Due to https://bugzilla.redhat.com/show_bug.cgi?id=2003532 which is
-   * a bug in the interaction between Ceph and systemd, we have a capped
-   * timeout of 5s on the sync here.  In general, we don't actually want
-   * to "own" flushing data on *all* mounted filesystems as part of
-   * our process.  Again, we're only keeping the `sync` here out of
-   * conservatisim.  We could likely just remove it and e.g. systemd
-   * would take care of sync as part of unmounting individual filesystems.
-   */
-  start_msec = g_get_monotonic_time () / 1000;
-  if (!(self->opt_flags & OSTREE_SYSROOT_GLOBAL_OPT_SKIP_SYNC))
-    {
-      SyncData *syncdata = g_new (SyncData, 1);
-      syncdata->ref_count = 2; // One for us, one for thread
-      syncdata->success = FALSE;
-      g_mutex_init (&syncdata->mutex);
-      g_cond_init (&syncdata->cond);
-      g_mutex_lock (&syncdata->mutex);
-      GThread *worker = g_thread_new ("ostree sync", sync_in_thread, syncdata);
-      // Wait up to 5 seconds for sync() to finish
-      gint64 end_time = g_get_monotonic_time () + (5 * G_TIME_SPAN_SECOND);
-      while (!syncdata->success)
-        {
-          if (!g_cond_wait_until (&syncdata->cond, &syncdata->mutex, end_time))
-            {
-              ot_journal_print (LOG_INFO, "Timed out waiting for global sync()");
-              break;
-            }
-        }
-      g_mutex_unlock (&syncdata->mutex);
-      sync_data_unref (syncdata);
-      // We can't join the thread here, for two reasons.  First, the whole
-      // point here is to avoid blocking on `sync`.  The other reason is
-      // today there is no return value on success from `sync`, so there's
-      // no point to joining the thread even if we had a nonblocking mechanism
-      // to do so.
-      g_thread_unref (worker);
-    }
-  end_msec = g_get_monotonic_time () / 1000;
-  out_stats->extra_syncfs_msec = (end_msec - start_msec);
 
   return TRUE;
 }
@@ -2843,9 +2765,8 @@ ostree_sysroot_write_deployments_with_options (OstreeSysroot *self, GPtrArray *n
   if (!_ostree_sysroot_ensure_writable (self, error))
     return FALSE;
 
-  /* for now, this is gated on an environment variable */
-  const gboolean opted_in = (self->opt_flags & OSTREE_SYSROOT_GLOBAL_OPT_EARLY_PRUNE) > 0;
-  if (opted_in && !opts->disable_auto_early_prune
+  const bool skip_early_prune = (self->opt_flags & OSTREE_SYSROOT_GLOBAL_OPT_NO_EARLY_PRUNE) > 0;
+  if (!skip_early_prune && !opts->disable_auto_early_prune
       && !auto_early_prune_old_deployments (self, new_deployments, cancellable, error))
     return FALSE;
 
@@ -3025,8 +2946,7 @@ ostree_sysroot_write_deployments_with_options (OstreeSysroot *self, GPtrArray *n
         bootloader_is_atomic ? "yes" : "no", "OSTREE_DID_BOOTSWAP=%s",
         requires_new_bootversion ? "yes" : "no", "OSTREE_N_DEPLOYMENTS=%u", new_deployments->len,
         "OSTREE_SYNCFS_ROOT_MSEC=%" G_GUINT64_FORMAT, syncstats.root_syncfs_msec,
-        "OSTREE_SYNCFS_BOOT_MSEC=%" G_GUINT64_FORMAT, syncstats.boot_syncfs_msec,
-        "OSTREE_SYNCFS_EXTRA_MSEC=%" G_GUINT64_FORMAT, syncstats.extra_syncfs_msec, NULL);
+        "OSTREE_SYNCFS_BOOT_MSEC=%" G_GUINT64_FORMAT, syncstats.boot_syncfs_msec, NULL);
     _ostree_sysroot_emit_journal_msg (self, msg);
   }
 
@@ -3128,6 +3048,17 @@ lint_deployment_fs (OstreeSysroot *self, OstreeDeployment *deployment, int deplo
   return TRUE;
 }
 
+static gboolean
+require_stateroot (OstreeSysroot *self, const char *stateroot, GError **error)
+{
+  const char *osdeploypath = glnx_strjoina ("ostree/deploy/", stateroot);
+  if (!glnx_fstatat_allow_noent (self->sysroot_fd, osdeploypath, NULL, 0, error))
+    return FALSE;
+  if (errno == ENOENT)
+    return glnx_throw (error, "No such stateroot: %s", stateroot);
+  return TRUE;
+}
+
 /* The first part of writing a deployment. This primarily means doing the
  * hardlink farm checkout, but we also compute some initial state.
  */
@@ -3143,6 +3074,9 @@ sysroot_initialize_deployment (OstreeSysroot *self, const char *osname, const ch
 
   if (osname == NULL)
     osname = ostree_deployment_get_osname (self->booted_deployment);
+
+  if (!require_stateroot (self, osname, error))
+    return FALSE;
 
   OstreeRepo *repo = ostree_sysroot_repo (self);
 
@@ -3318,6 +3252,7 @@ run_in_deployment (int deployment_dfd, const gchar *const *child_argv, gsize chi
 static gboolean
 sysroot_finalize_selinux_policy (int deployment_dfd, GError **error)
 {
+  GLNX_AUTO_PREFIX_ERROR ("Finalizing SELinux policy", error);
   struct stat stbuf;
   gint exit_status;
   g_autofree gchar *stdout = NULL;
@@ -3352,9 +3287,14 @@ sysroot_finalize_selinux_policy (int deployment_dfd, GError **error)
   static const gsize SEMODULE_REBUILD_ARGC
       = sizeof (SEMODULE_REBUILD_ARGV) / sizeof (*SEMODULE_REBUILD_ARGV);
 
+  ot_journal_print (LOG_INFO, "Refreshing SELinux policy");
+  guint64 start_msec = g_get_monotonic_time () / 1000;
   if (!run_in_deployment (deployment_dfd, SEMODULE_REBUILD_ARGV, SEMODULE_REBUILD_ARGC,
                           &exit_status, NULL, error))
     return FALSE;
+  guint64 end_msec = g_get_monotonic_time () / 1000;
+  ot_journal_print (LOG_INFO, "Refreshed SELinux policy in %" G_GUINT64_FORMAT " ms",
+                    end_msec - start_msec);
   return g_spawn_check_exit_status (exit_status, error);
 }
 #endif /* HAVE_SELINUX */
@@ -3364,6 +3304,7 @@ sysroot_finalize_deployment (OstreeSysroot *self, OstreeDeployment *deployment,
                              OstreeDeployment *merge_deployment, GCancellable *cancellable,
                              GError **error)
 {
+  GLNX_AUTO_PREFIX_ERROR ("Finalizing deployment", error);
   g_autofree char *deployment_path = ostree_sysroot_get_deployment_dirpath (self, deployment);
   glnx_autofd int deployment_dfd = -1;
   if (!glnx_opendirat (self->sysroot_fd, deployment_path, TRUE, &deployment_dfd, error))
@@ -3742,6 +3683,9 @@ ostree_sysroot_stage_tree_with_options (OstreeSysroot *self, const char *osname,
   if (self->staged_deployment)
     {
       if (!_ostree_sysroot_rmrf_deployment (self, self->staged_deployment, cancellable, error))
+        return FALSE;
+      // Also remove the lock; xref https://github.com/ostreedev/ostree/issues/3025
+      if (!ot_ensure_unlinked_at (AT_FDCWD, _OSTREE_SYSROOT_RUNSTATE_STAGED_LOCKED, error))
         return FALSE;
     }
 
