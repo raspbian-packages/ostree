@@ -1,11 +1,11 @@
-ostree (2023.8-1) UNRELEASED; urgency=medium
+ostree (2023.8-1) unstable; urgency=medium
 
   * New upstream release
   * d/libostree-1-1.symbols: Update
   * d/p/bootloader-zipl-No-op-if-run-as-non-root.patch:
     Drop patch, applied upstream
 
- -- Simon McVittie <smcv@debian.org>  Fri, 08 Dec 2023 10:15:13 +0000
+ -- Simon McVittie <smcv@debian.org>  Fri, 08 Dec 2023 10:35:12 +0000
 
 ostree (2023.7-3) unstable; urgency=medium
 
