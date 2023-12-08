@@ -1,6 +1,7 @@
 ostree (2023.8-1) UNRELEASED; urgency=medium
 
   * New upstream release
+  * d/libostree-1-1.symbols: Update
   * d/p/bootloader-zipl-No-op-if-run-as-non-root.patch:
     Drop patch, applied upstream
 
