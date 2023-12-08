@@ -26,7 +26,6 @@
 #include "ot-admin-builtins.h"
 #include "ot-admin-functions.h"
 #include "ot-builtins.h"
-#include "ot-main.h"
 
 #include <glib/gi18n.h>
 
@@ -39,6 +38,8 @@ static OstreeCommand admin_subcommands[] = {
     "Checkout revision REFSPEC as the new default deployment" },
   { "finalize-staged", OSTREE_BUILTIN_FLAG_NO_REPO | OSTREE_BUILTIN_FLAG_HIDDEN,
     ot_admin_builtin_finalize_staged, "Internal command to run at shutdown time" },
+  { "lock-finalization", OSTREE_BUILTIN_FLAG_NO_REPO, ot_admin_builtin_lock_finalization,
+    "Change the finalization locking state of the staged deployment" },
   { "boot-complete", OSTREE_BUILTIN_FLAG_NO_REPO | OSTREE_BUILTIN_FLAG_HIDDEN,
     ot_admin_builtin_boot_complete, "Internal command to run at boot after an update was applied" },
   { "init-fs", OSTREE_BUILTIN_FLAG_NO_REPO, ot_admin_builtin_init_fs,
@@ -51,6 +52,8 @@ static OstreeCommand admin_subcommands[] = {
     "Initialize empty state for given operating system" },
   { "pin", OSTREE_BUILTIN_FLAG_NO_REPO, ot_admin_builtin_pin,
     "Change the \"pinning\" state of a deployment" },
+  { "post-copy", OSTREE_BUILTIN_FLAG_NO_REPO, ot_admin_builtin_post_copy,
+    "Update the repo and deployments as needed after a copy" },
   { "set-origin", OSTREE_BUILTIN_FLAG_NO_REPO, ot_admin_builtin_set_origin,
     "Set Origin and create a new origin file" },
   { "status", OSTREE_BUILTIN_FLAG_NO_REPO, ot_admin_builtin_status, "List deployments" },

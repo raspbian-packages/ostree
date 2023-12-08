@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Red Hat, Inc.
+ * Copyright (C) 2023 Red Hat, Inc.
  *
  * SPDX-License-Identifier: LGPL-2.0+
  *
@@ -19,38 +19,59 @@
 
 #include "config.h"
 
-#include <stdlib.h>
+#include "ostree-sysroot-private.h"
 
 #include "ostree.h"
 #include "ot-admin-builtins.h"
 #include "ot-admin-functions.h"
 #include "otutil.h"
 
-#include "ostree-cmd-private.h"
+#include <glib/gi18n.h>
 
-static GOptionEntry options[] = { { NULL } };
+static gboolean opt_unlock;
+
+static GOptionEntry options[]
+    = { { "unlock", 'u', 0, G_OPTION_ARG_NONE, &opt_unlock, "Unlock finalization", NULL },
+        { NULL } };
 
 gboolean
-ot_admin_builtin_boot_complete (int argc, char **argv, OstreeCommandInvocation *invocation,
-                                GCancellable *cancellable, GError **error)
+ot_admin_builtin_lock_finalization (int argc, char **argv, OstreeCommandInvocation *invocation,
+                                    GCancellable *cancellable, GError **error)
 {
-  /* Just a sanity check; we shouldn't be called outside of the service though.
-   */
-  struct stat stbuf;
-  if (fstatat (AT_FDCWD, OSTREE_PATH_BOOTED, &stbuf, 0) < 0)
-    return TRUE;
-  // We must have been invoked via systemd which should have set up a mount namespace.
-  g_assert (getenv ("INVOCATION_ID"));
-
   g_autoptr (GOptionContext) context = g_option_context_new ("");
+
   g_autoptr (OstreeSysroot) sysroot = NULL;
   if (!ostree_admin_option_context_parse (context, options, &argc, &argv,
                                           OSTREE_ADMIN_BUILTIN_FLAG_SUPERUSER, invocation, &sysroot,
                                           cancellable, error))
     return FALSE;
 
-  if (!ostree_cmd__private__ ()->ostree_boot_complete (sysroot, cancellable, error))
+  OstreeDeployment *staged = ostree_sysroot_get_staged_deployment (sysroot);
+  if (!staged)
+    return glnx_throw (error, "No staged deployment");
+
+  const gboolean is_locked = ostree_deployment_is_finalization_locked (staged);
+  if (opt_unlock && !is_locked)
+    {
+      g_print ("Staged deployment is already prepared for finalization\n");
+      return TRUE;
+    }
+  else if (!opt_unlock && is_locked)
+    {
+      g_print ("Staged deployment is already finalization locked\n");
+      return TRUE;
+    }
+
+  if (!ostree_sysroot_change_finalization (sysroot, staged, error))
     return FALSE;
 
+  if (opt_unlock)
+    {
+      g_print ("Staged deployment is now queued to apply on shutdown\n");
+    }
+  else
+    {
+      g_print ("Staged deployment is now finalization locked\n");
+    }
   return TRUE;
 }

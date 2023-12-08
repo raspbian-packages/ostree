@@ -93,6 +93,9 @@ struct OstreeSysroot
   OstreeSysrootDebugFlags debug_flags;
 };
 
+/* Key in staged deployment variant for finalization locking */
+#define _OSTREE_SYSROOT_STAGED_KEY_LOCKED "locked"
+
 #define OSTREE_SYSROOT_LOCKFILE "ostree/lock"
 /* We keep some transient state in /run */
 #define _OSTREE_SYSROOT_RUNSTATE_STAGED "/run/ostree/staged-deployment"
@@ -146,6 +149,10 @@ gboolean _ostree_sysroot_rmrf_deployment (OstreeSysroot *sysroot, OstreeDeployme
                                           GCancellable *cancellable, GError **error);
 
 char *_ostree_sysroot_get_runstate_path (OstreeDeployment *deployment, const char *key);
+
+gboolean _ostree_sysroot_run_in_deployment (int deployment_dfd, const char *const *bwrap_argv,
+                                            const gchar *const *child_argv, gint *exit_status,
+                                            gchar **stdout, GError **error);
 
 char *_ostree_sysroot_join_lines (GPtrArray *lines);
 
