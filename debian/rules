@@ -8,7 +8,11 @@ binaries := $(shell dh_listpackages)
 	dh $@ --with=gir
 
 override_dh_autoreconf:
-	env NOCONFIGURE=1 dh_autoreconf ./autogen.sh
+	mkdir -p debian/tmp-path
+ifneq (,$(filter nodoc,$(DEB_BUILD_PROFILES)))
+	ln -fns /bin/true debian/tmp-path/gtkdocize
+endif
+	env NOCONFIGURE=1 PATH=$(CURDIR)/debian/tmp-path:$(PATH) dh_autoreconf ./autogen.sh
 
 configure_options = \
 	--enable-installed-tests \
