@@ -1,3 +1,12 @@
+ostree (2023.8-2) unstable; urgency=medium
+
+  * d/control, d/rules: Enable cross-compilation.
+    When cross-compiling, this requires a version of gobject-introspection
+    that is currently only available in experimental. When not
+    cross-compiling, the version in testing is sufficient.
+
+ -- Simon McVittie <smcv@debian.org>  Sun, 31 Dec 2023 15:34:37 +0000
+
 ostree (2023.8-1) unstable; urgency=medium
 
   * New upstream release
