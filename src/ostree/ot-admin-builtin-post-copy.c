@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Colin Walters <walters@verbum.org>
+ * Copyright (C) 2023 Alexander Larsson <alexl@redhat.com>
  *
  * SPDX-License-Identifier: LGPL-2.0+
  *
@@ -15,12 +15,13 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library. If not, see <https://www.gnu.org/licenses/>.
- *
- * Author: Colin Walters <walters@verbum.org>
  */
 
 #include "config.h"
 
+#include "ostree-sysroot-private.h"
+
+#include "ostree.h"
 #include "ot-admin-builtins.h"
 #include "ot-admin-functions.h"
 #include "otutil.h"
@@ -30,10 +31,10 @@
 static GOptionEntry options[] = { { NULL } };
 
 gboolean
-ot_admin_builtin_os_init (int argc, char **argv, OstreeCommandInvocation *invocation,
-                          GCancellable *cancellable, GError **error)
+ot_admin_builtin_post_copy (int argc, char **argv, OstreeCommandInvocation *invocation,
+                            GCancellable *cancellable, GError **error)
 {
-  g_autoptr (GOptionContext) context = g_option_context_new ("STATEROOT");
+  g_autoptr (GOptionContext) context = g_option_context_new ("");
 
   g_autoptr (OstreeSysroot) sysroot = NULL;
   if (!ostree_admin_option_context_parse (context, options, &argc, &argv,
@@ -41,21 +42,8 @@ ot_admin_builtin_os_init (int argc, char **argv, OstreeCommandInvocation *invoca
                                           cancellable, error))
     return FALSE;
 
-  if (!ostree_sysroot_ensure_initialized (sysroot, cancellable, error))
+  if (!ostree_sysroot_update_post_copy (sysroot, cancellable, error))
     return FALSE;
-
-  if (argc < 2)
-    {
-      ot_util_usage_error (context, "STATEROOT must be specified", error);
-      return FALSE;
-    }
-
-  const char *osname = argv[1];
-
-  if (!ostree_sysroot_init_osname (sysroot, osname, cancellable, error))
-    return FALSE;
-
-  g_print ("ostree/deploy/%s initialized as OSTree stateroot\n", osname);
 
   return TRUE;
 }

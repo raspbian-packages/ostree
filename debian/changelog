@@ -1,9 +1,27 @@
-ostree (2023.7-3+rpi1) trixie-staging; urgency=medium
+ostree (2023.8-2+rpi1) trixie-staging; urgency=medium
 
   [changes brought forward from 2020.8-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Tue, 15 Dec 2020 11:54:45 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Fri, 10 Nov 2023 22:59:44 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Wed, 10 Jan 2024 04:32:00 +0000
+
+ostree (2023.8-2) unstable; urgency=medium
+
+  * d/control, d/rules: Enable cross-compilation.
+    When cross-compiling, this requires a version of gobject-introspection
+    that is currently only available in experimental. When not
+    cross-compiling, the version in testing is sufficient.
+
+ -- Simon McVittie <smcv@debian.org>  Sun, 31 Dec 2023 15:34:37 +0000
+
+ostree (2023.8-1) unstable; urgency=medium
+
+  * New upstream release
+  * d/libostree-1-1.symbols: Update
+  * d/p/bootloader-zipl-No-op-if-run-as-non-root.patch:
+    Drop patch, applied upstream
+
+ -- Simon McVittie <smcv@debian.org>  Fri, 08 Dec 2023 10:35:12 +0000
 
 ostree (2023.7-3) unstable; urgency=medium
 
