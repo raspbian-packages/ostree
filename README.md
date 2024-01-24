@@ -73,7 +73,7 @@ their host system as well as Flatpak.
 [Liri OS](https://liri.io/download/silverblue/) has the option to install
 their distribution using ostree.
 
-[TorizonCore](https://developer.toradex.com/torizon/working-with-torizon/torizoncore-technical-overview/) is a Linux distribution for embedded systems that updates via OSTree images delivered via [Uptane](https://uptane.github.io/) and [aktualizr](https://github.com/uptane/aktualizr/).
+[Torizon OS](https://developer.toradex.com/torizon/torizoncore/torizoncore-technical-overview/) is a Linux distribution for embedded systems that updates via OSTree images delivered via [Uptane](https://uptane.github.io/) and [aktualizr](https://github.com/uptane/aktualizr/).
 
 ## Distribution build tools
 
@@ -96,6 +96,10 @@ the build tool used to generate Fedora CoreOS derivatives.
 
 [debos](https://github.com/go-debos/debos) is a tool-chain for simplifying the
 process of building a Debian-based OS image.
+
+[gardenlinux/ostree-image-builder](https://github.com/gardenlinux/ostree-image-builder)
+is a sample for building Debian-based OS images.
+It is not production ready but it might be useful to get started.
 
 ## Projects linking to libostree
 
