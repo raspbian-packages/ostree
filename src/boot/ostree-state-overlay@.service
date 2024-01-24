@@ -1,4 +1,4 @@
-# Copyright (C) 2022 Red Hat, Inc.
+# Copyright (C) 2023 Red Hat Inc.
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -14,24 +14,23 @@
 # License along with this library. If not, see <https://www.gnu.org/licenses/>.
 
 [Unit]
-Description=OSTree Complete Boot
+Description=OSTree State Overlay On /%I
 Documentation=man:ostree(1)
-ConditionKernelCommandLine=ostree
-# For now, this is the only condition on which we start, but it's
-# marked as a triggering condition in case in the future we want
-# to do something else.
-ConditionPathExists=|/boot/ostree/finalize-failure.stamp
-# We start early
 DefaultDependencies=no
-After=sysinit.target
-RequiresMountsFor=/boot
-# Ensure that we propagate the failure into the current boot before
-# any further finalization attempts.
-Before=ostree-finalize-staged.service
+ConditionKernelCommandLine=ostree
+# run after /var is setup since that's where the upperdir is stored
+# and after boot.mount so we can load the sysroot
+After=var.mount boot.mount
+# but before local-fs.target, which we consider ourselves a part of
+Before=local-fs.target
 
 [Service]
 Type=oneshot
-# To write to /boot while keeping it read-only
-MountFlags=slave
 RemainAfterExit=yes
-ExecStart=/usr/bin/ostree admin boot-complete
+ExecStart=/usr/bin/ostree admin state-overlay %i /%I
+StandardInput=null
+StandardOutput=journal
+StandardError=journal+console
+
+[Install]
+WantedBy=local-fs.target

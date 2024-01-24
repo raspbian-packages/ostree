@@ -59,6 +59,12 @@
   SD_ID128_MAKE (e8, 64, 6c, d6, 3d, ff, 46, 25, b7, 79, 09, a8, e7, a4, 09, 94)
 #endif
 
+/* How much additional space we require available on top of what we accounted
+ * during the early prune fallocate space check. This accounts for anything not
+ * captured directly by `get_kernel_layout_size()` like writing new BLS entries.
+ */
+#define EARLY_PRUNE_SAFETY_MARGIN_SIZE (1 << 20) /* 1 MB */
+
 /*
  * Like symlinkat() but overwrites (atomically) an existing
  * symlink.
@@ -2450,7 +2456,8 @@ write_deployments_finish (OstreeSysroot *self, GCancellable *cancellable, GError
 }
 
 static gboolean
-add_file_size_if_nonnull (int dfd, const char *path, guint64 *inout_size, GError **error)
+add_file_size_if_nonnull (int dfd, const char *path, guint64 blocksize, guint64 *inout_size,
+                          GError **error)
 {
   if (path == NULL)
     return TRUE;
@@ -2460,14 +2467,21 @@ add_file_size_if_nonnull (int dfd, const char *path, guint64 *inout_size, GError
     return FALSE;
 
   *inout_size += stbuf.st_size;
+  if (blocksize > 0)
+    {
+      off_t rem = stbuf.st_size % blocksize;
+      if (rem > 0)
+        *inout_size += blocksize - rem;
+    }
+
   return TRUE;
 }
 
 /* calculates the total size of the bootcsum dir in /boot after we would copy
  * it. This reflects the logic in  install_deployment_kernel(). */
 static gboolean
-get_kernel_layout_size (OstreeSysroot *self, OstreeDeployment *deployment, guint64 *out_size,
-                        GCancellable *cancellable, GError **error)
+get_kernel_layout_size (OstreeSysroot *self, OstreeDeployment *deployment, guint64 blocksize,
+                        guint64 *out_size, GCancellable *cancellable, GError **error)
 {
   g_autofree char *deployment_dirpath = ostree_sysroot_get_deployment_dirpath (self, deployment);
   glnx_autofd int deployment_dfd = -1;
@@ -2479,11 +2493,11 @@ get_kernel_layout_size (OstreeSysroot *self, OstreeDeployment *deployment, guint
     return FALSE;
 
   guint64 bootdir_size = 0;
-  if (!add_file_size_if_nonnull (kernel_layout->boot_dfd, kernel_layout->kernel_srcpath,
+  if (!add_file_size_if_nonnull (kernel_layout->boot_dfd, kernel_layout->kernel_srcpath, blocksize,
                                  &bootdir_size, error))
     return FALSE;
   if (!add_file_size_if_nonnull (kernel_layout->boot_dfd, kernel_layout->initramfs_srcpath,
-                                 &bootdir_size, error))
+                                 blocksize, &bootdir_size, error))
     return FALSE;
   if (kernel_layout->devicetree_srcpath)
     {
@@ -2491,22 +2505,22 @@ get_kernel_layout_size (OstreeSysroot *self, OstreeDeployment *deployment, guint
       if (kernel_layout->devicetree_namever)
         {
           if (!add_file_size_if_nonnull (kernel_layout->boot_dfd, kernel_layout->devicetree_srcpath,
-                                         &bootdir_size, error))
+                                         blocksize, &bootdir_size, error))
             return FALSE;
         }
       else
         {
           guint64 dirsize = 0;
           if (!ot_get_dir_size (kernel_layout->boot_dfd, kernel_layout->devicetree_srcpath,
-                                &dirsize, cancellable, error))
+                                blocksize, &dirsize, cancellable, error))
             return FALSE;
           bootdir_size += dirsize;
         }
     }
   if (!add_file_size_if_nonnull (kernel_layout->boot_dfd, kernel_layout->kernel_hmac_srcpath,
-                                 &bootdir_size, error))
+                                 blocksize, &bootdir_size, error))
     return FALSE;
-  if (!add_file_size_if_nonnull (kernel_layout->boot_dfd, kernel_layout->aboot_srcpath,
+  if (!add_file_size_if_nonnull (kernel_layout->boot_dfd, kernel_layout->aboot_srcpath, blocksize,
                                  &bootdir_size, error))
     return FALSE;
 
@@ -2532,6 +2546,9 @@ dfd_fallocate_check (int dfd, off_t len, gboolean *out_passed, GError **error)
   };
   if (!glnx_open_tmpfile_linkable_at (dfd, ".", O_WRONLY | O_CLOEXEC, &tmpf, error))
     return FALSE;
+
+  /* add the safety margin */
+  len += EARLY_PRUNE_SAFETY_MARGIN_SIZE;
 
   *out_passed = TRUE;
   /* There's glnx_try_fallocate, but not with the same error semantics. */
@@ -2583,6 +2600,11 @@ auto_early_prune_old_deployments (OstreeSysroot *self, GPtrArray *new_deployment
   g_autoptr (GHashTable) new_bootcsums
       = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
 
+  /* get bootfs block size */
+  struct statvfs stvfsbuf;
+  if (TEMP_FAILURE_RETRY (fstatvfs (self->boot_fd, &stvfsbuf)) < 0)
+    return glnx_throw_errno_prefix (error, "fstatvfs(boot)");
+
   g_auto (GStrv) bootdirs = NULL;
   if (!_ostree_sysroot_list_all_boot_directories (self, &bootdirs, cancellable, error))
     return glnx_prefix_error (error, "listing bootcsum directories in bootfs");
@@ -2597,7 +2619,8 @@ auto_early_prune_old_deployments (OstreeSysroot *self, GPtrArray *new_deployment
 
       guint64 bootdir_size;
       g_autofree char *ostree_bootdir = g_build_filename ("ostree", bootdir, NULL);
-      if (!ot_get_dir_size (self->boot_fd, ostree_bootdir, &bootdir_size, cancellable, error))
+      if (!ot_get_dir_size (self->boot_fd, ostree_bootdir, stvfsbuf.f_bsize, &bootdir_size,
+                            cancellable, error))
         return FALSE;
 
       /* for our purposes of sizing bootcsums, it's highly unlikely we need a
@@ -2609,10 +2632,7 @@ auto_early_prune_old_deployments (OstreeSysroot *self, GPtrArray *new_deployment
            * that users report it and we tweak this code to handle this.
            *
            * An alternative is working with the block size instead, which would
-           * be easier to handle. But ideally, `ot_get_dir_size` would be block
-           * size aware too for better accuracy, which is awkward since the
-           * function itself is generic over directories and doesn't consider
-           * e.g. mount points from different filesystems. */
+           * be easier to handle. */
           g_printerr ("bootcsum %s size exceeds %u; disabling auto-prune optimization\n", bootdir,
                       G_MAXUINT);
           return TRUE;
@@ -2640,7 +2660,8 @@ auto_early_prune_old_deployments (OstreeSysroot *self, GPtrArray *new_deployment
         }
 
       guint64 bootdir_size = 0;
-      if (!get_kernel_layout_size (self, deployment, &bootdir_size, cancellable, error))
+      if (!get_kernel_layout_size (self, deployment, stvfsbuf.f_bsize, &bootdir_size, cancellable,
+                                   error))
         return FALSE;
 
       /* see similar logic in previous loop */
@@ -2657,6 +2678,7 @@ auto_early_prune_old_deployments (OstreeSysroot *self, GPtrArray *new_deployment
       /* it wasn't in current_bootcsums; add */
       net_new_bootcsum_dirs_total_size += bootdir_size;
     }
+  g_autofree char *net_new_formatted = g_format_size (net_new_bootcsum_dirs_total_size);
 
   {
     gboolean bootfs_has_space = FALSE;
@@ -2667,9 +2689,13 @@ auto_early_prune_old_deployments (OstreeSysroot *self, GPtrArray *new_deployment
     /* does the bootfs have enough free space for temporarily holding both the new
      * and old bootdirs? */
     if (bootfs_has_space)
-      return TRUE; /* nothing to do! */
+      {
+        g_printerr ("bootfs is sufficient for calculated new size: %s\n", net_new_formatted);
+        return TRUE; /* nothing to do! */
+      }
   }
 
+  g_printerr ("bootfs requires additional space: %s\n", net_new_formatted);
   /* OK, we would fail if we tried to write the new bootdirs. Is it salvageable?
    * First, calculate how much space we could save with the bootcsums scheduled
    * for removal. */
@@ -2679,6 +2705,11 @@ auto_early_prune_old_deployments (OstreeSysroot *self, GPtrArray *new_deployment
       if (!g_hash_table_contains (new_bootcsums, bootcsum))
         bootcsum_dirs_to_remove_total_size += GPOINTER_TO_UINT (sizep);
     }
+
+  {
+    g_autofree char *to_remove_formated = g_format_size (bootcsum_dirs_to_remove_total_size);
+    g_printerr ("Size to prune from bootfs: %s\n", to_remove_formated);
+  }
 
   if (net_new_bootcsum_dirs_total_size > bootcsum_dirs_to_remove_total_size)
     {
@@ -3078,6 +3109,10 @@ sysroot_initialize_deployment (OstreeSysroot *self, const char *osname, const ch
   if (!require_stateroot (self, osname, error))
     return FALSE;
 
+  g_autofree char *stateroot_backing = g_strdup_printf ("ostree/deploy/%s/backing", osname);
+  if (!glnx_shutil_mkdir_p_at (self->sysroot_fd, stateroot_backing, 0700, cancellable, error))
+    return glnx_prefix_error (error, "Creating backing directory");
+
   OstreeRepo *repo = ostree_sysroot_repo (self);
 
   gint new_deployserial;
@@ -3296,6 +3331,49 @@ sysroot_finalize_selinux_policy (int deployment_dfd, GError **error)
 #endif /* HAVE_SELINUX */
 
 static gboolean
+sysroot_initialize_deployment_backing (OstreeSysroot *self, OstreeDeployment *deployment,
+                                       OstreeSePolicy *sepolicy, GError **error)
+{
+  GLNX_AUTO_PREFIX_ERROR ("Preparing deployment backing dir", error);
+  g_autofree char *deployment_path = ostree_sysroot_get_deployment_dirpath (self, deployment);
+  g_autofree char *backing_relpath = _ostree_sysroot_get_deployment_backing_relpath (deployment);
+  struct stat stbuf;
+
+  if (!glnx_fstatat (self->sysroot_fd, deployment_path, &stbuf, AT_SYMLINK_NOFOLLOW, error))
+    return FALSE;
+
+  // Create the "backing" directory with additional data */
+  if (!glnx_ensure_dir (self->sysroot_fd, backing_relpath, 0700, error))
+    return glnx_prefix_error (error, "Creating backing dir");
+
+  // The root-transient holds overlayfs directories for the root
+  g_autofree char *rootovldir
+      = g_build_filename (backing_relpath, OSTREE_DEPLOYMENT_ROOT_TRANSIENT_DIR, NULL);
+  if (!glnx_ensure_dir (self->sysroot_fd, rootovldir, 0700, error))
+    return glnx_prefix_error (error, "Creating root ovldir");
+
+  // The overlayfs work (subdirectory of root-transient)
+  g_autofree char *workdir = g_build_filename (rootovldir, "work", NULL);
+  if (!glnx_ensure_dir (self->sysroot_fd, workdir, 0700, error))
+    return glnx_prefix_error (error, "Creating work dir");
+
+  // Create the overlayfs upper; this needs to have the same mode and SELinux label as the root
+  {
+    g_auto (OstreeSepolicyFsCreatecon) con = {
+      0,
+    };
+
+    if (!_ostree_sepolicy_preparefscreatecon (&con, sepolicy, "/", stbuf.st_mode, error))
+      return glnx_prefix_error (error, "Looking up SELinux label for /");
+    g_autofree char *upperdir = g_build_filename (rootovldir, "upper", NULL);
+    if (!glnx_ensure_dir (self->sysroot_fd, upperdir, stbuf.st_mode, error))
+      return glnx_prefix_error (error, "Creating upper dir");
+  }
+
+  return TRUE;
+}
+
+static gboolean
 sysroot_finalize_deployment (OstreeSysroot *self, OstreeDeployment *deployment,
                              OstreeDeployment *merge_deployment, GCancellable *cancellable,
                              GError **error)
@@ -3358,6 +3436,9 @@ sysroot_finalize_deployment (OstreeSysroot *self, OstreeDeployment *deployment,
     return FALSE;
 
   if (!selinux_relabel_var_if_needed (self, sepolicy, os_deploy_dfd, cancellable, error))
+    return FALSE;
+
+  if (!sysroot_initialize_deployment_backing (self, deployment, sepolicy, error))
     return FALSE;
 
   /* Rewrite the origin using the final merged selinux config, just to be

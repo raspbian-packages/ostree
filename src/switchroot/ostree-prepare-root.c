@@ -87,6 +87,8 @@
 #define SYSROOT_KEY "sysroot"
 #define READONLY_KEY "readonly"
 
+/* This key configures the / mount in the deployment root */
+#define ROOT_KEY "root"
 #define ETC_KEY "etc"
 #define TRANSIENT_KEY "transient"
 
@@ -352,6 +354,11 @@ main (int argc, char *argv[])
     errx (EXIT_FAILURE, "Failed to parse config: %s", error->message);
 
   gboolean sysroot_readonly = FALSE;
+  gboolean root_transient = FALSE;
+
+  if (!ot_keyfile_get_boolean_with_default (config, ROOT_KEY, TRANSIENT_KEY, FALSE, &root_transient,
+                                            &error))
+    return FALSE;
 
   // We always parse the composefs config, because we want to detect and error
   // out if it's enabled, but not supported at compile time.
@@ -374,7 +381,12 @@ main (int argc, char *argv[])
   const char *root_mountpoint = realpath (root_arg, NULL);
   if (root_mountpoint == NULL)
     err (EXIT_FAILURE, "realpath(\"%s\")", root_arg);
-  char *deploy_path = resolve_deploy_path (root_mountpoint);
+  g_autofree char *deploy_path = resolve_deploy_path (root_mountpoint);
+  const char *deploy_directory_name = glnx_basename (deploy_path);
+  // Note that realpath() should have stripped any trailing `/` which shouldn't
+  // be in the karg to start with, but we assert here to be sure we have a non-empty
+  // filename.
+  g_assert (deploy_directory_name && *deploy_directory_name);
 
   if (mkdirat (AT_FDCWD, OTCORE_RUN_OSTREE, 0755) < 0)
     err (EXIT_FAILURE, "Failed to create %s", OTCORE_RUN_OSTREE);
@@ -510,20 +522,42 @@ main (int argc, char *argv[])
     errx (EXIT_FAILURE, "composefs: enabled at runtime, but support is not compiled in");
 #endif
 
-  if (!using_composefs)
+  if (root_transient)
     {
+      /* if (using_composefs)
+       * TODO: Add support to libcomposefs to mount writably; for now we end up with two overlayfs
+       * which is a bit silly.
+       */
+
+      g_autofree char *backingdir = g_strdup_printf ("../../backing/%s", deploy_directory_name);
+      g_autofree char *workdir
+          = g_build_filename (backingdir, OSTREE_DEPLOYMENT_ROOT_TRANSIENT_DIR, "work", NULL);
+      g_autofree char *upperdir
+          = g_build_filename (backingdir, OSTREE_DEPLOYMENT_ROOT_TRANSIENT_DIR, "upper", NULL);
+      g_autofree char *ovl_options
+          = g_strdup_printf ("lowerdir=.,upperdir=%s,workdir=%s", upperdir, workdir);
+      if (mount ("overlay", TMP_SYSROOT, "overlay", MS_SILENT, ovl_options) < 0)
+        err (EXIT_FAILURE, "failed to mount transient root overlayfs");
+      g_print ("Enabled transient /\n");
+    }
+  else if (!using_composefs)
+    {
+      g_print ("Using legacy ostree bind mount for /\n");
       /* The deploy root starts out bind mounted to sysroot.tmp */
       if (mount (deploy_path, TMP_SYSROOT, NULL, MS_BIND | MS_SILENT, NULL) < 0)
         err (EXIT_FAILURE, "failed to make initial bind mount %s", deploy_path);
     }
+
+  /* Pass on the state  */
+  g_variant_builder_add (&metadata_builder, "{sv}", OTCORE_RUN_BOOTED_KEY_ROOT_TRANSIENT,
+                         g_variant_new_boolean (root_transient));
 
   /* This will result in a system with /sysroot read-only. Thus, two additional
    * writable bind-mounts (for /etc and /var) are required later on. */
   if (sysroot_readonly)
     {
       if (!sysroot_currently_writable)
-        errx (EXIT_FAILURE, "sysroot.readonly=true requires %s to be writable at this point",
-              root_arg);
+        errx (EXIT_FAILURE, OTCORE_SYSROOT_NOT_WRITEABLE, root_arg);
     }
   /* Pass on the state for use by ostree-prepare-root */
   g_variant_builder_add (&metadata_builder, "{sv}", OTCORE_RUN_BOOTED_KEY_SYSROOT_RO,
@@ -548,7 +582,7 @@ main (int argc, char *argv[])
   /* Prepare /etc.
    * No action required if sysroot is writable. Otherwise, a bind-mount for
    * the deployment needs to be created and remounted as read/write. */
-  if (sysroot_readonly || using_composefs)
+  if (sysroot_readonly || using_composefs || root_transient)
     {
       gboolean etc_transient = FALSE;
       if (!ot_keyfile_get_boolean_with_default (config, ETC_KEY, TRANSIENT_KEY, FALSE,
@@ -598,25 +632,23 @@ main (int argc, char *argv[])
     }
 
   /* Prepare /usr.
-   * It may be either just a read-only bind-mount, or a persistent overlayfs. */
-  if (lstat (".usr-ovl-work", &stbuf) == 0)
+   * It may be either just a read-only bind-mount, or a persistent overlayfs if set up
+   * with ostree admin unlock --hotfix.
+   * Note however that root.transient as handled above is effectively a generalization of unlock
+   * --hotfix.
+   */
+  if (lstat (OTCORE_HOTFIX_USR_OVL_WORK, &stbuf) == 0)
     {
       /* Do we have a persistent overlayfs for /usr?  If so, mount it now. */
       const char usr_ovl_options[]
-          = "lowerdir=" TMP_SYSROOT "/usr,upperdir=.usr-ovl-upper,workdir=.usr-ovl-work";
+          = "lowerdir=" TMP_SYSROOT
+            "/usr,upperdir=.usr-ovl-upper,workdir=" OTCORE_HOTFIX_USR_OVL_WORK;
 
-      /* Except overlayfs barfs if we try to mount it on a read-only
-       * filesystem.  For this use case I think admins are going to be
-       * okay if we remount the rootfs here, rather than waiting until
-       * later boot and `systemd-remount-fs.service`.
-       */
-      if (path_is_on_readonly_fs (TMP_SYSROOT))
-        {
-          if (mount (TMP_SYSROOT, TMP_SYSROOT, NULL, MS_REMOUNT | MS_SILENT, NULL) < 0)
-            err (EXIT_FAILURE, "failed to remount rootfs writable (for overlayfs)");
-        }
-
-      if (mount ("overlay", TMP_SYSROOT "/usr", "overlay", MS_SILENT, usr_ovl_options) < 0)
+      unsigned long mflags = MS_SILENT;
+      // Propagate readonly state
+      if (!sysroot_currently_writable)
+        mflags |= MS_RDONLY;
+      if (mount ("overlay", TMP_SYSROOT "/usr", "overlay", mflags, usr_ovl_options) < 0)
         err (EXIT_FAILURE, "failed to mount /usr overlayfs");
     }
   else if (!using_composefs)
