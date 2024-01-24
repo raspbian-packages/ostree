@@ -1,8 +1,9 @@
-ostree (2024.1-1) UNRELEASED; urgency=medium
+ostree (2024.1-1) unstable; urgency=medium
 
   * New upstream release
+  * Package ostree-state-overlay@.service in ostree-boot
 
- -- Simon McVittie <smcv@debian.org>  Wed, 24 Jan 2024 10:06:12 +0000
+ -- Simon McVittie <smcv@debian.org>  Wed, 24 Jan 2024 10:21:50 +0000
 
 ostree (2023.8-2) unstable; urgency=medium
 
