@@ -1,11 +1,13 @@
-ostree (2024.2-1) UNRELEASED; urgency=medium
+ostree (2024.2-1) unstable; urgency=medium
 
   * New upstream release
   * Re-enable composefs.
     We can't run its unit tests on a Debian 12 kernel with /var/tmp on
     tmpfs, but they do pass on a sid kernel or if /var/tmp is disk-backed.
+  * Build-depend on dh-sequence-gir instead of using --with
+  * Update Lintian overrides for ostree-boot
 
- -- Simon McVittie <smcv@debian.org>  Sun, 11 Feb 2024 11:52:13 +0000
+ -- Simon McVittie <smcv@debian.org>  Sun, 11 Feb 2024 14:42:35 +0000
 
 ostree (2024.1-1) unstable; urgency=medium
 
