@@ -1,3 +1,12 @@
+ostree (2024.1-2) UNRELEASED; urgency=medium
+
+  * Re-enable composefs, this time with a proposed patch to avoid test
+    failures.
+    We can't run its unit tests on a Debian 12 kernel with /var/tmp on
+    tmpfs, but they do pass on a sid kernel or if /var/tmp is disk-backed.
+
+ -- Simon McVittie <smcv@debian.org>  Sun, 11 Feb 2024 11:52:13 +0000
+
 ostree (2024.1-1) unstable; urgency=medium
 
   * New upstream release
