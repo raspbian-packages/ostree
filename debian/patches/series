@@ -1,4 +1,3 @@
-tests-Skip-composefs-test-if-var-tmp-does-not-support-use.patch
 debian/Skip-test-pull-repeated-during-CI.patch
 debian/test-sysroot-Skip-on-s390x-by-default.patch
 debian/Skip-test-admin-deploy-uboot.sh-on-s390x.patch
