@@ -1,5 +1,3 @@
-# specific boot ordering requirements unlikely to be satisfiable in sysv-rc
-ostree-boot: package-supports-alternative-init-but-no-init.d-script *
 # statically Wanted by another unit
 ostree-boot: systemd-service-file-missing-install-key [*/systemd/system/ostree-finalize-staged-hold.service]
 # ostree-remount genuinely does need to be run that early
