@@ -251,16 +251,21 @@ _ostree_impl_system_generator (const char *normal_dir, const char *early_dir, co
   if (unlinkat (AT_FDCWD, INITRAMFS_MOUNT_VAR, 0) == 0)
     return TRUE;
 
+  // If we're not booted via ostree, do nothing
+  if (!glnx_fstatat_allow_noent (AT_FDCWD, OTCORE_RUN_OSTREE, NULL, 0, error))
+    return FALSE;
+  if (errno == ENOENT)
+    return TRUE;
+
   g_autofree char *cmdline = read_proc_cmdline ();
   if (!cmdline)
     return glnx_throw (error, "Failed to read /proc/cmdline");
 
-  /* If we're installed on a system which isn't using OSTree for boot (e.g.
-   * package installed as a dependency for flatpak or whatever), silently
-   * exit so that we don't error, but at the same time work where switchroot
-   * is PID 1 (and so hasn't created /run/ostree-booted).
-   */
   g_autofree char *ostree_cmdline = otcore_find_proc_cmdline_key (cmdline, "ostree");
+
+  /* This could happen in CoreOS live environments, where we hackily mock
+   * the `ostree=` karg for `ostree-prepare-root.service` specifically, but
+   * otherwise that karg doesn't exist on the real command-line. */
   if (!ostree_cmdline)
     return TRUE;
 

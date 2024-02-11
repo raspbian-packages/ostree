@@ -22,6 +22,7 @@
 #include "lcfs-writer.h"
 #include "lcfs-utils.h"
 #include "lcfs-fsverity.h"
+#include "lcfs-erofs.h"
 #include "hash.h"
 
 #include <errno.h>
@@ -35,6 +36,7 @@
 #include <sys/param.h>
 #include <assert.h>
 #include <sys/mman.h>
+#include <sys/sysmacros.h>
 
 static void lcfs_node_remove_all_children(struct lcfs_node_s *node);
 static void lcfs_node_destroy(struct lcfs_node_s *node);
@@ -67,9 +69,9 @@ size_t hash_memory(const char *string, size_t len, size_t n_buckets)
 	size_t i, value = 0;
 
 	for (i = 0; i < len; i++) {
-		value = (value * 31 + string[i]) % n_buckets;
+		value = (value * 31 + string[i]);
 	}
-	return value;
+	return value % n_buckets;
 }
 
 static struct lcfs_ctx_s *lcfs_new_ctx(struct lcfs_node_s *root,
@@ -112,7 +114,7 @@ int lcfs_clone_root(struct lcfs_ctx_s *ctx)
 
 	clone = lcfs_node_clone_deep(ctx->root);
 	if (clone == NULL) {
-		errno = -EINVAL;
+		errno = ENOMEM;
 		return -1;
 	}
 
@@ -143,14 +145,6 @@ int node_get_dtype(struct lcfs_node_s *node)
 	default:
 		return DT_UNKNOWN;
 	}
-}
-
-static int cmp_nodes(const void *a, const void *b)
-{
-	const struct lcfs_node_s *na = *((const struct lcfs_node_s **)a);
-	const struct lcfs_node_s *nb = *((const struct lcfs_node_s **)b);
-
-	return strcmp(na->name, nb->name);
 }
 
 static int cmp_xattr(const void *a, const void *b)
@@ -199,9 +193,6 @@ int lcfs_compute_tree(struct lcfs_ctx_s *ctx, struct lcfs_node_s *root)
 		}
 
 		/* Canonical order */
-		if (node->children)
-			qsort(node->children, node->children_size,
-			      sizeof(node->children[0]), cmp_nodes);
 		if (node->xattrs)
 			qsort(node->xattrs, node->n_xattrs,
 			      sizeof(node->xattrs[0]), cmp_xattr);
@@ -243,7 +234,8 @@ int lcfs_compute_tree(struct lcfs_ctx_s *ctx, struct lcfs_node_s *root)
 	for (node = root; node != NULL; node = node->next) {
 		for (size_t i = 0; i < node->children_size; i++) {
 			struct lcfs_node_s *child = node->children[i];
-			if (child->link_to != NULL && !child->link_to->in_tree) {
+			struct lcfs_node_s *link_to = follow_links(child);
+			if (child->link_to != NULL && !link_to->in_tree) {
 				/* Link to inode outside tree */
 				errno = EINVAL;
 				return -1;
@@ -337,6 +329,27 @@ static int lcfs_close(struct lcfs_ctx_s *ctx)
 	return 0;
 }
 
+static void lcfs_write_update_version(struct lcfs_node_s *node,
+				      struct lcfs_write_options_s *options)
+{
+	/* Version 1 changed how whiteouts are handled */
+	if (options->version < 1 && options->max_version >= 1) {
+		int type = node->inode.st_mode & S_IFMT;
+
+		if (type == S_IFCHR && node->inode.st_rdev == makedev(0, 0)) {
+			options->version = 1;
+		}
+	}
+
+	for (size_t i = 0; i < node->children_size; ++i) {
+		struct lcfs_node_s *child = node->children[i];
+		if (child->link_to != NULL) {
+			continue;
+		}
+		lcfs_write_update_version(child, options);
+	}
+}
+
 int lcfs_write_to(struct lcfs_node_s *root, struct lcfs_write_options_s *options)
 {
 	enum lcfs_format_t format = options->format;
@@ -345,9 +358,22 @@ int lcfs_write_to(struct lcfs_node_s *root, struct lcfs_write_options_s *options
 
 	/* Check for unknown flags */
 	if ((options->flags & ~LCFS_FLAGS_MASK) != 0) {
-		errno = -EINVAL;
+		errno = EINVAL;
 		return -1;
 	}
+
+	if (options->version > LCFS_VERSION_MAX ||
+	    options->max_version > LCFS_VERSION_MAX) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	if (options->max_version < options->version) {
+		options->max_version = options->version;
+	}
+
+	/* Update options->version up to options->max_version if needed */
+	lcfs_write_update_version(root, options);
 
 	ctx = lcfs_new_ctx(root, options);
 	if (ctx == NULL) {
@@ -358,11 +384,12 @@ int lcfs_write_to(struct lcfs_node_s *root, struct lcfs_write_options_s *options
 	if (format == LCFS_FORMAT_EROFS)
 		res = lcfs_write_erofs_to(ctx);
 	else {
-		errno = -EINVAL;
+		errno = EINVAL;
 		res = -1;
 	}
 
 	if (res < 0) {
+		PROTECT_ERRNO;
 		lcfs_close(ctx);
 		return res;
 	}
@@ -376,13 +403,15 @@ int lcfs_write_to(struct lcfs_node_s *root, struct lcfs_write_options_s *options
 	return 0;
 }
 
-static int read_xattrs(struct lcfs_node_s *ret, int dirfd, const char *fname)
+static int read_xattrs(struct lcfs_node_s *ret, int dirfd, const char *fname,
+		       int buildflags)
 {
 	char path[PATH_MAX];
 	ssize_t list_size;
 	cleanup_free char *list = NULL;
 	ssize_t r = 0;
 	cleanup_fd int fd = -1;
+	bool user_xattr = (buildflags & LCFS_BUILD_USER_XATTRS) != 0;
 
 	fd = openat(dirfd, fname, O_PATH | O_NOFOLLOW | O_CLOEXEC, 0);
 	if (fd < 0)
@@ -408,6 +437,9 @@ static int read_xattrs(struct lcfs_node_s *ret, int dirfd, const char *fname)
 	for (const char *it = list; it < list + list_size; it += strlen(it) + 1) {
 		ssize_t value_size;
 		cleanup_free char *value = NULL;
+
+		if (user_xattr && !str_has_prefix(it, "user."))
+			continue;
 
 		value_size = getxattr(path, it, NULL, 0);
 		if (value_size < 0) {
@@ -541,6 +573,8 @@ static int read_content(int fd, size_t size, uint8_t *buf)
 
 		if (bytes_read == 0)
 			break;
+		else if (bytes_read < 0)
+			return -1;
 
 		size -= bytes_read;
 		buf += bytes_read;
@@ -554,6 +588,21 @@ static int read_content(int fd, size_t size, uint8_t *buf)
 	return 0;
 }
 
+static void digest_to_path(const uint8_t *csum, char *buf)
+{
+	static const char hexchars[] = "0123456789abcdef";
+	uint32_t i, j;
+
+	for (i = 0, j = 0; i < LCFS_DIGEST_SIZE; i++, j += 2) {
+		uint8_t byte = csum[i];
+		if (i == 1)
+			buf[j++] = '/';
+		buf[j] = hexchars[byte >> 4];
+		buf[j + 1] = hexchars[byte & 0xF];
+	}
+	buf[j] = '\0';
+}
+
 struct lcfs_node_s *lcfs_load_node_from_file(int dirfd, const char *fname,
 					     int buildflags)
 {
@@ -563,7 +612,15 @@ struct lcfs_node_s *lcfs_load_node_from_file(int dirfd, const char *fname,
 
 	if (buildflags & ~(LCFS_BUILD_SKIP_XATTRS | LCFS_BUILD_USE_EPOCH |
 			   LCFS_BUILD_SKIP_DEVICES | LCFS_BUILD_COMPUTE_DIGEST |
-			   LCFS_BUILD_NO_INLINE)) {
+			   LCFS_BUILD_NO_INLINE | LCFS_BUILD_USER_XATTRS |
+			   LCFS_BUILD_BY_DIGEST)) {
+		errno = EINVAL;
+		return NULL;
+	}
+
+	if ((buildflags & LCFS_BUILD_SKIP_XATTRS) &&
+	    (buildflags & LCFS_BUILD_USER_XATTRS)) {
+		/* These conflict */
 		errno = EINVAL;
 		return NULL;
 	}
@@ -584,9 +641,10 @@ struct lcfs_node_s *lcfs_load_node_from_file(int dirfd, const char *fname,
 
 	if ((sb.st_mode & S_IFMT) == S_IFREG) {
 		bool compute_digest = (buildflags & LCFS_BUILD_COMPUTE_DIGEST) != 0;
+		bool by_digest = (buildflags & LCFS_BUILD_BY_DIGEST) != 0;
 		bool no_inline = (buildflags & LCFS_BUILD_NO_INLINE) != 0;
 		bool is_zerosized = sb.st_size == 0;
-		bool do_digest = !is_zerosized && compute_digest;
+		bool do_digest = !is_zerosized && (compute_digest || by_digest);
 		bool do_inline = !is_zerosized && !no_inline &&
 				 sb.st_size <= LCFS_BUILD_INLINE_FILE_SIZE_LIMIT;
 
@@ -599,6 +657,21 @@ struct lcfs_node_s *lcfs_load_node_from_file(int dirfd, const char *fname,
 				r = lcfs_node_set_fsverity_from_fd(ret, fd);
 				if (r < 0)
 					return NULL;
+
+				if (by_digest) {
+					const uint8_t *digest =
+						lcfs_node_get_fsverity_digest(ret);
+					char digest_path[LCFS_DIGEST_SIZE * 2 + 2];
+					digest_to_path(digest, digest_path);
+					r = lcfs_node_set_payload(ret, digest_path);
+					if (r < 0)
+						return NULL;
+
+					/* We just computed digest to get the payoad path */
+					if (!compute_digest)
+						ret->digest_set = false;
+				}
+
 				/* In case we re-read below */
 				lseek(fd, 0, SEEK_SET);
 			}
@@ -613,6 +686,17 @@ struct lcfs_node_s *lcfs_load_node_from_file(int dirfd, const char *fname,
 					return NULL;
 			}
 		}
+	} else if ((sb.st_mode & S_IFMT) == S_IFLNK) {
+		char target[PATH_MAX + 1];
+
+		r = readlinkat(dirfd, fname, target, sizeof(target));
+		if (r < 0)
+			return NULL;
+
+		target[r] = '\0';
+		r = lcfs_node_set_payload(ret, target);
+		if (r < 0)
+			return NULL;
 	}
 
 	if ((buildflags & LCFS_BUILD_USE_EPOCH) == 0) {
@@ -621,12 +705,30 @@ struct lcfs_node_s *lcfs_load_node_from_file(int dirfd, const char *fname,
 	}
 
 	if ((buildflags & LCFS_BUILD_SKIP_XATTRS) == 0) {
-		r = read_xattrs(ret, dirfd, fname);
+		r = read_xattrs(ret, dirfd, fname, buildflags);
 		if (r < 0)
 			return NULL;
 	}
 
 	return steal_pointer(&ret);
+}
+
+int lcfs_version_from_fd(int fd)
+{
+	struct lcfs_erofs_header_s *header;
+
+	header = mmap(0, sizeof(struct lcfs_erofs_header_s), PROT_READ,
+		      MAP_PRIVATE, fd, 0);
+	if (header == MAP_FAILED) {
+		return -1;
+	}
+	if (lcfs_u32_from_file(header->magic) != LCFS_EROFS_MAGIC ||
+	    lcfs_u32_from_file(header->version) != LCFS_EROFS_VERSION) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	return lcfs_u32_from_file(header->composefs_version);
 }
 
 struct lcfs_node_s *lcfs_load_node_from_fd(int fd)
@@ -665,10 +767,13 @@ struct lcfs_node_s *lcfs_load_node_from_fd(int fd)
 
 int lcfs_node_set_payload(struct lcfs_node_s *node, const char *payload)
 {
-	char *dup = strdup(payload);
-	if (dup == NULL) {
-		errno = ENOMEM;
-		return -1;
+	char *dup = NULL;
+	if (payload) {
+		dup = strdup(payload);
+		if (dup == NULL) {
+			errno = ENOMEM;
+			return -1;
+		}
 	}
 	free(node->payload);
 	node->payload = dup;
@@ -816,18 +921,52 @@ void lcfs_node_get_mtime(struct lcfs_node_s *node, struct timespec *time)
 	time->tv_nsec = node->inode.st_mtim_nsec;
 }
 
-struct lcfs_node_s *lcfs_node_lookup_child(struct lcfs_node_s *node, const char *name)
+static struct lcfs_node_s *lcfs_node_bsearch_child(struct lcfs_node_s *node,
+						   const char *name, size_t *pos)
 {
-	size_t i;
+	size_t start = 0, end = node->children_size;
 
-	for (i = 0; i < node->children_size; ++i) {
-		struct lcfs_node_s *child = node->children[i];
-
-		if (child->name && strcmp(child->name, name) == 0)
+	/* We start by looking at the end, as this is common when we insert in sorted order */
+	if (end > 0) {
+		struct lcfs_node_s *child = node->children[end - 1];
+		int cmp = strcmp(name, child->name);
+		if (cmp == 0) {
+			if (pos)
+				*pos = end - 1;
 			return child;
+		}
+		if (cmp > 0) {
+			if (pos)
+				*pos = end;
+			return NULL;
+		}
 	}
 
+	while (end > start) {
+		size_t mid = (start + end) / 2;
+		struct lcfs_node_s *child = node->children[mid];
+
+		int cmp = strcmp(name, child->name);
+		if (cmp == 0) {
+			if (pos)
+				*pos = mid;
+			return child;
+		}
+		if (cmp < 0) {
+			end = mid;
+		} else {
+			start = mid + 1;
+		}
+	}
+
+	if (pos)
+		*pos = start;
 	return NULL;
+}
+
+struct lcfs_node_s *lcfs_node_lookup_child(struct lcfs_node_s *node, const char *name)
+{
+	return lcfs_node_bsearch_child(node, name, NULL);
 }
 
 struct lcfs_node_s *lcfs_node_get_parent(struct lcfs_node_s *node)
@@ -851,8 +990,7 @@ int lcfs_node_add_child(struct lcfs_node_s *parent, struct lcfs_node_s *child,
 			const char *name)
 {
 	struct lcfs_node_s **new_children;
-	size_t new_size;
-	char *name_copy;
+	size_t new_capacity;
 
 	if ((parent->inode.st_mode & S_IFMT) != S_IFDIR) {
 		errno = ENOTDIR;
@@ -870,31 +1008,45 @@ int lcfs_node_add_child(struct lcfs_node_s *parent, struct lcfs_node_s *child,
 		return -1;
 	}
 
-	if (lcfs_node_lookup_child(parent, name) != NULL) {
+	if (parent->children_capacity == parent->children_size) {
+		if (parent->children_size == 0)
+			new_capacity = 16;
+		else
+			new_capacity = parent->children_capacity * 2;
+
+		new_children = reallocarray(parent->children,
+					    sizeof(*parent->children), new_capacity);
+		if (new_children == NULL) {
+			errno = ENOMEM;
+			return -1;
+		}
+
+		parent->children = new_children;
+		parent->children_capacity = new_capacity;
+	}
+
+	size_t insert_pos;
+	struct lcfs_node_s *existing =
+		lcfs_node_bsearch_child(parent, name, &insert_pos);
+	if (existing != NULL) {
 		errno = EEXIST;
 		return -1;
 	}
 
-	name_copy = strdup(name);
+	char *name_copy = strdup(name);
 	if (name_copy == NULL) {
 		errno = ENOMEM;
 		return -1;
 	}
 
-	new_size = parent->children_size + 1;
+	if (insert_pos < parent->children_size)
+		memmove(parent->children + insert_pos + 1,
+			parent->children + insert_pos,
+			(parent->children_size - insert_pos) *
+				sizeof(struct lcfs_node_s *));
 
-	new_children = reallocarray(parent->children, sizeof(*parent->children),
-				    new_size);
-	if (new_children == NULL) {
-		errno = ENOMEM;
-		free(name_copy);
-		return -1;
-	}
-
-	parent->children = new_children;
-
-	parent->children[parent->children_size] = child;
-	parent->children_size = new_size;
+	parent->children[insert_pos] = child;
+	parent->children_size += 1;
 	child->parent = parent;
 	child->name = name_copy;
 
@@ -1273,6 +1425,11 @@ int lcfs_node_set_xattr(struct lcfs_node_s *node, const char *name,
 	char *k, *v;
 	ssize_t index = find_xattr(node, name);
 
+	if (value_len > UINT16_MAX) {
+		errno = EINVAL;
+		return -1;
+	}
+
 	if (index >= 0) {
 		/* Already set, replace */
 		struct lcfs_xattr_s *xattr = &node->xattrs[index];
@@ -1286,6 +1443,11 @@ int lcfs_node_set_xattr(struct lcfs_node_s *node, const char *name,
 		xattr->value_len = value_len;
 
 		return 0;
+	}
+
+	if (node->n_xattrs == UINT16_MAX) {
+		errno = EINVAL;
+		return -1;
 	}
 
 	xattrs = realloc(node->xattrs,
