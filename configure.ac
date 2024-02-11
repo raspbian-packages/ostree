@@ -1,7 +1,7 @@
 AC_PREREQ([2.63])
 dnl To perform a release, follow the instructions in `docs/CONTRIBUTING.md`.
 m4_define([year_version], [2024])
-m4_define([release_version], [1])
+m4_define([release_version], [2])
 m4_define([package_version], [year_version.release_version])
 AC_INIT([libostree], [package_version], [walters@verbum.org])
 is_release_build=yes
@@ -284,6 +284,8 @@ AS_IF([test x$have_gpgme = xyes],
 AM_CONDITIONAL(USE_GPGME, test "x$have_gpgme" = xyes)
 
 dnl composefs won't work at all without this
+AC_CHECK_HEADERS([endian.h sys/endian.h machine/endian.h])
+AC_CHECK_FUNCS([reallocarray])
 AC_MSG_CHECKING([for MOUNT_ATTR_IDMAP])
 AC_COMPILE_IFELSE(
 	[AC_LANG_PROGRAM([
