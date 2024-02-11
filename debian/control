@@ -16,6 +16,7 @@ Build-Depends:
  cpio,
  debhelper (>= 13.11.6~),
  debhelper-compat (= 13),
+ dh-sequence-gir,
  docbook-xml <!nodoc>,
  docbook-xsl <!nodoc>,
  libext2fs-dev,

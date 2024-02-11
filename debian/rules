@@ -5,7 +5,7 @@ export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 binaries := $(shell dh_listpackages)
 
 %:
-	dh $@ --with=gir
+	dh $@
 
 override_dh_autoreconf:
 	mkdir -p debian/tmp-path
