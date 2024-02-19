@@ -1,6 +1,10 @@
 ostree (2024.3-1) UNRELEASED; urgency=medium
 
   * New upstream release
+  * d/p/tests-Generalize-has_gpgme-has_sign_ed25519-into-has_ostr.patch,
+    d/p/tests-Use-skip_without_ostree_feature-to-detect-libarchiv.patch,
+    d/p/test-admin-deploy-var-Don-t-rely-on-OSTREE_FEATURES.patch:
+    Add proposed patches to fix an autopkgtest failure
 
  -- Simon McVittie <smcv@debian.org>  Mon, 19 Feb 2024 12:09:06 +0000
 
