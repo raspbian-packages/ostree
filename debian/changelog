@@ -1,3 +1,9 @@
+ostree (2024.3-1) UNRELEASED; urgency=medium
+
+  * New upstream release
+
+ -- Simon McVittie <smcv@debian.org>  Mon, 19 Feb 2024 12:09:06 +0000
+
 ostree (2024.2-1) unstable; urgency=medium
 
   * New upstream release
