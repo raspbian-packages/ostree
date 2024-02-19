@@ -2137,7 +2137,9 @@ am__EXEEXT_23 = tests/test-basic.sh \
 	tests/test-admin-upgrade-systemd-update.sh \
 	tests/test-admin-deploy-syslinux.sh \
 	tests/test-admin-deploy-bootprefix.sh \
-	tests/test-admin-deploy-2.sh tests/test-admin-deploy-karg.sh \
+	tests/test-admin-deploy-composefs.sh \
+	tests/test-admin-deploy-var.sh tests/test-admin-deploy-2.sh \
+	tests/test-admin-deploy-karg.sh \
 	tests/test-admin-deploy-switch.sh \
 	tests/test-admin-deploy-etcmerge-cornercases.sh \
 	tests/test-admin-deploy-uboot.sh \
@@ -3074,7 +3076,9 @@ _installed_or_uninstalled_test_scripts = tests/test-basic.sh \
 	tests/test-admin-upgrade-systemd-update.sh \
 	tests/test-admin-deploy-syslinux.sh \
 	tests/test-admin-deploy-bootprefix.sh \
-	tests/test-admin-deploy-2.sh tests/test-admin-deploy-karg.sh \
+	tests/test-admin-deploy-composefs.sh \
+	tests/test-admin-deploy-var.sh tests/test-admin-deploy-2.sh \
+	tests/test-admin-deploy-karg.sh \
 	tests/test-admin-deploy-switch.sh \
 	tests/test-admin-deploy-etcmerge-cornercases.sh \
 	tests/test-admin-deploy-uboot.sh \
@@ -8975,6 +8979,20 @@ tests/test-admin-deploy-syslinux.sh.log: tests/test-admin-deploy-syslinux.sh
 tests/test-admin-deploy-bootprefix.sh.log: tests/test-admin-deploy-bootprefix.sh
 	@p='tests/test-admin-deploy-bootprefix.sh'; \
 	b='tests/test-admin-deploy-bootprefix.sh'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+tests/test-admin-deploy-composefs.sh.log: tests/test-admin-deploy-composefs.sh
+	@p='tests/test-admin-deploy-composefs.sh'; \
+	b='tests/test-admin-deploy-composefs.sh'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+tests/test-admin-deploy-var.sh.log: tests/test-admin-deploy-var.sh
+	@p='tests/test-admin-deploy-var.sh'; \
+	b='tests/test-admin-deploy-var.sh'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \

@@ -1,7 +1,7 @@
 AC_PREREQ([2.63])
 dnl To perform a release, follow the instructions in `docs/CONTRIBUTING.md`.
 m4_define([year_version], [2024])
-m4_define([release_version], [2])
+m4_define([release_version], [3])
 m4_define([package_version], [year_version.release_version])
 AC_INIT([libostree], [package_version], [walters@verbum.org])
 is_release_build=yes
@@ -85,7 +85,8 @@ LT_INIT([disable-static])
 dnl We have an always-on feature now to signify the fix for 
 dnl https://github.com/ostreedev/ostree/pull/2874/commits/de6fddc6adee09a93901243dc7074090828a1912
 dnl "commit: fix ostree deployment on 64-bit inode fs"
-OSTREE_FEATURES="inode64"
+dnl initial-var signifies this version of ostree propagates /var
+OSTREE_FEATURES="inode64 initial-var"
 AC_SUBST([OSTREE_FEATURES])
 
 GLIB_TESTS
@@ -294,7 +295,8 @@ AC_COMPILE_IFELSE(
   ],[int foo = MOUNT_ATTR_IDMAP;]
 	)],
 	[AC_MSG_RESULT(yes)
-	 have_mount_attr_idmap=yes],
+		AC_DEFINE([HAVE_MOUNT_ATTR_IDMAP], 1, [Define if MOUNT_ATTR_IDMAP is available in linux/mount.h])
+		have_mount_attr_idmap=yes],
 	[AC_MSG_RESULT(no)])
 dnl These are needed by libcomposefs to use the new mount API optionally
 AC_MSG_CHECKING([for new mount API (fsconfig)])

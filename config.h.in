@@ -118,6 +118,9 @@
 /* Define to 1 if you have the `mnt_unref_cache' function. */
 #undef HAVE_MNT_UNREF_CACHE
 
+/* Define if MOUNT_ATTR_IDMAP is available in linux/mount.h */
+#undef HAVE_MOUNT_ATTR_IDMAP
+
 /* Define to 1 if you have the `nanotime' function. */
 #undef HAVE_NANOTIME
 

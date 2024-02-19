@@ -41,7 +41,7 @@
  *
  * Since: 2017.4
  */
-#define OSTREE_RELEASE_VERSION (2)
+#define OSTREE_RELEASE_VERSION (3)
 
 /**
  * OSTREE_VERSION
@@ -50,7 +50,7 @@
  *
  * Since: 2017.4
  */
-#define OSTREE_VERSION (2024.2)
+#define OSTREE_VERSION (2024.3)
 
 /**
  * OSTREE_VERSION_S:
@@ -60,7 +60,7 @@
  *
  * Since: 2017.4
  */
-#define OSTREE_VERSION_S "2024.2"
+#define OSTREE_VERSION_S "2024.3"
 
 #define OSTREE_ENCODE_VERSION(year,release) \
         ((year) << 16 | (release))
@@ -99,5 +99,5 @@
  * Since: 2019.3
  */
 #ifndef __GI_SCANNER__
-#define OSTREE_BUILT_FEATURES "inode64 libcurl libsoup3 gpgme composefs ex-fsverity libarchive selinux openssl sign-ed25519 libmount systemd release p2p"
+#define OSTREE_BUILT_FEATURES "inode64 initial-var libcurl libsoup3 gpgme composefs ex-fsverity libarchive selinux openssl sign-ed25519 libmount systemd release p2p"
 #endif
