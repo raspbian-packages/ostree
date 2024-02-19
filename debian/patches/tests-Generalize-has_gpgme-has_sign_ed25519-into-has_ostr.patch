@@ -1,0 +1,444 @@
+From: Simon McVittie <smcv@collabora.com>
+Date: Mon, 19 Feb 2024 15:57:51 +0000
+Subject: tests: Generalize has_gpgme,
+ has_sign_ed25519 into has_ostree_feature
+
+Signed-off-by: Simon McVittie <smcv@collabora.com>
+Forwarded: https://github.com/ostreedev/ostree/pull/3184
+---
+ tests/libtest.sh                   | 31 +++++++++----------------------
+ tests/pull-test.sh                 |  6 +++---
+ tests/test-commit-sign.sh          |  5 +----
+ tests/test-create-usb.sh           |  2 +-
+ tests/test-delta-ed25519.sh        |  2 +-
+ tests/test-find-remotes.sh         |  2 +-
+ tests/test-gpg-signed-commit.sh    |  5 +----
+ tests/test-local-pull.sh           |  2 +-
+ tests/test-parent.sh               |  2 +-
+ tests/test-pre-signed-pull.sh      |  2 +-
+ tests/test-pull-collections.sh     |  6 +++---
+ tests/test-pull-contenturl.sh      |  8 ++++----
+ tests/test-pull-mirror-summary.sh  |  4 ++--
+ tests/test-pull-repeated.sh        |  2 +-
+ tests/test-pull-summary-caching.sh |  5 +----
+ tests/test-pull-summary-sigs.sh    |  4 ++--
+ tests/test-signed-commit.sh        |  2 +-
+ tests/test-signed-pull-summary.sh  |  4 ++--
+ tests/test-signed-pull.sh          |  2 +-
+ tests/test-summary-update.sh       |  2 +-
+ tests/test-summary-view.sh         |  2 +-
+ 21 files changed, 39 insertions(+), 61 deletions(-)
+
+diff --git a/tests/libtest.sh b/tests/libtest.sh
+index d1c99ea..2c2a33f 100755
+--- a/tests/libtest.sh
++++ b/tests/libtest.sh
+@@ -696,18 +696,20 @@ skip_without_fuse () {
+     [ -e /etc/mtab ] || skip "no /etc/mtab"
+ }
+ 
+-has_gpgme () {
+-    local ret
++has_ostree_feature () {
++    local ret=0
++    # Note that this needs to write to a file and then grep the file, to
++    # avoid ostree --version being killed with SIGPIPE and exiting with a
++    # nonzero status under `set -o pipefail`.
+     ${CMD_PREFIX} ostree --version > version.txt
+-    grep -q -e '- gpgme' version.txt
+-    ret=$?
++    grep -q -e "- $1\$" version.txt || ret=$?
+     rm -f version.txt
+     return ${ret}
+ }
+ 
+-skip_without_gpgme() {
+-    if ! has_gpgme; then
+-        skip "no gpg support compiled in"
++skip_without_ostree_feature () {
++    if ! has_ostree_feature "$1"; then
++        skip "no $1 support compiled in"
+     fi
+ }
+ 
+@@ -750,21 +752,6 @@ libtest_cleanup_gpg () {
+ }
+ libtest_exit_cmds+=(libtest_cleanup_gpg)
+ 
+-has_sign_ed25519 () {
+-    local ret
+-    ${CMD_PREFIX} ostree --version > version.txt
+-    grep -q -e '- sign-ed25519' version.txt
+-    ret=$?
+-    rm -f version.txt
+-    return ${ret}
+-}
+-
+-skip_without_sign_ed25519() {
+-    if ! has_sign_ed25519; then
+-        skip "no ed25519 support compiled in"
+-    fi
+-}
+-
+ # Keys for ed25519 signing tests
+ ED25519PUBLIC=
+ ED25519SEED=
+diff --git a/tests/pull-test.sh b/tests/pull-test.sh
+index f408429..d61735a 100644
+--- a/tests/pull-test.sh
++++ b/tests/pull-test.sh
+@@ -54,7 +54,7 @@ function verify_initial_contents() {
+ 
+ n_base_tests=35
+ gpg_tests=3
+-if has_gpgme; then
++if has_ostree_feature gpgme; then
+     echo "1..$(($n_base_tests+$gpg_tests))"
+ else
+     echo "1..$((n_base_tests))"
+@@ -633,7 +633,7 @@ fi
+ assert_file_has_content err.txt "404"
+ echo "ok pull repo 404"
+ 
+-if has_gpgme; then
++if has_ostree_feature gpgme; then
+     cd ${test_tmpdir}
+     repo_init --set=gpg-verify=true
+     if ${CMD_PREFIX} ostree --repo=repo --depth=0 pull origin main 2>err.txt; then
+@@ -653,7 +653,7 @@ assert_file_has_content err.txt "404"
+ find ostree-srv/gnomerepo/objects -name '*.dirtree.orig' | while read f; do mv ${f} $(dirname $f)/$(basename ${f} .orig); done
+ echo "ok pull repo 404 on dirtree object"
+ 
+-if has_gpgme; then
++if has_ostree_feature gpgme; then
+     cd ${test_tmpdir}
+     repo_init --set=gpg-verify=true
+     ${CMD_PREFIX} ostree --repo=ostree-srv/gnomerepo commit ${COMMIT_ARGS} \
+diff --git a/tests/test-commit-sign.sh b/tests/test-commit-sign.sh
+index e0cea0b..f45dd7b 100755
+--- a/tests/test-commit-sign.sh
++++ b/tests/test-commit-sign.sh
+@@ -21,10 +21,7 @@ set -euo pipefail
+ 
+ . $(dirname $0)/libtest.sh
+ 
+-if ! has_gpgme; then
+-    echo "1..0 #SKIP no gpg support compiled in"
+-    exit 0
+-fi
++skip_without_ostree_feature gpgme
+ 
+ if test -z "${OSTREE_HTTPD}"; then
+     echo "1..0 #SKIP no ostree-trivial-httpd"
+diff --git a/tests/test-create-usb.sh b/tests/test-create-usb.sh
+index 016d32c..064501f 100755
+--- a/tests/test-create-usb.sh
++++ b/tests/test-create-usb.sh
+@@ -24,7 +24,7 @@ set -euo pipefail
+ 
+ . $(dirname $0)/libtest.sh
+ 
+-skip_without_gpgme
++skip_without_ostree_feature gpgme
+ 
+ echo "1..5"
+ 
+diff --git a/tests/test-delta-ed25519.sh b/tests/test-delta-ed25519.sh
+index 9e00fdb..9cd2228 100755
+--- a/tests/test-delta-ed25519.sh
++++ b/tests/test-delta-ed25519.sh
+@@ -23,7 +23,7 @@ set -euo pipefail
+ 
+ skip_without_user_xattrs
+ 
+-skip_without_sign_ed25519
++skip_without_ostree_feature sign-ed25519
+ 
+ bindatafiles="bash true ostree"
+ 
+diff --git a/tests/test-find-remotes.sh b/tests/test-find-remotes.sh
+index abcc41d..3ec81f9 100755
+--- a/tests/test-find-remotes.sh
++++ b/tests/test-find-remotes.sh
+@@ -21,7 +21,7 @@ set -euo pipefail
+ 
+ . $(dirname $0)/libtest.sh
+ 
+-skip_without_gpgme
++skip_without_ostree_feature gpgme
+ 
+ echo '1..1'
+ 
+diff --git a/tests/test-gpg-signed-commit.sh b/tests/test-gpg-signed-commit.sh
+index 7b00f9e..d3b5433 100755
+--- a/tests/test-gpg-signed-commit.sh
++++ b/tests/test-gpg-signed-commit.sh
+@@ -22,10 +22,7 @@ set -euo pipefail
+ 
+ . $(dirname $0)/libtest.sh
+ 
+-if ! has_gpgme; then
+-    echo "1..0 #SKIP no gpgme support compiled in"
+-    exit 0
+-fi
++skip_without_ostree_feature gpgme
+ 
+ num_tests=1
+ 
+diff --git a/tests/test-local-pull.sh b/tests/test-local-pull.sh
+index 79b86ab..e1b916c 100755
+--- a/tests/test-local-pull.sh
++++ b/tests/test-local-pull.sh
+@@ -61,7 +61,7 @@ cmp checkout1.files checkout2.files
+ cmp checkout1.files checkout3.files
+ echo "ok checkouts same"
+ 
+-if has_gpgme; then
++if has_ostree_feature gpgme; then
+     # These tests are needed GPG support
+     mkdir repo4
+     ostree_repo_init repo4 --mode="archive"
+diff --git a/tests/test-parent.sh b/tests/test-parent.sh
+index 4b5806c..5a8809f 100755
+--- a/tests/test-parent.sh
++++ b/tests/test-parent.sh
+@@ -23,7 +23,7 @@ set -euo pipefail
+ 
+ skip_without_user_xattrs
+ 
+-skip_without_gpgme
++skip_without_ostree_feature gpgme
+ 
+ echo '1..2'
+ 
+diff --git a/tests/test-pre-signed-pull.sh b/tests/test-pre-signed-pull.sh
+index 2a1a1d2..0ac8e0a 100755
+--- a/tests/test-pre-signed-pull.sh
++++ b/tests/test-pre-signed-pull.sh
+@@ -23,7 +23,7 @@ set -euo pipefail
+ 
+ echo "1..1"
+ 
+-if ! has_sign_ed25519; then
++if ! has_ostree_feature sign-ed25519; then
+     echo "ok pre-signed pull # SKIP due ed25519 unavailability"
+     exit 0
+ fi
+diff --git a/tests/test-pull-collections.sh b/tests/test-pull-collections.sh
+index 1d14e5d..518545d 100755
+--- a/tests/test-pull-collections.sh
++++ b/tests/test-pull-collections.sh
+@@ -33,7 +33,7 @@ do_commit() {
+     mkdir -p files
+     pushd files
+     local GPG_ARGS=""
+-    if has_gpgme; then
++    if has_ostree_feature gpgme; then
+         GPG_ARGS="--gpg-homedir=${TEST_GPG_KEYHOME} --gpg-sign=${TEST_GPG_KEYID_1}"
+     fi
+     ${CMD_PREFIX} ostree --repo="../${repo}" commit -s "Test ${repo} commit for branch ${branch}" -b "${branch}" ${GPG_ARGS} "$@" > "../${branch}-checksum"
+@@ -45,7 +45,7 @@ do_summary() {
+     shift 1
+ 
+     local GPG_ARGS=""
+-    if has_gpgme; then
++    if has_ostree_feature gpgme; then
+         GPG_ARGS="--gpg-homedir=${TEST_GPG_KEYHOME} --gpg-sign=${TEST_GPG_KEYID_1}"
+     fi
+     ${CMD_PREFIX} ostree "--repo=${repo}" summary --update ${GPG_ARGS}
+@@ -103,7 +103,7 @@ do_remote_add() {
+     shift 2
+ 
+     local GPG_ARGS=""
+-    if has_gpgme; then
++    if has_ostree_feature gpgme; then
+         GPG_ARGS="--gpg-import=${test_tmpdir}/gpghome/key1.asc"
+     fi
+     ${CMD_PREFIX} ostree "--repo=${repo}" remote add "${remote_repo}-remote" "file://$(pwd)/${remote_repo}" "$@" ${GPG_ARGS}
+diff --git a/tests/test-pull-contenturl.sh b/tests/test-pull-contenturl.sh
+index d47fdfe..63eecf7 100755
+--- a/tests/test-pull-contenturl.sh
++++ b/tests/test-pull-contenturl.sh
+@@ -29,7 +29,7 @@ fi
+ echo "1..2"
+ 
+ COMMIT_SIGN=""
+-if has_gpgme; then
++if has_ostree_feature gpgme; then
+   COMMIT_SIGN="--gpg-homedir=${TEST_GPG_KEYHOME} --gpg-sign=${TEST_GPG_KEYID_1}"
+ fi
+ 
+@@ -47,7 +47,7 @@ cp -a ${test_tmpdir}/ostree-srv ostree
+ 
+ # delete all the meta stuff from here
+ rm ostree/gnomerepo/summary
+-if has_gpgme; then
++if has_ostree_feature gpgme; then
+   rm ostree/gnomerepo/summary.sig
+   find ostree/gnomerepo/objects -name '*.commitmeta' | xargs rm
+ fi
+@@ -63,7 +63,7 @@ echo "http://127.0.0.1:${content_port}" > ${test_tmpdir}/httpd-content-address
+ cd ${test_tmpdir}
+ mkdir repo
+ ostree_repo_init repo
+-if has_gpgme; then VERIFY=true; else VERIFY=false; fi
++if has_ostree_feature gpgme; then VERIFY=true; else VERIFY=false; fi
+ ${CMD_PREFIX} ostree --repo=repo remote add origin \
+   --set=gpg-verify=$VERIFY --set=gpg-verify-summary=$VERIFY \
+   --contenturl=$(cat httpd-content-address)/ostree/gnomerepo \
+@@ -72,7 +72,7 @@ ${CMD_PREFIX} ostree --repo=repo pull origin:main
+ 
+ echo "ok pull objects from contenturl"
+ 
+-if ! has_gpgme; then
++if ! has_ostree_feature gpgme; then
+   echo "ok don't pull sigs from contenturl # SKIP not compiled with gpgme"
+ else
+   echo "ok don't pull sigs from contenturl"
+diff --git a/tests/test-pull-mirror-summary.sh b/tests/test-pull-mirror-summary.sh
+index 94a8c02..88a37b8 100755
+--- a/tests/test-pull-mirror-summary.sh
++++ b/tests/test-pull-mirror-summary.sh
+@@ -22,7 +22,7 @@ set -euo pipefail
+ . $(dirname $0)/libtest.sh
+ 
+ COMMIT_SIGN=""
+-if has_gpgme; then
++if has_ostree_feature gpgme; then
+     COMMIT_SIGN="--gpg-homedir=${TEST_GPG_KEYHOME} --gpg-sign=${TEST_GPG_KEYID_1}"
+     echo "1..5"
+ else
+@@ -67,7 +67,7 @@ find repo/objects -name '*.filez' | while read name; do
+ done
+ echo "ok pull mirror summary"
+ 
+-if ! has_gpgme; then
++if ! has_ostree_feature gpgme; then
+     exit 0;
+ fi
+ 
+diff --git a/tests/test-pull-repeated.sh b/tests/test-pull-repeated.sh
+index 7f724c9..b3e0074 100755
+--- a/tests/test-pull-repeated.sh
++++ b/tests/test-pull-repeated.sh
+@@ -22,7 +22,7 @@ set -euo pipefail
+ . $(dirname $0)/libtest.sh
+ 
+ COMMIT_SIGN=""
+-if has_gpgme; then
++if has_ostree_feature gpgme; then
+     COMMIT_SIGN="--gpg-homedir=${TEST_GPG_KEYHOME} --gpg-sign=${TEST_GPG_KEYID_1}"
+ fi
+ 
+diff --git a/tests/test-pull-summary-caching.sh b/tests/test-pull-summary-caching.sh
+index 8c6727d..180f671 100755
+--- a/tests/test-pull-summary-caching.sh
++++ b/tests/test-pull-summary-caching.sh
+@@ -24,10 +24,7 @@ set -euo pipefail
+ 
+ . $(dirname $0)/libtest.sh
+ 
+-if ! has_gpgme; then
+-    echo "1..0 #SKIP no gpg support compiled in"
+-    exit 0
+-fi
++skip_without_ostree_feature gpgme
+ 
+ # Ensure repo caching is in use.
+ unset OSTREE_SKIP_CACHE
+diff --git a/tests/test-pull-summary-sigs.sh b/tests/test-pull-summary-sigs.sh
+index e1b0412..8a5cc4f 100755
+--- a/tests/test-pull-summary-sigs.sh
++++ b/tests/test-pull-summary-sigs.sh
+@@ -25,7 +25,7 @@ set -euo pipefail
+ unset OSTREE_SKIP_CACHE
+ 
+ COMMIT_SIGN=""
+-if has_gpgme; then
++if has_ostree_feature gpgme; then
+     COMMIT_SIGN="--gpg-homedir=${TEST_GPG_KEYHOME} --gpg-sign=${TEST_GPG_KEYID_1}"
+     echo "1..10"
+ else
+@@ -63,7 +63,7 @@ assert_file_has_content yet-another-copy/yet-another-hello-world "hello world ye
+ ${CMD_PREFIX} ostree --repo=repo fsck
+ echo "ok pull mirror summary"
+ 
+-if ! has_gpgme; then
++if ! has_ostree_feature gpgme; then
+     exit 0;
+ fi
+ 
+diff --git a/tests/test-signed-commit.sh b/tests/test-signed-commit.sh
+index 432687d..cf1cd1c 100755
+--- a/tests/test-signed-commit.sh
++++ b/tests/test-signed-commit.sh
+@@ -61,7 +61,7 @@ assert_file_has_content_literal err.txt ' No valid signatures found'
+ echo "ok dummy sig requires env"
+ 
+ # tests below require libsodium support
+-if ! has_sign_ed25519; then
++if ! has_ostree_feature sign-ed25519; then
+     echo "ok Detached ed25519 signature # SKIP due libsodium unavailability"
+     echo "ok ed25519 signature verified # SKIP due libsodium unavailability"
+     echo "ok multiple signing # SKIP due libsodium unavailability"
+diff --git a/tests/test-signed-pull-summary.sh b/tests/test-signed-pull-summary.sh
+index d287389..e533907 100755
+--- a/tests/test-signed-pull-summary.sh
++++ b/tests/test-signed-pull-summary.sh
+@@ -52,7 +52,7 @@ do
+             PUBLIC_KEY="dummysign"
+             ;;
+         ed25519)
+-            if ! has_sign_ed25519; then
++            if ! has_ostree_feature sign-ed25519; then
+                 echo "ok ${engine} pull mirror summary # SKIP due libsodium unavailability"
+                 echo "ok ${engine} pull with signed summary # SKIP due libsodium unavailability"
+                 echo "ok ${engine} prune summary cache # SKIP due libsodium unavailability"
+@@ -174,7 +174,7 @@ do
+ 
+ done
+ 
+-if ! has_sign_ed25519; then
++if ! has_ostree_feature sign-ed25519; then
+     echo "ok ${engine} pull with signed summary remote old summary # SKIP due libsodium unavailability"
+     echo "ok ${engine} pull with signed summary broken cache # SKIP due libsodium unavailability"
+     exit 0
+diff --git a/tests/test-signed-pull.sh b/tests/test-signed-pull.sh
+index 5754914..a08d3fb 100755
+--- a/tests/test-signed-pull.sh
++++ b/tests/test-signed-pull.sh
+@@ -140,7 +140,7 @@ fi
+ assert_file_has_content err.txt 'Invalid key reference'
+ echo "ok remote add errs"
+ 
+-if ! has_sign_ed25519; then
++if ! has_ostree_feature sign-ed25519; then
+     echo "ok ed25519-key pull signed commit # SKIP due libsodium unavailability"
+     echo "ok ed25519-key re-pull signature for stored commit # SKIP due libsodium unavailability"
+     echo "ok ed25519-key+file pull signed commit # SKIP due libsodium unavailability"
+diff --git a/tests/test-summary-update.sh b/tests/test-summary-update.sh
+index d85e9c4..6cf5fcc 100755
+--- a/tests/test-summary-update.sh
++++ b/tests/test-summary-update.sh
+@@ -27,7 +27,7 @@ set -euo pipefail
+ echo "1..2"
+ 
+ COMMIT_SIGN=""
+-if has_gpgme; then
++if has_ostree_feature gpgme; then
+     COMMIT_SIGN="--gpg-homedir=${TEST_GPG_KEYHOME} --gpg-sign=${TEST_GPG_KEYID_1}"
+ fi
+ 
+diff --git a/tests/test-summary-view.sh b/tests/test-summary-view.sh
+index 9dfc74f..473c6db 100755
+--- a/tests/test-summary-view.sh
++++ b/tests/test-summary-view.sh
+@@ -27,7 +27,7 @@ set -euo pipefail
+ echo "1..2"
+ 
+ COMMIT_SIGN=""
+-if has_gpgme; then
++if has_ostree_feature gpgme; then
+     COMMIT_SIGN="--gpg-homedir=${TEST_GPG_KEYHOME} --gpg-sign=${TEST_GPG_KEYID_1}"
+ fi
+ 
