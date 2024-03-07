@@ -124,7 +124,7 @@ resolve_deploy_path (const char *root_mountpoint)
 
   g_autoptr (GError) error = NULL;
   g_autofree char *ostree_target = NULL;
-  if (!otcore_get_ostree_target (kernel_cmdline, &ostree_target, &error))
+  if (!otcore_get_ostree_target (kernel_cmdline, NULL, &ostree_target, &error))
     errx (EXIT_FAILURE, "Failed to determine ostree target: %s", error->message);
   if (!ostree_target)
     errx (EXIT_FAILURE, "No ostree target found");
@@ -277,7 +277,8 @@ main (int argc, char *argv[])
 
   // We always parse the composefs config, because we want to detect and error
   // out if it's enabled, but not supported at compile time.
-  g_autoptr (ComposefsConfig) composefs_config = otcore_load_composefs_config (config, &error);
+  g_autoptr (ComposefsConfig) composefs_config
+      = otcore_load_composefs_config (config, TRUE, &error);
   if (!composefs_config)
     errx (EXIT_FAILURE, "%s", error->message);
 
@@ -326,12 +327,11 @@ main (int argc, char *argv[])
   g_print ("sysroot.readonly configuration value: %d (fs writable: %d)\n", (int)sysroot_readonly,
            (int)sysroot_currently_writable);
 
-  /* Work-around for a kernel bug: for some reason the kernel
-   * refuses switching root if any file systems are mounted
-   * MS_SHARED. Hence remount them MS_PRIVATE here as a
-   * work-around.
+  /* Remount root MS_PRIVATE here to avoid errors due to the kernel-enforced
+   * constraint that disallows MS_SHARED mounts to be moved.
    *
-   * https://bugzilla.redhat.com/show_bug.cgi?id=847418 */
+   * Kernel docs: Documentation/filesystems/sharedsubtree.txt
+   */
   if (mount (NULL, "/", NULL, MS_REC | MS_PRIVATE | MS_SILENT, NULL) < 0)
     err (EXIT_FAILURE, "failed to make \"/\" private mount");
 
@@ -572,8 +572,10 @@ main (int argc, char *argv[])
    * with ostree admin unlock --hotfix.
    * Note however that root.transient as handled above is effectively a generalization of unlock
    * --hotfix.
+   * Also, hotfixes are incompatible with signed composefs use for security reasons.
    */
-  if (lstat (OTCORE_HOTFIX_USR_OVL_WORK, &stbuf) == 0)
+  if (lstat (OTCORE_HOTFIX_USR_OVL_WORK, &stbuf) == 0
+      && !(using_composefs && composefs_config->is_signed))
     {
       /* Do we have a persistent overlayfs for /usr?  If so, mount it now. */
       const char usr_ovl_options[]

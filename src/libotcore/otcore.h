@@ -44,7 +44,8 @@ gboolean otcore_validate_ed25519_signature (GBytes *data, GBytes *pubkey, GBytes
                                             bool *out_valid, GError **error);
 
 char *otcore_find_proc_cmdline_key (const char *cmdline, const char *key);
-gboolean otcore_get_ostree_target (const char *cmdline, char **out_target, GError **error);
+gboolean otcore_get_ostree_target (const char *cmdline, gboolean *is_aboot, char **out_target,
+                                   GError **error);
 
 GKeyFile *otcore_load_config (int rootfs, const char *filename, GError **error);
 
@@ -58,7 +59,8 @@ typedef struct
 void otcore_free_composefs_config (ComposefsConfig *config);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (ComposefsConfig, otcore_free_composefs_config)
 
-ComposefsConfig *otcore_load_composefs_config (GKeyFile *config, GError **error);
+ComposefsConfig *otcore_load_composefs_config (GKeyFile *config, gboolean load_keys,
+                                               GError **error);
 
 // Our directory with transient state (eventually /run/ostree-booted should be a link to
 // /run/ostree/booted)
