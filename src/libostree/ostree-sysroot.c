@@ -775,6 +775,9 @@ parse_deployment (OstreeSysroot *self, const char *boot_link, OstreeDeployment *
   g_autofree char *osname = NULL;
   g_autofree char *bootcsum = NULL;
   int treebootserial = -1;
+
+  // Note is_boot should always be false here, this boot_link is taken from BLS file, not
+  // /proc/cmdline, BLS files are present in aboot images
   if (!_ostree_sysroot_parse_bootlink (boot_link, &entry_boot_version, &osname, &bootcsum,
                                        &treebootserial, error))
     return FALSE;

@@ -75,7 +75,8 @@ otcore_find_proc_cmdline_key (const char *cmdline, const char *key)
 //
 // If invalid data is found, @error will be set.
 gboolean
-otcore_get_ostree_target (const char *cmdline, char **out_target, GError **error)
+otcore_get_ostree_target (const char *cmdline, gboolean *is_aboot, char **out_target,
+                          GError **error)
 {
   g_assert (cmdline);
   g_assert (out_target && *out_target == NULL);
@@ -84,8 +85,14 @@ otcore_get_ostree_target (const char *cmdline, char **out_target, GError **error
 
   // First, handle the Android boot case
   g_autofree char *slot_suffix = otcore_find_proc_cmdline_key (cmdline, "androidboot.slot_suffix");
+  if (is_aboot)
+    *is_aboot = false;
+
   if (slot_suffix)
     {
+      if (is_aboot)
+        *is_aboot = true;
+
       if (strcmp (slot_suffix, "_a") == 0)
         {
           *out_target = g_strdup (slot_a);
@@ -154,7 +161,7 @@ otcore_free_composefs_config (ComposefsConfig *config)
 
 // Parse the [composefs] section of the prepare-root.conf.
 ComposefsConfig *
-otcore_load_composefs_config (GKeyFile *config, GError **error)
+otcore_load_composefs_config (GKeyFile *config, gboolean load_keys, GError **error)
 {
   GLNX_AUTO_PREFIX_ERROR ("Loading composefs config", error);
 
@@ -178,7 +185,7 @@ otcore_load_composefs_config (GKeyFile *config, GError **error)
                                           &ret->signature_pubkey, error))
     return NULL;
 
-  if (ret->is_signed)
+  if (ret->is_signed && load_keys)
     {
       ret->pubkeys = g_ptr_array_new_with_free_func ((GDestroyNotify)g_bytes_unref);
 
