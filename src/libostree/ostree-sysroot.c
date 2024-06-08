@@ -1261,7 +1261,7 @@ ostree_sysroot_load_if_changed (OstreeSysroot *self, gboolean *out_changed,
   if (!glnx_fstatat (self->sysroot_fd, "ostree/deploy", &stbuf, 0, error))
     return FALSE;
 
-  if (self->loaded_ts.tv_sec == stbuf.st_mtim.tv_sec
+  if (self->has_loaded && self->loaded_ts.tv_sec == stbuf.st_mtim.tv_sec
       && self->loaded_ts.tv_nsec == stbuf.st_mtim.tv_nsec)
     {
       if (out_changed)
@@ -1280,6 +1280,7 @@ ostree_sysroot_load_if_changed (OstreeSysroot *self, gboolean *out_changed,
     return FALSE;
 
   self->loaded_ts = stbuf.st_mtim;
+  self->has_loaded = TRUE;
 
   if (out_changed)
     *out_changed = TRUE;
@@ -2239,9 +2240,9 @@ ostree_sysroot_deployment_unlock (OstreeSysroot *self, OstreeDeployment *deploym
         g_autofree char *devpath
             = unlocked_state == OSTREE_DEPLOYMENT_UNLOCKED_DEVELOPMENT
                   ? _ostree_sysroot_get_runstate_path (
-                      deployment, _OSTREE_SYSROOT_DEPLOYMENT_RUNSTATE_FLAG_DEVELOPMENT)
+                        deployment, _OSTREE_SYSROOT_DEPLOYMENT_RUNSTATE_FLAG_DEVELOPMENT)
                   : _ostree_sysroot_get_runstate_path (
-                      deployment, _OSTREE_SYSROOT_DEPLOYMENT_RUNSTATE_FLAG_TRANSIENT);
+                        deployment, _OSTREE_SYSROOT_DEPLOYMENT_RUNSTATE_FLAG_TRANSIENT);
         g_autofree char *devpath_parent = dirname (g_strdup (devpath));
 
         if (!glnx_shutil_mkdir_p_at (AT_FDCWD, devpath_parent, 0755, cancellable, error))
