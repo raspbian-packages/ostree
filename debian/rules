@@ -17,7 +17,6 @@ endif
 configure_options = \
 	--enable-installed-tests \
 	--with-avahi \
-	--with-composefs \
 	--with-curl \
 	--with-dracut \
 	--with-grub2 \
@@ -30,6 +29,7 @@ configure_options = \
 	--with-selinux \
 	--with-systemdsystemgeneratordir=/usr/lib/systemd/system-generators \
 	--with-systemdsystemunitdir=/usr/lib/systemd/system \
+	--without-composefs \
 	--without-smack \
 	$(NULL)
 
