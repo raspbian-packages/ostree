@@ -21,13 +21,19 @@ set -euo pipefail
 
 echo "1..$((31 + ${extra_admin_tests:-0}))"
 
+for flag in --modern --epoch=1; do
+    mkdir sysrootmin
+    ${CMD_PREFIX} ostree admin init-fs --modern sysrootmin
+    assert_has_dir sysrootmin/boot
+    assert_has_dir sysrootmin/ostree/repo
+    assert_not_has_dir sysrootmin/home
+    rm sysrootmin -rf
+done
 mkdir sysrootmin
-${CMD_PREFIX} ostree admin init-fs --modern sysrootmin
-assert_has_dir sysrootmin/boot
-assert_has_dir sysrootmin/ostree/repo
+${CMD_PREFIX} ostree admin init-fs --epoch=2 sysrootmin
+assert_streq "$(stat -c '%f' sysrootmin/ostree)" 41c0
 assert_not_has_dir sysrootmin/home
-rm sysrootmin -rf
-echo "ok init-fs --modern"
+echo "ok init-fs"
 
 function validate_bootloader() {
     cd ${test_tmpdir};
@@ -54,7 +60,9 @@ orig_mtime=$(stat -c '%.Y' sysroot/ostree/deploy)
 ${CMD_PREFIX} ostree --repo=sysroot/ostree/repo pull-local --remote=testos testos-repo testos/buildmain/x86_64-runtime
 rev=$(${CMD_PREFIX} ostree --repo=sysroot/ostree/repo rev-parse testos/buildmain/x86_64-runtime)
 export rev
-# This initial deployment gets kicked off with some kernel arguments
+# This initial deployment gets kicked off with some kernel arguments.  We also set the initial
+# timestamp of the deploy directory to the epoch as a regression test.
+touch -d @0 sysroot/ostree/deploy
 ${CMD_PREFIX} ostree admin deploy --karg=root=LABEL=MOO --karg=quiet --os=testos testos:testos/buildmain/x86_64-runtime
 new_mtime=$(stat -c '%.Y' sysroot/ostree/deploy)
 assert_not_streq "${orig_mtime}" "${new_mtime}"
