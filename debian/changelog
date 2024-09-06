@@ -1,3 +1,12 @@
+ostree (2024.7-2) unstable; urgency=medium
+
+  * d/control, d/rules: Disable gjs-based tests on armel.
+    It's looking as though mozjs128, and therefore the next gjs release,
+    will not support armel due to its lack of atomic instructions causing
+    relatively basic features to be disabled. (Helps: #1080521)
+
+ -- Simon McVittie <smcv@debian.org>  Fri, 06 Sep 2024 18:16:11 +0100
+
 ostree (2024.7-1) unstable; urgency=medium
 
   * New upstream release
