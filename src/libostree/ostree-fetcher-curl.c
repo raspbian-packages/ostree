@@ -75,6 +75,7 @@ struct OstreeFetcher
   char *proxy;
   struct curl_slist *extra_headers;
   int tmpdir_dfd;
+  gboolean finalizing; // Set if we're in the process of teardown
   char *custom_user_agent;
 
   GMainContext *mainctx;
@@ -174,6 +175,15 @@ _ostree_fetcher_finalize (GObject *object)
 {
   OstreeFetcher *self = OSTREE_FETCHER (object);
 
+  // Because curl_multi_cleanup may invoke callbacks, we effectively have
+  // some circular references going on here. See discussion in
+  // https://github.com/curl/curl/issues/14860
+  // Basically what we do is make most callbacks libcurl may invoke into no-ops when
+  // we detect we're finalizing. The data structures are owned by this object and
+  // not by the callbacks, and will be destroyed below. Note that
+  // e.g. g_hash_table_unref() may itself invoke callbacks, which is where
+  // some data is cleaned up.
+  self->finalizing = TRUE;
   curl_multi_cleanup (self->multi);
   g_free (self->remote_name);
   g_free (self->tls_ca_db_path);
@@ -520,6 +530,10 @@ sock_cb (CURL *easy, curl_socket_t s, int what, void *cbp, void *sockp)
 {
   OstreeFetcher *fetcher = cbp;
   SockInfo *fdp = (SockInfo*) sockp;
+
+  // We do nothing if we're in the process of teardown; see below.
+  if (fetcher->finalizing)
+    return 0;
 
   if (what == CURL_POLL_REMOVE)
     {
