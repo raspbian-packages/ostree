@@ -1,3 +1,16 @@
+ostree (2024.7-3) unstable; urgency=high
+
+  * d/p/curl-Assert-that-curl_multi_assign-worked.patch,
+    d/p/curl-Make-socket-callback-during-cleanup-into-no-op.patch:
+    Add patches from upstream to avoid libflatpak crash with curl 8.10.x
+    (Closes: #1082121)
+  * d/copyright: Remove obsolete stanzas
+  * Standards-Version: 4.7.0 (no changes required)
+  * Set high urgency since the version of libcurl that triggered the
+    regression has already migrated
+
+ -- Simon McVittie <smcv@debian.org>  Thu, 19 Sep 2024 09:57:08 +0100
+
 ostree (2024.7-2) unstable; urgency=medium
 
   * d/control, d/rules: Disable gjs-based tests on armel.
