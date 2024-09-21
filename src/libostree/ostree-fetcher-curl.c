@@ -78,6 +78,7 @@ struct OstreeFetcher
   struct curl_slist *extra_headers;
   int tmpdir_dfd;
   bool force_anonymous;
+  bool finalizing; // Set if we're in the process of teardown
   char *custom_user_agent;
   guint32 opt_low_speed_limit;
   guint32 opt_low_speed_time;
@@ -180,6 +181,15 @@ _ostree_fetcher_finalize (GObject *object)
 {
   OstreeFetcher *self = OSTREE_FETCHER (object);
 
+  // Because curl_multi_cleanup may invoke callbacks, we effectively have
+  // some circular references going on here. See discussion in
+  // https://github.com/curl/curl/issues/14860
+  // Basically what we do is make most callbacks libcurl may invoke into no-ops when
+  // we detect we're finalizing. The data structures are owned by this object and
+  // not by the callbacks, and will be destroyed below. Note that
+  // e.g. g_hash_table_unref() may itself invoke callbacks, which is where
+  // some data is cleaned up.
+  self->finalizing = true;
   curl_multi_cleanup (self->multi);
   g_free (self->remote_name);
   g_free (self->tls_ca_db_path);
@@ -517,7 +527,8 @@ addsock (curl_socket_t s, CURL *easy, int action, OstreeFetcher *fetcher)
   fdp->refcount = 1;
   fdp->fetcher = fetcher;
   setsock (fdp, s, action, fetcher);
-  curl_multi_assign (fetcher->multi, s, fdp);
+  CURLMcode rc = curl_multi_assign (fetcher->multi, s, fdp);
+  g_assert_cmpint (rc, ==, CURLM_OK);
   g_hash_table_add (fetcher->sockets, fdp);
 }
 
@@ -527,6 +538,10 @@ sock_cb (CURL *easy, curl_socket_t s, int what, void *cbp, void *sockp)
 {
   OstreeFetcher *fetcher = cbp;
   SockInfo *fdp = (SockInfo *)sockp;
+
+  // We do nothing if we're in the process of teardown; see below.
+  if (fetcher->finalizing)
+    return 0;
 
   if (what == CURL_POLL_REMOVE)
     {
