@@ -1,3 +1,9 @@
+ostree (2024.8-1) UNRELEASED; urgency=medium
+
+  * New upstream release
+
+ -- Simon McVittie <smcv@debian.org>  Sat, 21 Sep 2024 18:46:10 +0100
+
 ostree (2024.7-3) unstable; urgency=high
 
   * d/p/curl-Assert-that-curl_multi_assign-worked.patch,
