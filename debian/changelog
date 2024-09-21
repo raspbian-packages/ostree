@@ -1,8 +1,11 @@
-ostree (2024.8-1) UNRELEASED; urgency=medium
+ostree (2024.8-1) unstable; urgency=medium
 
   * New upstream release
+  * d/p/curl-Assert-that-curl_multi_assign-worked.patch,
+    d/p/curl-Make-socket-callback-during-cleanup-into-no-op.patch:
+    Drop patches that were included in the new upstream release
 
- -- Simon McVittie <smcv@debian.org>  Sat, 21 Sep 2024 18:46:10 +0100
+ -- Simon McVittie <smcv@debian.org>  Sat, 21 Sep 2024 18:49:10 +0100
 
 ostree (2024.7-3) unstable; urgency=high
 
