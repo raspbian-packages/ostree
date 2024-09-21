@@ -1,5 +1,3 @@
-curl-Assert-that-curl_multi_assign-worked.patch
-curl-Make-socket-callback-during-cleanup-into-no-op.patch
 debian/Skip-test-pull-repeated-during-CI.patch
 debian/test-sysroot-Skip-on-s390x-by-default.patch
 debian/Skip-test-admin-deploy-uboot.sh-on-s390x.patch
