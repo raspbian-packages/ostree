@@ -574,8 +574,7 @@ main (int argc, char *argv[])
           /* Bind-mount /etc (at deploy path), and remount as writable. */
           if (mount ("etc", tmp_sysroot_etc, NULL, MS_BIND | MS_SILENT, NULL) < 0)
             err (EXIT_FAILURE, "failed to prepare /etc bind-mount at /sysroot.tmp/etc");
-          if (mount (tmp_sysroot_etc, tmp_sysroot_etc, NULL, MS_BIND | MS_REMOUNT | MS_SILENT,
-                     NULL)
+          if (mount (tmp_sysroot_etc, tmp_sysroot_etc, NULL, MS_BIND | MS_REMOUNT | MS_SILENT, NULL)
               < 0)
             err (EXIT_FAILURE, "failed to make writable /etc bind-mount at /sysroot.tmp/etc");
         }
@@ -645,6 +644,16 @@ main (int argc, char *argv[])
     {
       if (mount ("../../var", TMP_SYSROOT "/var", NULL, MS_BIND | MS_SILENT, NULL) < 0)
         err (EXIT_FAILURE, "failed to bind mount ../../var to var");
+
+      /* To avoid having submounts of /var propagate into $stateroot/var, the
+       * mount is made with slave+shared propagation. See the comment in
+       * ostree-impl-system-generator.c when /var isn't mounted in the
+       * initramfs for further explanation.
+       */
+      if (mount (NULL, TMP_SYSROOT "/var", NULL, MS_SLAVE | MS_SILENT, NULL) < 0)
+        err (EXIT_FAILURE, "failed to change /var to slave mount");
+      if (mount (NULL, TMP_SYSROOT "/var", NULL, MS_SHARED | MS_SILENT, NULL) < 0)
+        err (EXIT_FAILURE, "failed to change /var to slave+shared mount");
     }
 
   /* This can be used by other things to signal ostree is in use */
@@ -687,17 +696,6 @@ main (int argc, char *argv[])
           < 0)
         err (EXIT_FAILURE, "failed to make /sysroot read-only");
     }
-
-  /* The /sysroot mount needs to be private to avoid having a mount for e.g. /var/cache
-   * also propagate to /sysroot/ostree/deploy/$stateroot/var/cache
-   *
-   * Now in reality, today this is overridden by systemd: the *actual* way we fix this up
-   * is in ostree-remount.c.  But let's do it here to express the semantics we want
-   * at the very start (perhaps down the line systemd will have compile/runtime option
-   * to say that the initramfs environment did everything right from the start).
-   */
-  if (mount ("none", "sysroot", NULL, MS_PRIVATE | MS_SILENT, NULL) < 0)
-    err (EXIT_FAILURE, "remounting 'sysroot' private");
 
   exit (EXIT_SUCCESS);
 }
