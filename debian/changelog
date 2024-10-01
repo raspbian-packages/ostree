@@ -1,4 +1,4 @@
-ostree (2022.7-2+deb12u1) bookworm-UNRELEASED; urgency=medium
+ostree (2022.7-2+deb12u1) bookworm; urgency=medium
 
   * d/control, d/gbp.conf: Configure for stable updates
   * d/p/curl-Assert-that-curl_multi_assign-worked.patch,
@@ -9,7 +9,7 @@ ostree (2022.7-2+deb12u1) bookworm-UNRELEASED; urgency=medium
     bookworm if using libcurl3-gnutls from bookworm-backports.
     (Closes: #1082121)
 
- -- Simon McVittie <smcv@debian.org>  Tue, 01 Oct 2024 12:24:03 +0100
+ -- Simon McVittie <smcv@debian.org>  Tue, 01 Oct 2024 12:25:32 +0100
 
 ostree (2022.7-2) unstable; urgency=medium
 
