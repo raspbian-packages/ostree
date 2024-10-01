@@ -1,3 +1,16 @@
+ostree (2022.7-2+deb12u1) bookworm-UNRELEASED; urgency=medium
+
+  * d/control, d/gbp.conf: Configure for stable updates
+  * d/p/curl-Assert-that-curl_multi_assign-worked.patch,
+    d/p/curl-Make-socket-callback-during-cleanup-into-no-op.patch:
+    Add patches from upstream 2024.8 to avoid libflatpak crash with an
+    assertion failure when using curl 8.10.x.
+    This was originally reported in testing/unstable, but can affect
+    bookworm if using libcurl3-gnutls from bookworm-backports.
+    (Closes: #1082121)
+
+ -- Simon McVittie <smcv@debian.org>  Tue, 01 Oct 2024 12:24:03 +0100
+
 ostree (2022.7-2) unstable; urgency=medium
 
   * Skip test-sysroot.js on s390x (Mitigates: #1025532)
