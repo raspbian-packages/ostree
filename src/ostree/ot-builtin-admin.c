@@ -42,6 +42,8 @@ static OstreeCommand admin_subcommands[] = {
     "Change the finalization locking state of the staged deployment" },
   { "boot-complete", OSTREE_BUILTIN_FLAG_NO_REPO | OSTREE_BUILTIN_FLAG_HIDDEN,
     ot_admin_builtin_boot_complete, "Internal command to run at boot after an update was applied" },
+  { "state-overlay", OSTREE_BUILTIN_FLAG_NO_REPO | OSTREE_BUILTIN_FLAG_HIDDEN,
+    ot_admin_builtin_state_overlay, "Internal command to assemble a state overlay" },
   { "init-fs", OSTREE_BUILTIN_FLAG_NO_REPO, ot_admin_builtin_init_fs,
     "Initialize a root filesystem" },
   { "instutil", OSTREE_BUILTIN_FLAG_NO_REPO | OSTREE_BUILTIN_FLAG_HIDDEN, ot_admin_builtin_instutil,
@@ -51,7 +53,8 @@ static OstreeCommand admin_subcommands[] = {
   { "stateroot-init", OSTREE_BUILTIN_FLAG_NO_REPO, ot_admin_builtin_os_init,
     "Initialize empty state for given operating system" },
   { "pin", OSTREE_BUILTIN_FLAG_NO_REPO, ot_admin_builtin_pin,
-    "Change the \"pinning\" state of a deployment" },
+    "Change the \"pinning\" state of a deployment, INDEX can be >= 0 or one of booted, pending or "
+    "rollback strings" },
   { "post-copy", OSTREE_BUILTIN_FLAG_NO_REPO, ot_admin_builtin_post_copy,
     "Update the repo and deployments as needed after a copy" },
   { "set-origin", OSTREE_BUILTIN_FLAG_NO_REPO, ot_admin_builtin_set_origin,

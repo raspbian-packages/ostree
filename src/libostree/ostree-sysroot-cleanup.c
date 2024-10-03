@@ -218,6 +218,7 @@ gboolean
 _ostree_sysroot_rmrf_deployment (OstreeSysroot *self, OstreeDeployment *deployment,
                                  GCancellable *cancellable, GError **error)
 {
+  g_autofree char *backing_relpath = _ostree_sysroot_get_deployment_backing_relpath (deployment);
   g_autofree char *origin_relpath = ostree_deployment_get_origin_relpath (deployment);
   g_autofree char *deployment_path = ostree_sysroot_get_deployment_dirpath (self, deployment);
   struct stat stbuf;
@@ -237,6 +238,12 @@ _ostree_sysroot_rmrf_deployment (OstreeSysroot *self, OstreeDeployment *deployme
 
   /* This deployment wasn't referenced, so delete it */
   if (!_ostree_linuxfs_fd_alter_immutable_flag (deployment_fd, FALSE, cancellable, error))
+    return FALSE;
+  /* Note we must delete the origin and backing directories first, as the "source of truth"
+   * is the deployment path.  We don't currently have code that detects "orphaned"
+   * origin files or work directories.
+   */
+  if (!glnx_shutil_rm_rf_at (self->sysroot_fd, backing_relpath, cancellable, error))
     return FALSE;
   if (!glnx_shutil_rm_rf_at (self->sysroot_fd, origin_relpath, cancellable, error))
     return FALSE;
@@ -565,11 +572,10 @@ _ostree_sysroot_cleanup_internal (OstreeSysroot *self, gboolean do_prune_repo,
                                               &freed_space, cancellable, error))
         return FALSE;
 
-      /* TODO remove printf in library */
       if (freed_space > 0)
         {
           g_autofree char *freed_space_str = g_format_size_full (freed_space, 0);
-          g_print ("Freed objects: %s\n", freed_space_str);
+          ot_journal_print (LOG_INFO, "Freed objects: %s", freed_space_str);
         }
     }
 

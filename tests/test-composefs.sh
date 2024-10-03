@@ -19,11 +19,8 @@ set -euo pipefail
 
 . $(dirname $0)/libtest.sh
 
-if ! ${CMD_PREFIX} ostree --version | grep -q -e '- composefs'; then
-    echo "1..0 #SKIP no composefs support compiled in"
-    exit 0
-fi
-
+skip_without_ostree_feature composefs
+skip_without_user_xattrs
 
 setup_test_repository "bare-user"
 
@@ -40,5 +37,15 @@ new_composefs_digest=$($OSTREE show --print-hex --print-metadata-key ostree.comp
 assert_streq "${orig_composefs_digest}" "${new_composefs_digest}"
 assert_streq "${new_composefs_digest}" "be956966c70970ea23b1a8043bca58cfb0d011d490a35a7817b36d04c0210954"
 tap_ok "composefs metadata"
+
+rm test2-co -rf
+$OSTREE checkout --composefs test-composefs test2-co.cfs
+digest=$(sha256sum < test2-co.cfs | cut -f 1 -d ' ')
+# This file should be reproducible bit for bit across environments; per above
+# we're operating on predictable data (fixed uid, gid, timestamps, xattrs, permissions).
+assert_streq "${digest}" "031fab2c7f390b752a820146dc89f6880e5739cba7490f64024e0c7d11aad7c9"
+# Verify it with composefs tooling
+composefs-info dump test2-co.cfs >/dev/null
+tap_ok "checkout composefs"
 
 tap_end

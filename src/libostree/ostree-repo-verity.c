@@ -29,19 +29,6 @@
 #include <linux/fsverity.h>
 #endif
 
-#if defined(HAVE_OPENSSL)
-#include <openssl/bio.h>
-#include <openssl/engine.h>
-#include <openssl/err.h>
-#include <openssl/pem.h>
-#include <openssl/pkcs7.h>
-
-G_DEFINE_AUTOPTR_CLEANUP_FUNC (X509, X509_free);
-G_DEFINE_AUTOPTR_CLEANUP_FUNC (EVP_PKEY, EVP_PKEY_free);
-G_DEFINE_AUTOPTR_CLEANUP_FUNC (BIO, BIO_free);
-G_DEFINE_AUTOPTR_CLEANUP_FUNC (PKCS7, PKCS7_free);
-#endif
-
 gboolean
 _ostree_repo_parse_fsverity_config (OstreeRepo *self, GError **error)
 {
@@ -224,9 +211,13 @@ _ostree_tmpf_fsverity (OstreeRepo *self, GLnxTmpfile *tmpf, GBytes *signature, G
 
 gboolean
 _ostree_ensure_fsverity (OstreeRepo *self, gboolean allow_enoent, int dirfd, const char *path,
-                         gboolean *supported, GError **error)
+                         gboolean *supported_out, GError **error)
 {
   struct stat buf;
+  gboolean supported;
+
+  if (supported_out)
+    *supported_out = TRUE;
 
   if (fstatat (dirfd, path, &buf, AT_SYMLINK_NOFOLLOW) != 0)
     {
@@ -243,11 +234,14 @@ _ostree_ensure_fsverity (OstreeRepo *self, gboolean allow_enoent, int dirfd, con
   if (fd < 0)
     return glnx_throw_errno_prefix (error, "openat(%s)", path);
 
-  if (!_ostree_fsverity_enable (fd, TRUE, supported, NULL, error))
+  if (!_ostree_fsverity_enable (fd, TRUE, &supported, NULL, error))
     return FALSE;
 
   if (!supported && self->fs_verity_wanted == _OSTREE_FEATURE_YES)
     return glnx_throw (error, "fsverity required but filesystem does not support it");
+
+  if (supported_out)
+    *supported_out = supported;
 
   return TRUE;
 }

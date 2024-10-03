@@ -139,6 +139,8 @@ gboolean
 _ostree_write_bareuser_metadata (int fd, guint32 uid, guint32 gid, guint32 mode, GVariant *xattrs,
                                  GError **error)
 {
+  if (xattrs != NULL && !_ostree_validate_structureof_xattrs (xattrs, error))
+    return FALSE;
   g_autoptr (GVariant) filemeta = create_file_metadata (uid, gid, mode, xattrs);
 
   if (TEMP_FAILURE_RETRY (fsetxattr (fd, "user.ostreemeta", (char *)g_variant_get_data (filemeta),
@@ -792,7 +794,7 @@ _try_clone_from_payload_link (OstreeRepo *self, OstreeRepo *dest_repo, const cha
       glnx_autofd int fdf = -1;
       char loose_path_buf[_OSTREE_LOOSE_PATH_MAX];
       char loose_path_target_buf[_OSTREE_LOOSE_PATH_MAX];
-      char target_buf[_OSTREE_LOOSE_PATH_MAX + _OSTREE_PAYLOAD_LINK_PREFIX_LEN];
+      char target_buf[_OSTREE_LOOSE_PATH_MAX + _OSTREE_PAYLOAD_LINK_PREFIX_LEN + 1];
       char target_checksum[OSTREE_SHA256_STRING_LEN + 1];
       int dfd = dfd_searches[i];
       ssize_t size;
@@ -802,19 +804,25 @@ _try_clone_from_payload_link (OstreeRepo *self, OstreeRepo *dest_repo, const cha
       _ostree_loose_path (loose_path_buf, payload_checksum, OSTREE_OBJECT_TYPE_PAYLOAD_LINK,
                           self->mode);
 
-      size = TEMP_FAILURE_RETRY (readlinkat (dfd, loose_path_buf, target_buf, sizeof (target_buf)));
+      size = TEMP_FAILURE_RETRY (
+          readlinkat (dfd, loose_path_buf, target_buf, sizeof (target_buf) - 1));
       if (size < 0)
         {
           if (errno == ENOENT)
             continue;
           return glnx_throw_errno_prefix (error, "readlinkat");
         }
+      target_buf[size] = '\0';
 
+      const size_t expected_len = OSTREE_SHA256_STRING_LEN + _OSTREE_PAYLOAD_LINK_PREFIX_LEN;
       if (size < OSTREE_SHA256_STRING_LEN + _OSTREE_PAYLOAD_LINK_PREFIX_LEN)
-        return glnx_throw (error, "invalid data size for %s", loose_path_buf);
+        return glnx_throw (error, "invalid data size for %s; expected=%llu found=%llu",
+                           loose_path_buf, (unsigned long long)expected_len,
+                           (unsigned long long)size);
 
-      sprintf (target_checksum, "%.2s%.62s", target_buf + _OSTREE_PAYLOAD_LINK_PREFIX_LEN,
-               target_buf + _OSTREE_PAYLOAD_LINK_PREFIX_LEN + 3);
+      snprintf (target_checksum, sizeof (target_checksum), "%.2s%.62s",
+                target_buf + _OSTREE_PAYLOAD_LINK_PREFIX_LEN,
+                target_buf + _OSTREE_PAYLOAD_LINK_PREFIX_LEN + 3);
 
       _ostree_loose_path (loose_path_target_buf, target_checksum, OSTREE_OBJECT_TYPE_FILE,
                           self->mode);
