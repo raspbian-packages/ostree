@@ -1,3 +1,11 @@
+ostree (2024.8-2) unstable; urgency=medium
+
+  * d/p/tests-Work-around-GPG-2.2.45-error-behaviour-when-revokin.patch:
+    Add proposed patch to work around a test failure with gnupg 2.2.45
+    (Mitigates: #1086140)
+
+ -- Simon McVittie <smcv@debian.org>  Thu, 31 Oct 2024 11:00:06 +0000
+
 ostree (2024.8-1) unstable; urgency=medium
 
   * New upstream release
