@@ -35,7 +35,13 @@
 #define WHITEOUT_PREFIX ".wh."
 #define OPAQUE_WHITEOUT_NAME ".wh..wh..opq"
 
-#define OVERLAYFS_WHITEOUT_PREFIX ".ostree-wh."
+// ostree doesn't have native support for devices. Whiteouts in overlayfs
+// are a 0:0 character device, and in some cases people are copying docker/podman
+// style overlayfs container storage directly into ostree commits. This
+// adds special support for "quoting" the whiteout so it just appears as a regular
+// file in the ostree commit, but can be converted back into a character device
+// on checkout.
+#define OSTREE_QUOTED_OVERLAYFS_WHITEOUT_PREFIX ".ostree-wh."
 
 /* Per-checkout call state/caching */
 typedef struct
@@ -711,7 +717,8 @@ checkout_one_file_at (OstreeRepo *repo, OstreeRepoCheckoutAtOptions *options, Ch
   const gboolean is_whiteout = (!is_symlink && options->process_whiteouts
                                 && g_str_has_prefix (destination_name, WHITEOUT_PREFIX));
   const gboolean is_overlayfs_whiteout
-      = (!is_symlink && g_str_has_prefix (destination_name, OVERLAYFS_WHITEOUT_PREFIX));
+      = (!is_symlink
+         && g_str_has_prefix (destination_name, OSTREE_QUOTED_OVERLAYFS_WHITEOUT_PREFIX));
   const gboolean is_reg_zerosized = (!is_symlink && g_file_info_get_size (source_info) == 0);
   const gboolean override_user_unreadable
       = (options->mode == OSTREE_REPO_CHECKOUT_MODE_USER && is_unreadable);
@@ -735,7 +742,7 @@ checkout_one_file_at (OstreeRepo *repo, OstreeRepoCheckoutAtOptions *options, Ch
     }
   else if (is_overlayfs_whiteout && options->process_passthrough_whiteouts)
     {
-      const char *name = destination_name + (sizeof (OVERLAYFS_WHITEOUT_PREFIX) - 1);
+      const char *name = destination_name + (sizeof (OSTREE_QUOTED_OVERLAYFS_WHITEOUT_PREFIX) - 1);
 
       if (!name[0])
         return glnx_throw (error, "Invalid empty overlayfs whiteout '%s'", name);
@@ -1266,14 +1273,18 @@ compare_verity_digests (GVariant *metadata_composefs, const guchar *fsverity_dig
 /**
  * ostree_repo_checkout_composefs:
  * @self: A repo
- * @options: (nullable): Future expansion space; must currently be %NULL
+ * @options: (nullable): If non-NULL, must be a GVariant of type a{sv}. See below.
  * @destination_dfd: Parent directory fd
  * @destination_path: Filename
  * @checksum: OStree commit digest
  * @cancellable: Cancellable
  * @error: Error
  *
- * Create a composefs filesystem metadata blob from an OSTree commit.
+ * Create a composefs filesystem metadata blob from an OSTree commit. Supported
+ * options:
+ *
+ *  - verity: `u`: 0 = disabled, 1 = set if present on file, 2 = enabled; any other value is a fatal
+ * error
  */
 gboolean
 ostree_repo_checkout_composefs (OstreeRepo *self, GVariant *options, int destination_dfd,
@@ -1281,8 +1292,31 @@ ostree_repo_checkout_composefs (OstreeRepo *self, GVariant *options, int destina
                                 GCancellable *cancellable, GError **error)
 {
 #ifdef HAVE_COMPOSEFS
-  /* Force this for now */
-  g_assert (options == NULL);
+  OtTristate verity = OT_TRISTATE_YES;
+
+  if (options != NULL)
+    {
+      g_auto (GVariantDict) options_dict;
+      g_variant_dict_init (&options_dict, options);
+      guint32 verity_v = 0;
+      if (g_variant_dict_lookup (&options_dict, "verity", "u", &verity_v))
+        {
+          switch (verity_v)
+            {
+            case 0:
+              verity = OT_TRISTATE_NO;
+              break;
+            case 1:
+              verity = OT_TRISTATE_MAYBE;
+              break;
+            case 2:
+              verity = OT_TRISTATE_YES;
+              break;
+            default:
+              g_assert_not_reached ();
+            }
+        }
+    }
 
   g_auto (GLnxTmpfile) tmpf = {
     0,
@@ -1304,17 +1338,22 @@ ostree_repo_checkout_composefs (OstreeRepo *self, GVariant *options, int destina
 
   g_autoptr (OstreeComposefsTarget) target = ostree_composefs_target_new ();
 
-  if (!_ostree_repo_checkout_composefs (self, target, (OstreeRepoFile *)commit_root, cancellable,
-                                        error))
+  if (!_ostree_repo_checkout_composefs (self, verity, target, (OstreeRepoFile *)commit_root,
+                                        cancellable, error))
     return FALSE;
 
   g_autofree guchar *fsverity_digest = NULL;
   if (!ostree_composefs_target_write (target, tmpf.fd, &fsverity_digest, cancellable, error))
     return FALSE;
 
-  /* If the commit specified a composefs digest, verify it */
-  if (!compare_verity_digests (metadata_composefs, fsverity_digest, error))
-    return FALSE;
+  /* If the commit specified a composefs digest and the target is known to have fsverity,
+   * then double check our ouptut.
+   */
+  if (verity == OT_TRISTATE_YES)
+    {
+      if (!compare_verity_digests (metadata_composefs, fsverity_digest, error))
+        return FALSE;
+    }
 
   if (!glnx_fchmod (tmpf.fd, 0644, error))
     return FALSE;
