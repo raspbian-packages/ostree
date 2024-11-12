@@ -1,8 +1,10 @@
-ostree (2024.9-1) UNRELEASED; urgency=medium
+ostree (2024.9-1) unstable; urgency=medium
 
   * New upstream release
+  * d/p/tests-Work-around-GPG-2.2.45-error-behaviour-when-revokin.patch:
+    Drop patch, applied upstream
 
- -- Simon McVittie <smcv@debian.org>  Mon, 11 Nov 2024 22:23:50 +0000
+ -- Simon McVittie <smcv@debian.org>  Tue, 12 Nov 2024 09:27:19 +0000
 
 ostree (2024.8-2) unstable; urgency=medium
 
