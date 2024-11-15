@@ -1,9 +1,17 @@
-ostree (2024.8-2+rpi1) trixie-staging; urgency=medium
+ostree (2024.9-1+rpi1) trixie-staging; urgency=medium
 
   [changes brought forward from 2020.8-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Tue, 15 Dec 2020 11:54:45 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Sat, 02 Nov 2024 08:16:33 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Fri, 15 Nov 2024 15:31:38 +0000
+
+ostree (2024.9-1) unstable; urgency=medium
+
+  * New upstream release
+  * d/p/tests-Work-around-GPG-2.2.45-error-behaviour-when-revokin.patch:
+    Drop patch, applied upstream
+
+ -- Simon McVittie <smcv@debian.org>  Tue, 12 Nov 2024 09:27:19 +0000
 
 ostree (2024.8-2) unstable; urgency=medium
 
