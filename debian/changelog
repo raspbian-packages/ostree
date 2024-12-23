@@ -1,3 +1,10 @@
+ostree (2024.9-2) UNRELEASED; urgency=medium
+
+  * d/salsa-ci.yml: Use recommended recipe
+  * d/salsa-ci.yml: Re-enable tests
+
+ -- Simon McVittie <smcv@debian.org>  Mon, 23 Dec 2024 09:51:52 +0000
+
 ostree (2024.9-1) unstable; urgency=medium
 
   * New upstream release
