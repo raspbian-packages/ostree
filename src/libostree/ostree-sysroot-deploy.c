@@ -640,9 +640,6 @@ checkout_deployment_tree (OstreeSysroot *sysroot, OstreeRepo *repo, OstreeDeploy
   if (!glnx_opendirat (osdeploy_dfd, checkout_target_name, TRUE, &ret_deployment_dfd, error))
     return FALSE;
 
-  guint64 composefs_start_time = 0;
-  guint64 composefs_end_time = 0;
-#ifdef HAVE_COMPOSEFS
   /* TODO: Consider changing things in the future to parse the deployment config from memory, and
    * if composefs is enabled, then we can check out in "user mode" (i.e. only have suid binaries
    * enabled in composefs, etc.)
@@ -667,7 +664,11 @@ checkout_deployment_tree (OstreeSysroot *sysroot, OstreeRepo *repo, OstreeDeploy
   g_debug ("composefs enabled by config: %d repo: %d", composefs_enabled, repo->composefs_wanted);
   if (repo->composefs_wanted == OT_TRISTATE_YES)
     composefs_enabled = repo->composefs_wanted;
-  if (composefs_enabled == OT_TRISTATE_YES)
+
+  guint64 composefs_start_time = 0;
+  guint64 composefs_end_time = 0;
+#ifdef HAVE_COMPOSEFS
+  if (composefs_enabled != OT_TRISTATE_NO)
     {
       composefs_start_time = g_get_monotonic_time ();
       // TODO: Clean up our mess around composefs/fsverity...we have duplication
@@ -680,7 +681,7 @@ checkout_deployment_tree (OstreeSysroot *sysroot, OstreeRepo *repo, OstreeDeploy
       g_auto (GVariantBuilder) cfs_checkout_opts_builder
           = G_VARIANT_BUILDER_INIT (G_VARIANT_TYPE_VARDICT);
       guint32 composefs_requested = 1;
-      if (composefs_config->is_signed)
+      if (composefs_config->require_verity)
         composefs_requested = 2;
       g_variant_builder_add (&cfs_checkout_opts_builder, "{sv}", "verity",
                              g_variant_new_uint32 (composefs_requested));
@@ -694,6 +695,9 @@ checkout_deployment_tree (OstreeSysroot *sysroot, OstreeRepo *repo, OstreeDeploy
     }
   else
     g_debug ("not using composefs");
+#else
+  if (composefs_enabled == OT_TRISTATE_YES)
+    return glnx_throw (error, "composefs: enabled at runtime, but support is not compiled in");
 #endif
 
   *checkout_elapsed = (checkout_end_time - checkout_start_time);

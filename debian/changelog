@@ -1,9 +1,17 @@
-ostree (2024.9-1+rpi1) trixie-staging; urgency=medium
+ostree (2024.10-1+rpi1) trixie-staging; urgency=medium
 
   [changes brought forward from 2020.8-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Tue, 15 Dec 2020 11:54:45 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Fri, 15 Nov 2024 15:31:38 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Wed, 15 Jan 2025 10:19:45 +0000
+
+ostree (2024.10-1) unstable; urgency=medium
+
+  * New upstream release
+  * d/salsa-ci.yml: Use recommended recipe
+  * d/salsa-ci.yml: Re-enable tests
+
+ -- Simon McVittie <smcv@debian.org>  Thu, 26 Dec 2024 17:05:32 +0000
 
 ostree (2024.9-1) unstable; urgency=medium
 
