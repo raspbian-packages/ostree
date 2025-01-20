@@ -337,6 +337,7 @@
     <keyword type="function" name="ostree_sysroot_get_repo ()" link="ostree-Root-partition-mount-point.html#ostree-sysroot-get-repo"/>
     <keyword type="function" name="ostree_sysroot_get_staged_deployment ()" link="ostree-Root-partition-mount-point.html#ostree-sysroot-get-staged-deployment" since="2018.5"/>
     <keyword type="function" name="ostree_sysroot_init_osname ()" link="ostree-Root-partition-mount-point.html#ostree-sysroot-init-osname" since="2016.4"/>
+    <keyword type="function" name="ostree_sysroot_deployment_kexec_load ()" link="ostree-Root-partition-mount-point.html#ostree-sysroot-deployment-kexec-load"/>
     <keyword type="function" name="ostree_sysroot_deployment_set_kargs ()" link="ostree-Root-partition-mount-point.html#ostree-sysroot-deployment-set-kargs"/>
     <keyword type="function" name="ostree_sysroot_deployment_set_kargs_in_place ()" link="ostree-Root-partition-mount-point.html#ostree-sysroot-deployment-set-kargs-in-place"/>
     <keyword type="function" name="ostree_sysroot_deployment_set_mutable ()" link="ostree-Root-partition-mount-point.html#ostree-sysroot-deployment-set-mutable"/>
@@ -626,6 +627,7 @@
     <keyword type="constant" name="OSTREE_SYSROOT_UPGRADER_FLAGS_NONE" link="ostree-Simple-upgrade-class.html#OSTREE-SYSROOT-UPGRADER-FLAGS-NONE:CAPS"/>
     <keyword type="constant" name="OSTREE_SYSROOT_UPGRADER_FLAGS_IGNORE_UNCONFIGURED" link="ostree-Simple-upgrade-class.html#OSTREE-SYSROOT-UPGRADER-FLAGS-IGNORE-UNCONFIGURED:CAPS"/>
     <keyword type="constant" name="OSTREE_SYSROOT_UPGRADER_FLAGS_STAGE" link="ostree-Simple-upgrade-class.html#OSTREE-SYSROOT-UPGRADER-FLAGS-STAGE:CAPS"/>
+    <keyword type="constant" name="OSTREE_SYSROOT_UPGRADER_FLAGS_KEXEC" link="ostree-Simple-upgrade-class.html#OSTREE-SYSROOT-UPGRADER-FLAGS-KEXEC:CAPS"/>
     <keyword type="constant" name="OSTREE_SYSROOT_UPGRADER_PULL_FLAGS_NONE" link="ostree-Simple-upgrade-class.html#OSTREE-SYSROOT-UPGRADER-PULL-FLAGS-NONE:CAPS"/>
     <keyword type="constant" name="OSTREE_SYSROOT_UPGRADER_PULL_FLAGS_ALLOW_OLDER" link="ostree-Simple-upgrade-class.html#OSTREE-SYSROOT-UPGRADER-PULL-FLAGS-ALLOW-OLDER:CAPS"/>
     <keyword type="constant" name="OSTREE_SYSROOT_UPGRADER_PULL_FLAGS_SYNTHETIC" link="ostree-Simple-upgrade-class.html#OSTREE-SYSROOT-UPGRADER-PULL-FLAGS-SYNTHETIC:CAPS"/>
