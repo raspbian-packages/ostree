@@ -1,8 +1,12 @@
-ostree (2025.1-1) UNRELEASED; urgency=medium
+ostree (2025.1-1) unstable; urgency=medium
 
   * New upstream release
+  * d/libostree-1-1.symbols: Update
+  * d/control: Use ${gir:Depends}, ${gir:Provides} in -dev package
+    if available. Don't completely rely on those variables, for
+    backportability.
 
- -- Simon McVittie <smcv@debian.org>  Mon, 20 Jan 2025 10:40:25 +0000
+ -- Simon McVittie <smcv@debian.org>  Mon, 20 Jan 2025 10:46:58 +0000
 
 ostree (2024.10-1) unstable; urgency=medium
 
