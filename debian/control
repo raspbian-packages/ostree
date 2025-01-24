@@ -102,10 +102,12 @@ Depends:
  libglib2.0-dev,
  libostree-1-1 (= ${binary:Version}),
  pkgconf,
+ ${gir:Depends},
  ${misc:Depends},
 Suggests:
  libostree-doc,
 Provides:
+ ${gir:Provides},
  gir1.2-ostree-1.0-dev (= ${binary:Version}),
 Description: Development files for the libostree library
  libostree is a library for managing bootable, immutable, versioned

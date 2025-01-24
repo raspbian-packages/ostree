@@ -1,9 +1,19 @@
-ostree (2024.10-1+rpi1) trixie-staging; urgency=medium
+ostree (2025.1-1+rpi1) trixie-staging; urgency=medium
 
   [changes brought forward from 2020.8-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Tue, 15 Dec 2020 11:54:45 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Wed, 15 Jan 2025 10:19:45 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Fri, 24 Jan 2025 14:55:46 +0000
+
+ostree (2025.1-1) unstable; urgency=medium
+
+  * New upstream release
+  * d/libostree-1-1.symbols: Update
+  * d/control: Use ${gir:Depends}, ${gir:Provides} in -dev package
+    if available. Don't completely rely on those variables, for
+    backportability.
+
+ -- Simon McVittie <smcv@debian.org>  Mon, 20 Jan 2025 10:46:58 +0000
 
 ostree (2024.10-1) unstable; urgency=medium
 
