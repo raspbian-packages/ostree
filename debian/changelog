@@ -1,3 +1,10 @@
+ostree (2025.2-1) UNRELEASED; urgency=medium
+
+  * New upstream release
+  * Add myself to Uploaders (Closes: #1099068)
+
+ -- Dylan Aïssi <daissi@debian.org>  Mon, 31 Mar 2025 10:08:25 +0200
+
 ostree (2025.1-1) unstable; urgency=medium
 
   * New upstream release
