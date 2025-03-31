@@ -50,6 +50,7 @@ libostree-1.so.1 libostree-1-1 #MINVER#
  LIBOSTREE_2023.8@LIBOSTREE_2023.8 2023.8
  LIBOSTREE_2024.7@LIBOSTREE_2024.7 2024.7
  LIBOSTREE_2025.1@LIBOSTREE_2025.1 2025.1
+ LIBOSTREE_2025.2@LIBOSTREE_2025.2 2025.2
  ostree_async_progress_copy_state@LIBOSTREE_2019.6 2019.6
  ostree_async_progress_finish@LIBOSTREE_2016.3 2016.4
  ostree_async_progress_get@LIBOSTREE_2017.6 2017.6
@@ -65,6 +66,8 @@ libostree-1.so.1 libostree-1-1 #MINVER#
  ostree_async_progress_set_uint64@LIBOSTREE_2016.3 2016.4
  ostree_async_progress_set_uint@LIBOSTREE_2016.3 2016.4
  ostree_async_progress_set_variant@LIBOSTREE_2017.6 2017.6
+ ostree_blob_reader_get_type@LIBOSTREE_2025.2 2025.2
+ ostree_blob_reader_read_blob@LIBOSTREE_2025.2 2025.2
  ostree_bootconfig_parser_clone@LIBOSTREE_2016.3 2016.4
  ostree_bootconfig_parser_get@LIBOSTREE_2016.3 2016.4
  ostree_bootconfig_parser_get_overlay_initrds@LIBOSTREE_2020.7 2020.7
@@ -439,6 +442,7 @@ libostree-1.so.1 libostree-1-1 #MINVER#
  ostree_sepolicy_new_at@LIBOSTREE_2017.4 2017.4
  ostree_sepolicy_new_from_commit@LIBOSTREE_2021.5 2021.5
  ostree_sepolicy_restorecon@LIBOSTREE_2016.3 2016.4
+ ostree_sepolicy_set_null_log@LIBOSTREE_2025.2 2025.2
  ostree_sepolicy_setfscreatecon@LIBOSTREE_2016.3 2016.4
  ostree_sign_add_pk@LIBOSTREE_2020.4 2020.4
  ostree_sign_clear_keys@LIBOSTREE_2020.4 2020.4
@@ -453,6 +457,8 @@ libostree-1.so.1 libostree-1-1 #MINVER#
  ostree_sign_load_pk@LIBOSTREE_2020.4 2020.4
  ostree_sign_metadata_format@LIBOSTREE_2020.4 2020.4
  ostree_sign_metadata_key@LIBOSTREE_2020.4 2020.4
+ ostree_sign_read_pk@LIBOSTREE_2025.2 2025.2
+ ostree_sign_read_sk@LIBOSTREE_2025.2 2025.2
  ostree_sign_set_pk@LIBOSTREE_2020.4 2020.4
  ostree_sign_set_sk@LIBOSTREE_2020.4 2020.4
  ostree_sign_summary@LIBOSTREE_2020.4 2020.4
