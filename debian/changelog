@@ -2,8 +2,12 @@ ostree (2025.2-1) UNRELEASED; urgency=medium
 
   * New upstream release
   * Add myself to Uploaders (Closes: #1099068)
+  * Don't install usr/lib/systemd/system/ostree-finalize-staged.path anymore
+      in ostree-boot, it was dropped upstream.
+  * Update debian/libostree-1-1.symbols
+  * Standards-Version: 4.7.2 (no changes required)
 
- -- Dylan Aïssi <daissi@debian.org>  Mon, 31 Mar 2025 10:08:25 +0200
+ -- Dylan Aïssi <daissi@debian.org>  Mon, 31 Mar 2025 10:48:34 +0200
 
 ostree (2025.1-1) unstable; urgency=medium
 
