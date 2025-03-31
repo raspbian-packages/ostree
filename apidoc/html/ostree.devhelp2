@@ -219,7 +219,7 @@
     <keyword type="function" name="ostree_repo_checkout_tree ()" link="ostree-OstreeRepo.html#ostree-repo-checkout-tree"/>
     <keyword type="function" name="ostree_repo_checkout_tree_at ()" link="ostree-OstreeRepo.html#ostree-repo-checkout-tree-at" deprecated=""/>
     <keyword type="function" name="ostree_repo_checkout_at ()" link="ostree-OstreeRepo.html#ostree-repo-checkout-at" since="2016.8"/>
-    <keyword type="function" name="ostree_repo_checkout_composefs ()" link="ostree-OstreeRepo.html#ostree-repo-checkout-composefs"/>
+    <keyword type="function" name="ostree_repo_checkout_composefs ()" link="ostree-OstreeRepo.html#ostree-repo-checkout-composefs" since="2024.7"/>
     <keyword type="function" name="ostree_repo_checkout_gc ()" link="ostree-OstreeRepo.html#ostree-repo-checkout-gc"/>
     <keyword type="function" name="ostree_repo_read_commit ()" link="ostree-OstreeRepo.html#ostree-repo-read-commit"/>
     <keyword type="function" name="ostree_repo_list_objects ()" link="ostree-OstreeRepo.html#ostree-repo-list-objects"/>
@@ -337,7 +337,7 @@
     <keyword type="function" name="ostree_sysroot_get_repo ()" link="ostree-Root-partition-mount-point.html#ostree-sysroot-get-repo"/>
     <keyword type="function" name="ostree_sysroot_get_staged_deployment ()" link="ostree-Root-partition-mount-point.html#ostree-sysroot-get-staged-deployment" since="2018.5"/>
     <keyword type="function" name="ostree_sysroot_init_osname ()" link="ostree-Root-partition-mount-point.html#ostree-sysroot-init-osname" since="2016.4"/>
-    <keyword type="function" name="ostree_sysroot_deployment_kexec_load ()" link="ostree-Root-partition-mount-point.html#ostree-sysroot-deployment-kexec-load"/>
+    <keyword type="function" name="ostree_sysroot_deployment_kexec_load ()" link="ostree-Root-partition-mount-point.html#ostree-sysroot-deployment-kexec-load" since="2025.1"/>
     <keyword type="function" name="ostree_sysroot_deployment_set_kargs ()" link="ostree-Root-partition-mount-point.html#ostree-sysroot-deployment-set-kargs"/>
     <keyword type="function" name="ostree_sysroot_deployment_set_kargs_in_place ()" link="ostree-Root-partition-mount-point.html#ostree-sysroot-deployment-set-kargs-in-place"/>
     <keyword type="function" name="ostree_sysroot_deployment_set_mutable ()" link="ostree-Root-partition-mount-point.html#ostree-sysroot-deployment-set-mutable"/>
@@ -383,6 +383,7 @@
     <keyword type="function" name="ostree_sepolicy_restorecon ()" link="ostree-SELinux-policy-management.html#ostree-sepolicy-restorecon"/>
     <keyword type="function" name="ostree_sepolicy_setfscreatecon ()" link="ostree-SELinux-policy-management.html#ostree-sepolicy-setfscreatecon"/>
     <keyword type="function" name="ostree_sepolicy_fscreatecon_cleanup ()" link="ostree-SELinux-policy-management.html#ostree-sepolicy-fscreatecon-cleanup"/>
+    <keyword type="function" name="ostree_sepolicy_set_null_log ()" link="ostree-SELinux-policy-management.html#ostree-sepolicy-set-null-log" since="2025.2"/>
     <keyword type="typedef" name="OstreeSePolicy" link="ostree-SELinux-policy-management.html#OstreeSePolicy"/>
     <keyword type="enum" name="enum OstreeSePolicyRestoreconFlags" link="ostree-SELinux-policy-management.html#OstreeSePolicyRestoreconFlags"/>
     <keyword type="function" name="ostree_sysroot_upgrader_new ()" link="ostree-Simple-upgrade-class.html#ostree-sysroot-upgrader-new"/>
@@ -426,6 +427,8 @@
     <keyword type="function" name="ostree_sign_set_pk ()" link="ostree-Signature-management.html#ostree-sign-set-pk" since="2020.2"/>
     <keyword type="function" name="ostree_sign_set_sk ()" link="ostree-Signature-management.html#ostree-sign-set-sk" since="2020.2"/>
     <keyword type="function" name="ostree_sign_summary ()" link="ostree-Signature-management.html#ostree-sign-summary" since="2020.2"/>
+    <keyword type="function" name="ostree_sign_read_pk ()" link="ostree-Signature-management.html#ostree-sign-read-pk" since="2025.2"/>
+    <keyword type="function" name="ostree_sign_read_sk ()" link="ostree-Signature-management.html#ostree-sign-read-sk" since="2025.2"/>
     <keyword type="struct" name="OstreeSign" link="ostree-Signature-management.html#OstreeSign"/>
     <keyword type="function" name="ostree_bootconfig_parser_new ()" link="ostree-ostree-bootconfig-parser.html#ostree-bootconfig-parser-new"/>
     <keyword type="function" name="ostree_bootconfig_parser_clone ()" link="ostree-ostree-bootconfig-parser.html#ostree-bootconfig-parser-clone"/>
