@@ -115,6 +115,9 @@
 /* Define if we have libselinux.pc */
 #undef HAVE_SELINUX
 
+/* Define if spki is supported */
+#undef HAVE_SPKI
+
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
 

@@ -5,7 +5,8 @@ Maintainer: Utopia Maintenance Team <pkg-utopia-maintainers@lists.alioth.debian.
 Uploaders:
  Matthias Klumpp <mak@debian.org>,
  Simon McVittie <smcv@debian.org>,
- Sjoerd Simons <sjoerd@debian.org>
+ Sjoerd Simons <sjoerd@debian.org>,
+ Dylan Aïssi <daissi@debian.org>
 Build-Depends:
  attr,
  autoconf,
@@ -52,7 +53,7 @@ Build-Depends:
 Build-Depends-Indep:
  libglib2.0-doc,
 Rules-Requires-Root: no
-Standards-Version: 4.7.0
+Standards-Version: 4.7.2
 Homepage: https://github.com/ostreedev/ostree/
 Vcs-Git: https://salsa.debian.org/debian/ostree.git
 Vcs-Browser: https://salsa.debian.org/debian/ostree
@@ -99,9 +100,19 @@ Multi-Arch: same
 Section: libdevel
 Depends:
  gir1.2-ostree-1.0 (= ${binary:Version}),
+ libarchive-dev,
+ libavahi-client-dev,
+ libavahi-glib-dev,
+ libcurl-dev,
  libglib2.0-dev,
+ libgpg-error-dev,
+ libgpgme-dev,
+ liblzma-dev,
  libostree-1-1 (= ${binary:Version}),
+ libselinux1-dev,
+ libsystemd-dev,
  pkgconf,
+ zlib1g-dev,
  ${gir:Depends},
  ${misc:Depends},
 Suggests:
