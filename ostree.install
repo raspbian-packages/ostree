@@ -1,0 +1,5 @@
+etc/ostree
+usr/bin/ostree
+usr/bin/rofiles-fuse
+usr/share/bash-completion/completions/ostree
+usr/share/ostree/trusted.gpg.d
