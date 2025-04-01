@@ -6,8 +6,10 @@ ostree (2025.2-1) UNRELEASED; urgency=medium
       in ostree-boot, it was dropped upstream.
   * Update debian/libostree-1-1.symbols
   * Standards-Version: 4.7.2 (no changes required)
+  * d/copyright: Remove the old postal address of the Free Software Foundation
+  * d/control: add new dependencies for libostree-dev
 
- -- Dylan Aïssi <daissi@debian.org>  Mon, 31 Mar 2025 10:48:34 +0200
+ -- Dylan Aïssi <daissi@debian.org>  Tue, 01 Apr 2025 16:10:38 +0200
 
 ostree (2025.1-1) unstable; urgency=medium
 
