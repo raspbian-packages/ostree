@@ -1,9 +1,22 @@
-ostree (2025.1-1+rpi1) trixie-staging; urgency=medium
+ostree (2025.2-1+rpi1) trixie-staging; urgency=medium
 
   [changes brought forward from 2020.8-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Tue, 15 Dec 2020 11:54:45 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Fri, 24 Jan 2025 14:55:46 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Wed, 09 Apr 2025 14:39:47 +0000
+
+ostree (2025.2-1) unstable; urgency=medium
+
+  * New upstream release
+  * Add myself to Uploaders (Closes: #1099068)
+  * Don't install usr/lib/systemd/system/ostree-finalize-staged.path anymore
+      in ostree-boot, it was dropped upstream.
+  * Update debian/libostree-1-1.symbols
+  * Standards-Version: 4.7.2 (no changes required)
+  * d/copyright: Remove the old postal address of the Free Software Foundation
+  * d/control: add new dependencies for libostree-dev
+
+ -- Dylan Aïssi <daissi@debian.org>  Tue, 01 Apr 2025 17:17:30 +0200
 
 ostree (2025.1-1) unstable; urgency=medium
 

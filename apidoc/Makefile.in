@@ -265,6 +265,7 @@ LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBSYSTEMD_CFLAGS = @LIBSYSTEMD_CFLAGS@
 LIBSYSTEMD_LIBS = @LIBSYSTEMD_LIBS@
+LIBS_PRIVATE = @LIBS_PRIVATE@
 LIBTOOL = @LIBTOOL@
 LIPO = @LIPO@
 LN_S = @LN_S@
@@ -326,6 +327,7 @@ PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 RANLIB = @RANLIB@
 RELEASE_VERSION = @RELEASE_VERSION@
+REQUIRES_PRIVATE = @REQUIRES_PRIVATE@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -426,6 +428,7 @@ libostree_public_headers = \
 	src/libostree/ostree-kernel-args.h \
 	src/libostree/ostree-sign.h \
 	src/libostree/ostree-sign-ed25519.h \
+	src/libostree/ostree-blob-reader.h \
 	$(NULL)
 
 
