@@ -64,8 +64,16 @@ struct OstreeSysroot
   GObject parent;
 
   GFile *path;
+  // File descriptor for the sysroot. Only valid after `ostree_sysroot_ensure_initialized()`
+  // has been invoked (directly by a calling program, or transitively from another public API).
   int sysroot_fd;
+  // File descriptor for the boot partition. Should be initialized on demand internally
+  // by a public API eventually invoking `_ostree_sysroot_ensure_boot_fd()`.
   int boot_fd;
+  // Set if the /boot filesystem is VFAT.
+  // Only initialized if boot_fd is set.
+  gboolean boot_is_vfat;
+  // Lock for this sysroot.
   GLnxLockFile lock;
 
   OstreeSysrootLoadState loadstate;
@@ -74,6 +82,10 @@ struct OstreeSysroot
   /* The device/inode for / and /etc, used to detect booted deployment */
   dev_t root_device;
   ino_t root_inode;
+  /* The device inode for a queued soft reboot deployment */
+  gboolean expecting_nextroot;
+  dev_t nextroot_device;
+  ino_t nextroot_inode;
 
   // The parsed data from /run/ostree
   GVariantDict *run_ostree_metadata;
@@ -83,6 +95,7 @@ struct OstreeSysroot
   int bootversion;
   int subbootversion;
   OstreeDeployment *booted_deployment;
+  OstreeDeployment *soft_reboot_target_deployment;
   OstreeDeployment *staged_deployment;
   GVariant *staged_deployment_data;
   // True if loaded_ts is initialized
@@ -116,6 +129,12 @@ struct OstreeSysroot
 
 gboolean _ostree_sysroot_ensure_writable (OstreeSysroot *self, GError **error);
 
+// Should be preferred over ostree_deployment_new
+OstreeDeployment *_ostree_sysroot_new_deployment_object (OstreeSysroot *self, const char *osname,
+                                                         const char *csum, int deployserial,
+                                                         const char *bootcsum, int bootserial,
+                                                         GError **error);
+
 void _ostree_sysroot_emit_journal_msg (OstreeSysroot *self, const char *msg);
 
 gboolean _ostree_sysroot_read_boot_loader_configs (OstreeSysroot *self, int bootversion,
@@ -129,7 +148,8 @@ gboolean _ostree_sysroot_read_current_subbootversion (OstreeSysroot *self, int b
 gboolean _ostree_sysroot_parse_deploy_path_name (const char *name, char **out_csum, int *out_serial,
                                                  GError **error);
 
-gboolean _ostree_sysroot_list_deployment_dirs_for_os (int deploydir_dfd, const char *osname,
+gboolean _ostree_sysroot_list_deployment_dirs_for_os (OstreeSysroot *self, int deploydir_dfd,
+                                                      const char *osname,
                                                       GPtrArray *inout_deployments,
                                                       GCancellable *cancellable, GError **error);
 
@@ -138,12 +158,17 @@ void _ostree_deployment_set_bootconfig_from_kargs (OstreeDeployment *deployment,
 
 gboolean _ostree_sysroot_reload_staged (OstreeSysroot *self, GError **error);
 
+gboolean _ostree_sysroot_ensure_finalize_staged_service (GError **error);
+
 gboolean _ostree_sysroot_finalize_staged (OstreeSysroot *self, GCancellable *cancellable,
                                           GError **error);
 gboolean _ostree_sysroot_boot_complete (OstreeSysroot *self, GCancellable *cancellable,
                                         GError **error);
 
-OstreeDeployment *_ostree_sysroot_deserialize_deployment_from_variant (GVariant *v, GError **error);
+gboolean _ostree_prepare_soft_reboot (GError **error);
+
+OstreeDeployment *_ostree_sysroot_deserialize_deployment_from_variant (OstreeSysroot *self,
+                                                                       GVariant *v, GError **error);
 
 char *_ostree_sysroot_get_deployment_backing_relpath (OstreeDeployment *deployment);
 

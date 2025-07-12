@@ -176,29 +176,29 @@ this is not guaranteed).</p>
 <tr>
 <td class="parameter_name"><p>refs</p></td>
 <td class="parameter_description"><p>non-empty array of collection–ref pairs to find remotes for. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/array"><span class="acronym">array</span></a> zero-terminated=1]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="Parameter points to an array of items."><span class="acronym">array</span></acronym> zero-terminated=1]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>options</p></td>
 <td class="parameter_description"><p>a GVariant <code class="literal">a{sv}</code> with an extensible set of flags. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/nullable"><span class="acronym">nullable</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="NULL may be passed as the value in, out, in-out; or as a return value."><span class="acronym">nullable</span></acronym>]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>finders</p></td>
 <td class="parameter_description"><p>non-empty array of
 <a class="link" href="ostree-ostree-repo-finder.html#OstreeRepoFinder" title="OstreeRepoFinder"><span class="type">OstreeRepoFinder</span></a> instances to use, or <code class="literal">NULL</code> to use the system defaults. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/array"><span class="acronym">array</span></a> zero-terminated=1][<a href="http://foldoc.org/transfer%20none"><span class="acronym">transfer none</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="Parameter points to an array of items."><span class="acronym">array</span></acronym> zero-terminated=1][<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>progress</p></td>
 <td class="parameter_description"><p>an <a class="link" href="ostree-Progress-notification-system-for-asynchronous-operations.html#OstreeAsyncProgress" title="OstreeAsyncProgress"><span class="type">OstreeAsyncProgress</span></a> to update with the operation’s
 progress, or <code class="literal">NULL</code>. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/nullable"><span class="acronym">nullable</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="NULL may be passed as the value in, out, in-out; or as a return value."><span class="acronym">nullable</span></acronym>]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>cancellable</p></td>
 <td class="parameter_description"><p>a <span class="type">GCancellable</span>, or <code class="literal">NULL</code>. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/nullable"><span class="acronym">nullable</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="NULL may be passed as the value in, out, in-out; or as a return value."><span class="acronym">nullable</span></acronym>]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>callback</p></td>
@@ -257,7 +257,7 @@ ostree_repo_find_remotes_finish (<em class="parameter"><code><a class="link" hre
 <p>a potentially empty array
 of <span class="type">OstreeRepoFinderResults</span>, followed by a <code class="literal">NULL</code> terminator element; or
 <code class="literal">NULL</code> on error. </p>
-<p><span class="annotation">[<a href="http://foldoc.org/transfer%20full"><span class="acronym">transfer full</span></a>][<a href="http://foldoc.org/array"><span class="acronym">array</span></a> zero-terminated=1]</span></p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>][<acronym title="Parameter points to an array of items."><span class="acronym">array</span></acronym> zero-terminated=1]</span></p>
 </div>
 <p class="since">Since: 2018.6</p>
 </div>
@@ -330,23 +330,23 @@ will be verified with the keyring of the remote being pulled from.</p></li>
 <td class="parameter_name"><p>results</p></td>
 <td class="parameter_description"><p><code class="literal">NULL</code>-terminated array of remotes to
 pull from, including the refs to pull from each. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/array"><span class="acronym">array</span></a> zero-terminated=1]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="Parameter points to an array of items."><span class="acronym">array</span></acronym> zero-terminated=1]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>options</p></td>
 <td class="parameter_description"><p>A GVariant <code class="literal">a{sv}</code> with an extensible set of flags. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/nullable"><span class="acronym">nullable</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="NULL may be passed as the value in, out, in-out; or as a return value."><span class="acronym">nullable</span></acronym>]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>progress</p></td>
 <td class="parameter_description"><p>an <a class="link" href="ostree-Progress-notification-system-for-asynchronous-operations.html#OstreeAsyncProgress" title="OstreeAsyncProgress"><span class="type">OstreeAsyncProgress</span></a> to update with the operation’s
 progress, or <code class="literal">NULL</code>. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/nullable"><span class="acronym">nullable</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="NULL may be passed as the value in, out, in-out; or as a return value."><span class="acronym">nullable</span></acronym>]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>cancellable</p></td>
 <td class="parameter_description"><p>a <span class="type">GCancellable</span>, or <code class="literal">NULL</code>. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/nullable"><span class="acronym">nullable</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="NULL may be passed as the value in, out, in-out; or as a return value."><span class="acronym">nullable</span></acronym>]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>callback</p></td>
@@ -447,7 +447,7 @@ keyrings should match.</p>
 <tr>
 <td class="parameter_name"><p>cancellable</p></td>
 <td class="parameter_description"><p>a <span class="type">GCancellable</span>, or <code class="literal">NULL</code>. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/nullable"><span class="acronym">nullable</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="NULL may be passed as the value in, out, in-out; or as a return value."><span class="acronym">nullable</span></acronym>]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>error</p></td>
@@ -462,7 +462,7 @@ keyrings should match.</p>
 <p><a class="link" href="ostree-ostree-remote.html#OstreeRemote" title="struct OstreeRemote"><span class="type">OstreeRemote</span></a> containing the GPG keyring for
 <em class="parameter"><code>collection_id</code></em>
 . </p>
-<p><span class="annotation">[<a href="http://foldoc.org/transfer%20full"><span class="acronym">transfer full</span></a>]</span></p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
 <p class="since">Since: 2018.6</p>
 </div>

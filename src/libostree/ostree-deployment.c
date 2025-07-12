@@ -17,6 +17,7 @@
 
 #include "config.h"
 
+#include "ostree-bootconfig-parser.h"
 #include "ostree-deployment-private.h"
 #include "ostree.h"
 #include "otutil.h"
@@ -255,6 +256,10 @@ ostree_deployment_clone (OstreeDeployment *self)
   OstreeDeployment *ret = ostree_deployment_new (
       self->index, self->osname, self->csum, self->deployserial, self->bootcsum, self->bootserial);
 
+  ret->devino_initialized = TRUE;
+  ret->device = self->device;
+  ret->inode = self->inode;
+
   new_bootconfig = ostree_bootconfig_parser_clone (self->bootconfig);
   ostree_deployment_set_bootconfig (ret, new_bootconfig);
 
@@ -475,4 +480,35 @@ gboolean
 ostree_deployment_is_finalization_locked (OstreeDeployment *self)
 {
   return self->finalization_locked;
+}
+
+/**
+ * ostree_deployment_is_soft_reboot_target:
+ * @self: Deployment
+ *
+ * Returns: `TRUE` if deployment is set for a soft reboot.
+ * Since: TODO
+ */
+gboolean
+ostree_deployment_is_soft_reboot_target (OstreeDeployment *self)
+{
+  return self->soft_reboot_target;
+}
+
+/**
+ * ostree_deployment_get_kargs:
+ * @self: Deployment
+ *
+ * Returns: (transfer full) (nullable): Kernel arguments
+ */
+OstreeKernelArgs *
+_ostree_deployment_get_kargs (OstreeDeployment *self)
+{
+  OstreeBootconfigParser *bootcfg = ostree_deployment_get_bootconfig (self);
+  if (!bootcfg)
+    return NULL;
+  const char *kargs = ostree_bootconfig_parser_get (bootcfg, "options");
+  if (!kargs)
+    return NULL;
+  return ostree_kernel_args_from_string (kargs);
 }

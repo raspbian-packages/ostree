@@ -26,6 +26,7 @@
       <sub name="ostree-version" link="ostree-ostree-version.html"/>
       <sub name="API Index" link="reference.html#api-index-full"/>
     </sub>
+    <sub name="Annotation Glossary" link="annotation-glossary.html"/>
   </chapters>
   <functions>
     <keyword type="macro" name="OSTREE_OBJECT_TYPE_IS_META()" link="ostree-Core-repository-independent-functions.html#OSTREE-OBJECT-TYPE-IS-META:CAPS"/>
@@ -145,6 +146,7 @@
     <keyword type="function" name="ostree_repo_get_remote_option ()" link="ostree-OstreeRepo.html#ostree-repo-get-remote-option" since="2016.5"/>
     <keyword type="function" name="ostree_repo_get_parent ()" link="ostree-OstreeRepo.html#ostree-repo-get-parent"/>
     <keyword type="function" name="ostree_repo_write_config ()" link="ostree-OstreeRepo.html#ostree-repo-write-config"/>
+    <keyword type="function" name="ostree_repo_write_config_and_reload ()" link="ostree-OstreeRepo.html#ostree-repo-write-config-and-reload"/>
     <keyword type="function" name="ostree_repo_scan_hardlinks ()" link="ostree-OstreeRepo.html#ostree-repo-scan-hardlinks"/>
     <keyword type="function" name="ostree_repo_prepare_transaction ()" link="ostree-OstreeRepo.html#ostree-repo-prepare-transaction"/>
     <keyword type="function" name="ostree_repo_commit_transaction ()" link="ostree-OstreeRepo.html#ostree-repo-commit-transaction"/>
@@ -440,6 +442,8 @@
     <keyword type="function" name="ostree_bootconfig_parser_get ()" link="ostree-ostree-bootconfig-parser.html#ostree-bootconfig-parser-get"/>
     <keyword type="function" name="ostree_bootconfig_parser_set_overlay_initrds ()" link="ostree-ostree-bootconfig-parser.html#ostree-bootconfig-parser-set-overlay-initrds" since="2020.7"/>
     <keyword type="function" name="ostree_bootconfig_parser_get_overlay_initrds ()" link="ostree-ostree-bootconfig-parser.html#ostree-bootconfig-parser-get-overlay-initrds" since="2020.7"/>
+    <keyword type="function" name="ostree_bootconfig_parser_get_tries_left ()" link="ostree-ostree-bootconfig-parser.html#ostree-bootconfig-parser-get-tries-left" since="2025.2"/>
+    <keyword type="function" name="ostree_bootconfig_parser_get_tries_done ()" link="ostree-ostree-bootconfig-parser.html#ostree-bootconfig-parser-get-tries-done"/>
     <keyword type="struct" name="OstreeBootconfigParser" link="ostree-ostree-bootconfig-parser.html#OstreeBootconfigParser"/>
     <keyword type="function" name="ostree_chain_input_stream_new ()" link="ostree-ostree-chain-input-stream.html#ostree-chain-input-stream-new"/>
     <keyword type="struct" name="struct OstreeChainInputStream" link="ostree-ostree-chain-input-stream.html#OstreeChainInputStream"/>
@@ -462,6 +466,7 @@
     <keyword type="function" name="ostree_deployment_is_pinned ()" link="ostree-ostree-deployment.html#ostree-deployment-is-pinned" since="2018.3"/>
     <keyword type="function" name="ostree_deployment_is_staged ()" link="ostree-ostree-deployment.html#ostree-deployment-is-staged" since="2018.3"/>
     <keyword type="function" name="ostree_deployment_is_finalization_locked ()" link="ostree-ostree-deployment.html#ostree-deployment-is-finalization-locked" since="2023.8"/>
+    <keyword type="function" name="ostree_deployment_is_soft_reboot_target ()" link="ostree-ostree-deployment.html#ostree-deployment-is-soft-reboot-target" since="TODO"/>
     <keyword type="function" name="ostree_deployment_set_index ()" link="ostree-ostree-deployment.html#ostree-deployment-set-index"/>
     <keyword type="function" name="ostree_deployment_set_bootserial ()" link="ostree-ostree-deployment.html#ostree-deployment-set-bootserial"/>
     <keyword type="function" name="ostree_deployment_set_bootconfig ()" link="ostree-ostree-deployment.html#ostree-deployment-set-bootconfig"/>
@@ -679,7 +684,11 @@
     <keyword type="member" name="OstreeDeployment.unlocked" link="ostree-ostree-deployment.html#OstreeDeployment.unlocked"/>
     <keyword type="member" name="OstreeDeployment.staged" link="ostree-ostree-deployment.html#OstreeDeployment.staged"/>
     <keyword type="member" name="OstreeDeployment.finalization-locked" link="ostree-ostree-deployment.html#OstreeDeployment.finalization-locked"/>
+    <keyword type="member" name="OstreeDeployment.soft-reboot-target" link="ostree-ostree-deployment.html#OstreeDeployment.soft-reboot-target"/>
     <keyword type="member" name="OstreeDeployment.overlay-initrds" link="ostree-ostree-deployment.html#OstreeDeployment.overlay-initrds"/>
     <keyword type="member" name="OstreeDeployment.overlay-initrds-id" link="ostree-ostree-deployment.html#OstreeDeployment.overlay-initrds-id"/>
+    <keyword type="member" name="OstreeDeployment.devino-initialized" link="ostree-ostree-deployment.html#OstreeDeployment.devino-initialized"/>
+    <keyword type="member" name="OstreeDeployment.device" link="ostree-ostree-deployment.html#OstreeDeployment.device"/>
+    <keyword type="member" name="OstreeDeployment.inode" link="ostree-ostree-deployment.html#OstreeDeployment.inode"/>
   </functions>
 </book>

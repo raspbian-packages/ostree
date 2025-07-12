@@ -25,7 +25,9 @@
 #ifdef HAVE_LIBSODIUM
 #include <sodium.h>
 #define USE_LIBSODIUM
-#elif defined(HAVE_OPENSSL)
+#endif
+
+#if defined(HAVE_OPENSSL)
 #include <openssl/evp.h>
 #include <openssl/x509.h>
 #define USE_OPENSSL
@@ -76,6 +78,30 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (ComposefsConfig, otcore_free_composefs_config)
 ComposefsConfig *otcore_load_composefs_config (const char *cmdline, GKeyFile *config,
                                                gboolean load_keys, GError **error);
 
+/**
+ * otcore_mount_rootfs:
+ * @composefs_config: Configuration for composefs.
+ * @metadata_builder: (transfer none): GVariantBuilder to add metadata to.
+ * @root_transient: Whether the root filesystem is transient.
+ * @root_mountpoint: The mount point of the physical root filesystem.
+ * @deploy_path: The path to the deployment.
+ * @mount_target: The target path to mount the composefs image.
+ * @out_using_composefs: (out): Whether composefs was successfully used.
+ * @error: (out): Return location for a GError, or %NULL.
+ *
+ * If composefs is enabled, it will be mounted at the target. Otherwise, the
+ * target directory is left unchanged.
+ *
+ * Returns: %TRUE on success, %FALSE on error.
+ */
+gboolean otcore_mount_rootfs (ComposefsConfig *composefs_config, GVariantBuilder *metadata_builder,
+                              gboolean root_transient, const char *root_mountpoint,
+                              const char *deploy_path, const char *mount_target,
+                              bool *out_using_composefs, GError **error);
+
+gboolean otcore_mount_etc (GKeyFile *config, GVariantBuilder *metadata_builder,
+                           const char *mount_target, GError **error);
+
 // Our directory with transient state (eventually /run/ostree-booted should be a link to
 // /run/ostree/booted)
 #define OTCORE_RUN_OSTREE "/run/ostree"
@@ -89,6 +115,8 @@ ComposefsConfig *otcore_load_composefs_config (const char *cmdline, GKeyFile *co
 #define OSTREE_DEPLOYMENT_BACKING_DIR "backing"
 // The directory holding the root overlayfs
 #define OSTREE_DEPLOYMENT_ROOT_TRANSIENT_DIR "root-transient"
+// The directory holding overlayfs for /usr (ostree admin unlock)
+#define OSTREE_DEPLOYMENT_USR_TRANSIENT_DIR "usr-transient"
 
 // Written by ostree admin unlock --hotfix, read by ostree-prepare-root
 #define OTCORE_HOTFIX_USR_OVL_WORK ".usr-ovl-work"
@@ -103,10 +131,18 @@ ComposefsConfig *otcore_load_composefs_config (const char *cmdline, GKeyFile *co
 #define OTCORE_PREPARE_ROOT_COMPOSEFS_KEY "composefs"
 #define OTCORE_PREPARE_ROOT_ENABLED_KEY "enabled"
 #define OTCORE_PREPARE_ROOT_KEYPATH_KEY "keypath"
+#define OTCORE_PREPARE_ROOT_TRANSIENT_KEY "transient"
+
+// For use with systemd soft reboots
+#define OTCORE_RUN_NEXTROOT "/run/nextroot"
 
 // The file written in the initramfs which contains an a{sv} of metadata
 // from ostree-prepare-root.
 #define OTCORE_RUN_BOOTED "/run/ostree-booted"
+// Written by ostree-soft-reboot.c with metadata about /run/nextroot
+// that is then processed by ostree-boot-complete.c and turned into
+// the canonical /run/ostree-booted.
+#define OTCORE_RUN_NEXTROOT_BOOTED "/run/ostree/nextroot-booted"
 // This key will be present if composefs was successfully used.
 #define OTCORE_RUN_BOOTED_KEY_COMPOSEFS "composefs"
 // True if fsverity was required for composefs.

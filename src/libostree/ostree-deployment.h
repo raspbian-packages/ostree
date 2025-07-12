@@ -18,6 +18,7 @@
 #pragma once
 
 #include "ostree-bootconfig-parser.h"
+#include "ostree-types.h"
 
 G_BEGIN_DECLS
 
@@ -72,6 +73,8 @@ _OSTREE_PUBLIC
 gboolean ostree_deployment_is_staged (OstreeDeployment *self);
 _OSTREE_PUBLIC
 gboolean ostree_deployment_is_finalization_locked (OstreeDeployment *self);
+_OSTREE_PUBLIC
+gboolean ostree_deployment_is_soft_reboot_target (OstreeDeployment *self);
 _OSTREE_PUBLIC
 gboolean ostree_deployment_is_pinned (OstreeDeployment *self);
 

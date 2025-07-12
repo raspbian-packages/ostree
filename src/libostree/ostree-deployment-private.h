@@ -52,8 +52,14 @@ struct _OstreeDeployment
   OstreeDeploymentUnlockedState unlocked;
   gboolean staged;
   gboolean finalization_locked;
+  gboolean soft_reboot_target;
   char **overlay_initrds;
   char *overlay_initrds_id;
+
+  // Private cache of expected backing device/inode
+  gboolean devino_initialized;
+  dev_t device;
+  ino_t inode;
 };
 
 void _ostree_deployment_set_bootcsum (OstreeDeployment *self, const char *bootcsum);
@@ -61,5 +67,7 @@ void _ostree_deployment_set_bootcsum (OstreeDeployment *self, const char *bootcs
 void _ostree_deployment_set_overlay_initrds (OstreeDeployment *self, char **overlay_initrds);
 
 char **_ostree_deployment_get_overlay_initrds (OstreeDeployment *self);
+
+OstreeKernelArgs *_ostree_deployment_get_kargs (OstreeDeployment *self);
 
 G_END_DECLS

@@ -166,6 +166,14 @@
 </tr>
 <tr>
 <td class="function_type">
+<span class="returnvalue">gboolean</span>
+</td>
+<td class="function_name">
+<a class="link" href="ostree-ostree-deployment.html#ostree-deployment-is-soft-reboot-target" title="ostree_deployment_is_soft_reboot_target ()">ostree_deployment_is_soft_reboot_target</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
 <span class="returnvalue">void</span>
 </td>
 <td class="function_name">
@@ -255,7 +263,7 @@ ostree_deployment_hash (<em class="parameter"><code><span class="type">gconstpoi
 <tbody><tr>
 <td class="parameter_name"><p>v</p></td>
 <td class="parameter_description"><p>Deployment. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/type"><span class="acronym">type</span></a> OstreeDeployment]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="Override the parsed C type with given type."><span class="acronym">type</span></acronym> OstreeDeployment]</span></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -282,12 +290,12 @@ ostree_deployment_equal (<em class="parameter"><code><span class="type">gconstpo
 <tr>
 <td class="parameter_name"><p>ap</p></td>
 <td class="parameter_description"><p>A deployment. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/type"><span class="acronym">type</span></a> OstreeDeployment]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="Override the parsed C type with given type."><span class="acronym">type</span></acronym> OstreeDeployment]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>bp</p></td>
 <td class="parameter_description"><p>A deployment. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/type"><span class="acronym">type</span></a> OstreeDeployment]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="Override the parsed C type with given type."><span class="acronym">type</span></acronym> OstreeDeployment]</span></td>
 </tr>
 </tbody>
 </table></div>
@@ -339,7 +347,7 @@ ostree_deployment_new (<em class="parameter"><code><span class="type">int</span>
 <tr>
 <td class="parameter_name"><p>bootcsum</p></td>
 <td class="parameter_description"><p>Kernel/initrd checksum. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/nullable"><span class="acronym">nullable</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="NULL may be passed as the value in, out, in-out; or as a return value."><span class="acronym">nullable</span></acronym>]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>bootserial</p></td>
@@ -352,7 +360,7 @@ ostree_deployment_new (<em class="parameter"><code><span class="type">int</span>
 <div class="refsect3">
 <a name="ostree-deployment-new.returns"></a><h4>Returns</h4>
 <p>New deployment. </p>
-<p><span class="annotation">[<a href="http://foldoc.org/transfer%20full"><span class="acronym">transfer full</span></a>][<a href="http://foldoc.org/not%20nullable"><span class="acronym">not nullable</span></a>]</span></p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>][<acronym title="NULL must not be passed as the value in, out, in-out; or as a return value."><span class="acronym">not nullable</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -433,7 +441,7 @@ ostree_deployment_get_bootconfig (<em class="parameter"><code><a class="link" hr
 <div class="refsect3">
 <a name="ostree-deployment-get-bootconfig.returns"></a><h4>Returns</h4>
 <p>Boot configuration. </p>
-<p><span class="annotation">[<a href="http://foldoc.org/transfer%20none"><span class="acronym">transfer none</span></a>][<a href="http://foldoc.org/nullable"><span class="acronym">nullable</span></a>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>][<acronym title="NULL may be passed as the value in, out, in-out; or as a return value."><span class="acronym">nullable</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -459,7 +467,7 @@ ostree_deployment_get_origin (<em class="parameter"><code><a class="link" href="
 <div class="refsect3">
 <a name="ostree-deployment-get-origin.returns"></a><h4>Returns</h4>
 <p>Origin. </p>
-<p><span class="annotation">[<a href="http://foldoc.org/transfer%20none"><span class="acronym">transfer none</span></a>][<a href="http://foldoc.org/nullable"><span class="acronym">nullable</span></a>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>][<acronym title="NULL may be passed as the value in, out, in-out; or as a return value."><span class="acronym">nullable</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -488,7 +496,7 @@ or concatenate it with the full <a class="link" href="ostree-Root-partition-moun
 <div class="refsect3">
 <a name="ostree-deployment-get-origin-relpath.returns"></a><h4>Returns</h4>
 <p>Path to deployment root directory, relative to sysroot. </p>
-<p><span class="annotation">[<a href="http://foldoc.org/not%20nullable"><span class="acronym">not nullable</span></a>][<a href="http://foldoc.org/transfer%20full"><span class="acronym">transfer full</span></a>]</span></p>
+<p><span class="annotation">[<acronym title="NULL must not be passed as the value in, out, in-out; or as a return value."><span class="acronym">not nullable</span></acronym>][<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -581,6 +589,33 @@ additional action.</p>
 </div>
 <hr>
 <div class="refsect2">
+<a name="ostree-deployment-is-soft-reboot-target"></a><h3>ostree_deployment_is_soft_reboot_target ()</h3>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>
+ostree_deployment_is_soft_reboot_target
+                               (<em class="parameter"><code><a class="link" href="ostree-ostree-deployment.html#OstreeDeployment" title="OstreeDeployment"><span class="type">OstreeDeployment</span></a> *self</code></em>);</pre>
+<div class="refsect3">
+<a name="ostree-deployment-is-soft-reboot-target.parameters"></a><h4>Parameters</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>self</p></td>
+<td class="parameter_description"><p>Deployment</p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="ostree-deployment-is-soft-reboot-target.returns"></a><h4>Returns</h4>
+<p> <code class="literal">TRUE</code> if deployment is set for a soft reboot.</p>
+</div>
+<p class="since">Since: TODO</p>
+</div>
+<hr>
+<div class="refsect2">
 <a name="ostree-deployment-set-index"></a><h3>ostree_deployment_set_index ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>
 ostree_deployment_set_index (<em class="parameter"><code><a class="link" href="ostree-ostree-deployment.html#OstreeDeployment" title="OstreeDeployment"><span class="type">OstreeDeployment</span></a> *self</code></em>,
@@ -663,7 +698,7 @@ ostree_deployment_set_bootconfig (<em class="parameter"><code><a class="link" hr
 <tr>
 <td class="parameter_name"><p>bootconfig</p></td>
 <td class="parameter_description"><p>Bootloader configuration object. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/nullable"><span class="acronym">nullable</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="NULL may be passed as the value in, out, in-out; or as a return value."><span class="acronym">nullable</span></acronym>]</span></td>
 </tr>
 </tbody>
 </table></div>
@@ -694,7 +729,7 @@ of the deployment and how to update to the next version.</p>
 <tr>
 <td class="parameter_name"><p>origin</p></td>
 <td class="parameter_description"><p>Set the origin for this deployment. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/nullable"><span class="acronym">nullable</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="NULL may be passed as the value in, out, in-out; or as a return value."><span class="acronym">nullable</span></acronym>]</span></td>
 </tr>
 </tbody>
 </table></div>
@@ -759,7 +794,7 @@ ostree_deployment_clone (<em class="parameter"><code><a class="link" href="ostre
 <a name="ostree-deployment-clone.returns"></a><h4>Returns</h4>
 <p>New deep copy of <em class="parameter"><code>self</code></em>
 . </p>
-<p><span class="annotation">[<a href="http://foldoc.org/not%20nullable"><span class="acronym">not nullable</span></a>][<a href="http://foldoc.org/transfer%20full"><span class="acronym">transfer full</span></a>]</span></p>
+<p><span class="annotation">[<acronym title="NULL must not be passed as the value in, out, in-out; or as a return value."><span class="acronym">not nullable</span></acronym>][<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -771,7 +806,7 @@ ostree_deployment_unlocked_state_to_string
 <div class="refsect3">
 <a name="ostree-deployment-unlocked-state-to-string.returns"></a><h4>Returns</h4>
 <p>Description of state. </p>
-<p><span class="annotation">[<a href="http://foldoc.org/not%20nullable"><span class="acronym">not nullable</span></a>]</span></p>
+<p><span class="annotation">[<acronym title="NULL must not be passed as the value in, out, in-out; or as a return value."><span class="acronym">not nullable</span></acronym>]</span></p>
 </div>
 <p class="since">Since: 2016.4</p>
 </div>
@@ -794,8 +829,14 @@ ostree_deployment_unlocked_state_to_string
   OstreeDeploymentUnlockedState unlocked;
   gboolean staged;
   gboolean finalization_locked;
+  gboolean soft_reboot_target;
   char **overlay_initrds;
   char *overlay_initrds_id;
+
+  // Private cache of expected backing device/inode
+  gboolean devino_initialized;
+  dev_t device;
+  ino_t inode;
 } OstreeDeployment;
 </pre>
 <div class="refsect3">
@@ -863,6 +904,11 @@ ostree_deployment_unlocked_state_to_string
 <td> </td>
 </tr>
 <tr>
+<td class="struct_member_name"><p><span class="type">gboolean</span> <em class="structfield"><code><a name="OstreeDeployment.soft-reboot-target"></a>soft_reboot_target</code></em>;</p></td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
 <td class="struct_member_name"><p><span class="type">char</span> **<em class="structfield"><code><a name="OstreeDeployment.overlay-initrds"></a>overlay_initrds</code></em>;</p></td>
 <td class="struct_member_description"><p>Checksums of staged additional initrds for this deployment</p></td>
 <td class="struct_member_annotations"> </td>
@@ -871,6 +917,21 @@ ostree_deployment_unlocked_state_to_string
 <td class="struct_member_name"><p><span class="type">char</span> *<em class="structfield"><code><a name="OstreeDeployment.overlay-initrds-id"></a>overlay_initrds_id</code></em>;</p></td>
 <td class="struct_member_description"><p>Unique ID generated from initrd checksums; used to compare deployments</p></td>
 <td class="struct_member_annotations"> </td>
+</tr>
+<tr>
+<td class="struct_member_name"><p><span class="type">gboolean</span> <em class="structfield"><code><a name="OstreeDeployment.devino-initialized"></a>devino_initialized</code></em>;</p></td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td class="struct_member_name"><p><span class="type">dev_t</span> <em class="structfield"><code><a name="OstreeDeployment.device"></a>device</code></em>;</p></td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td class="struct_member_name"><p><span class="type">ino_t</span> <em class="structfield"><code><a name="OstreeDeployment.inode"></a>inode</code></em>;</p></td>
+<td> </td>
+<td> </td>
 </tr>
 </tbody>
 </table></div>
