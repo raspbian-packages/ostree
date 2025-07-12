@@ -1,10 +1,12 @@
 ostree (2025.3-1) UNRELEASED; urgency=medium
 
   * New upstream release
+  * Rebase patch series
   * d/libostree-1-1.symbols: Update
   * d/copyright: Update
+  * d/control: Add jq to Build-Depends and -tests Depends
 
- -- Simon McVittie <smcv@debian.org>  Sat, 12 Jul 2025 16:34:56 +0100
+ -- Simon McVittie <smcv@debian.org>  Sat, 12 Jul 2025 19:02:57 +0100
 
 ostree (2025.2-1) unstable; urgency=medium
 
