@@ -1,3 +1,9 @@
+ostree (2025.3-1) UNRELEASED; urgency=medium
+
+  * New upstream release
+
+ -- Simon McVittie <smcv@debian.org>  Sat, 12 Jul 2025 16:25:56 +0100
+
 ostree (2025.2-1) unstable; urgency=medium
 
   * New upstream release
