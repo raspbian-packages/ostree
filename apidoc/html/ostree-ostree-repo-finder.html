@@ -188,18 +188,18 @@ the checksum will not be set. Results which provide none of the requested
 <tr>
 <td class="parameter_name"><p>refs</p></td>
 <td class="parameter_description"><p>non-empty array of collection–ref pairs to find remotes for. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/array"><span class="acronym">array</span></a> zero-terminated=1]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="Parameter points to an array of items."><span class="acronym">array</span></acronym> zero-terminated=1]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>parent_repo</p></td>
 <td class="parameter_description"><p>the local repository which the refs are being resolved for,
 which provides configuration information and GPG keys. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/transfer%20none"><span class="acronym">transfer none</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>cancellable</p></td>
 <td class="parameter_description"><p>a <span class="type">GCancellable</span>, or <code class="literal">NULL</code>. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/nullable"><span class="acronym">nullable</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="NULL may be passed as the value in, out, in-out; or as a return value."><span class="acronym">nullable</span></acronym>]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>callback</p></td>
@@ -256,7 +256,7 @@ ostree_repo_finder_resolve_finish (<em class="parameter"><code><a class="link" h
 <a name="ostree-repo-finder-resolve-finish.returns"></a><h4>Returns</h4>
 <p>array of zero
 or more results. </p>
-<p><span class="annotation">[<a href="http://foldoc.org/transfer%20full"><span class="acronym">transfer full</span></a>][<a href="http://foldoc.org/element-type"><span class="acronym">element-type</span></a> OstreeRepoFinderResult]</span></p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>][<acronym title="Generics and defining elements of containers and arrays."><span class="acronym">element-type</span></acronym> OstreeRepoFinderResult]</span></p>
 </div>
 <p class="since">Since: 2018.6</p>
 </div>
@@ -285,23 +285,23 @@ ostree_repo_finder_resolve_all_async (<em class="parameter"><code><a class="link
 <tr>
 <td class="parameter_name"><p>finders</p></td>
 <td class="parameter_description"><p>non-empty array of <a href="ostree-ostree-repo-finder.html#OstreeRepoFinder"><span class="type">OstreeRepoFinders</span></a>. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/array"><span class="acronym">array</span></a> zero-terminated=1]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="Parameter points to an array of items."><span class="acronym">array</span></acronym> zero-terminated=1]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>refs</p></td>
 <td class="parameter_description"><p>non-empty array of collection–ref pairs to find remotes for. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/array"><span class="acronym">array</span></a> zero-terminated=1]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="Parameter points to an array of items."><span class="acronym">array</span></acronym> zero-terminated=1]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>parent_repo</p></td>
 <td class="parameter_description"><p>the local repository which the refs are being resolved for,
 which provides configuration information and GPG keys. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/transfer%20none"><span class="acronym">transfer none</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>cancellable</p></td>
 <td class="parameter_description"><p>a <span class="type">GCancellable</span>, or <code class="literal">NULL</code>. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/nullable"><span class="acronym">nullable</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="NULL may be passed as the value in, out, in-out; or as a return value."><span class="acronym">nullable</span></acronym>]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>callback</p></td>
@@ -352,7 +352,7 @@ ostree_repo_finder_resolve_all_finish (<em class="parameter"><code><span class="
 <a name="ostree-repo-finder-resolve-all-finish.returns"></a><h4>Returns</h4>
 <p>array of zero
 or more results. </p>
-<p><span class="annotation">[<a href="http://foldoc.org/transfer%20full"><span class="acronym">transfer full</span></a>][<a href="http://foldoc.org/element-type"><span class="acronym">element-type</span></a> OstreeRepoFinderResult]</span></p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>][<acronym title="Generics and defining elements of containers and arrays."><span class="acronym">element-type</span></acronym> OstreeRepoFinderResult]</span></p>
 </div>
 <p class="since">Since: 2018.6</p>
 </div>
@@ -381,13 +381,13 @@ are as described in the <span class="type">OstreeRepoFinderResult</span> documen
 <td class="parameter_name"><p>remote</p></td>
 <td class="parameter_description"><p>an <a class="link" href="ostree-ostree-remote.html#OstreeRemote" title="struct OstreeRemote"><span class="type">OstreeRemote</span></a> containing the transport details
 for the result. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/transfer%20none"><span class="acronym">transfer none</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>finder</p></td>
 <td class="parameter_description"><p>the <a class="link" href="ostree-ostree-repo-finder.html#OstreeRepoFinder" title="OstreeRepoFinder"><span class="type">OstreeRepoFinder</span></a> instance which produced the
 result. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/transfer%20none"><span class="acronym">transfer none</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>priority</p></td>
@@ -398,7 +398,7 @@ priority</p></td>
 <tr>
 <td class="parameter_name"><p>ref_to_checksum</p></td>
 <td class="parameter_description"><p>map of collection–ref pairs to checksums provided by this result. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/element-type"><span class="acronym">element-type</span></a> OstreeCollectionRef utf8][<a href="http://foldoc.org/transfer%20none"><span class="acronym">transfer none</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="Generics and defining elements of containers and arrays."><span class="acronym">element-type</span></acronym> OstreeCollectionRef utf8][<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>ref_to_timestamp</p></td>
@@ -419,7 +419,7 @@ the summary file for the result was last modified, or <code class="literal">0</c
 <div class="refsect3">
 <a name="ostree-repo-finder-result-new.returns"></a><h4>Returns</h4>
 <p>a new <span class="type">OstreeRepoFinderResult</span>. </p>
-<p><span class="annotation">[<a href="http://foldoc.org/transfer%20full"><span class="acronym">transfer full</span></a>]</span></p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
 <p class="since">Since: 2018.6</p>
 </div>
@@ -440,7 +440,7 @@ ostree_repo_finder_result_dup (<em class="parameter"><code><span class="type">Os
 <tbody><tr>
 <td class="parameter_name"><p>result</p></td>
 <td class="parameter_description"><p>an <span class="type">OstreeRepoFinderResult</span> to copy. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/transfer%20none"><span class="acronym">transfer none</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -448,7 +448,7 @@ ostree_repo_finder_result_dup (<em class="parameter"><code><span class="type">Os
 <a name="ostree-repo-finder-result-dup.returns"></a><h4>Returns</h4>
 <p>a newly allocated copy of <em class="parameter"><code>result</code></em>
 . </p>
-<p><span class="annotation">[<a href="http://foldoc.org/transfer%20full"><span class="acronym">transfer full</span></a>]</span></p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
 <p class="since">Since: 2018.6</p>
 </div>
@@ -470,7 +470,7 @@ ostree_repo_finder_result_free (<em class="parameter"><code><span class="type">O
 <tbody><tr>
 <td class="parameter_name"><p>result</p></td>
 <td class="parameter_description"><p>an <span class="type">OstreeRepoFinderResult</span>. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/transfer%20full"><span class="acronym">transfer full</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -535,7 +535,7 @@ ostree_repo_finder_result_freev (<em class="parameter"><code><span class="type">
 <tbody><tr>
 <td class="parameter_name"><p>results</p></td>
 <td class="parameter_description"><p>an <span class="type">OstreeRepoFinderResult</span>. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/array"><span class="acronym">array</span></a> zero-terminated=1][<a href="http://foldoc.org/transfer%20full"><span class="acronym">transfer full</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="Parameter points to an array of items."><span class="acronym">array</span></acronym> zero-terminated=1][<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></td>
 </tr></tbody>
 </table></div>
 </div>

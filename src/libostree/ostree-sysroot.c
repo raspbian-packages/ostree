@@ -22,8 +22,10 @@
 
 #include "otutil.h"
 #include <err.h>
+#include <linux/magic.h>
 #include <sys/file.h>
 #include <sys/mount.h>
+#include <sys/vfs.h>
 #include <sys/wait.h>
 
 #include "ostree-bootloader-aboot.h"
@@ -338,13 +340,63 @@ ensure_sysroot_fd (OstreeSysroot *self, GError **error)
   return TRUE;
 }
 
+static gboolean
+validate_boot_fd (OstreeSysroot *self, int fd, GError **error)
+{
+  g_assert_cmpint (fd, !=, -1);
+  struct statfs stbuf;
+  if (fstatfs (fd, &stbuf) < 0)
+    return glnx_throw_errno_prefix (error, "fstatfs(boot)");
+  self->boot_is_vfat = (stbuf.f_type == MSDOS_SUPER_MAGIC);
+  if (self->boot_is_vfat)
+    return glnx_throw (error, "/boot cannot currently be a vfat filesystem");
+  return TRUE;
+}
+
+/* Require that both self->sysroot_fd is set.
+ * If the sysroot has a boot/ subdirectory, it will be loaded.
+ * If not, self->boot_fd will remain -1.
+ *
+ * This API is only for backwards compatibility with effectively broken
+ * situations where we're pointed at a sysroot that doesn't have /boot.
+ */
+static gboolean
+_ostree_sysroot_maybe_load_boot_fd (OstreeSysroot *self, GError **error)
+{
+  if (!ensure_sysroot_fd (self, error))
+    return FALSE;
+  if (self->boot_fd == -1)
+    {
+      glnx_autofd int fd = glnx_opendirat_with_errno (self->sysroot_fd, "boot", TRUE);
+      if (fd < 0)
+        {
+          if (errno != ENOENT)
+            return glnx_throw_errno_prefix (error, "Opening boot/");
+        }
+      else
+        {
+          if (!validate_boot_fd (self, fd, error))
+            return FALSE;
+          self->boot_fd = glnx_steal_fd (&fd);
+        }
+    }
+  return TRUE;
+}
+
+/* Require that both self->sysroot_fd and self->boot_fd are loaded */
 gboolean
 _ostree_sysroot_ensure_boot_fd (OstreeSysroot *self, GError **error)
 {
+  if (!ensure_sysroot_fd (self, error))
+    return FALSE;
   if (self->boot_fd == -1)
     {
-      if (!glnx_opendirat (self->sysroot_fd, "boot", TRUE, &self->boot_fd, error))
+      glnx_autofd int fd = -1;
+      if (!glnx_opendirat (self->sysroot_fd, "boot", TRUE, &fd, error))
         return FALSE;
+      if (!validate_boot_fd (self, fd, error))
+        return FALSE;
+      self->boot_fd = glnx_steal_fd (&fd);
     }
   return TRUE;
 }
@@ -607,18 +659,28 @@ _ostree_sysroot_read_boot_loader_configs (OstreeSysroot *self, int bootversion,
                                           GPtrArray **out_loader_configs, GCancellable *cancellable,
                                           GError **error)
 {
-  if (!ensure_sysroot_fd (self, error))
-    return FALSE;
-
   g_autoptr (GPtrArray) ret_loader_configs
       = g_ptr_array_new_with_free_func ((GDestroyNotify)g_object_unref);
 
-  g_autofree char *entries_path = g_strdup_printf ("boot/loader.%d/entries", bootversion);
+  // In our unit tests we have some cases where we do
+  // ostree --sysroot=/path/to/deployment/root remote add
+  // without a boot directory at all. This is a broken situation,
+  // but we attempt to cope.
+  if (!_ostree_sysroot_maybe_load_boot_fd (self, error))
+    return FALSE;
+  if (self->boot_fd == -1)
+    {
+      g_debug ("Deployment is missing boot directory");
+      *out_loader_configs = g_steal_pointer (&ret_loader_configs);
+      return TRUE;
+    }
+
+  g_autofree char *entries_path = g_strdup_printf ("loader.%d/entries", bootversion);
   gboolean entries_exists;
   g_auto (GLnxDirFdIterator) dfd_iter = {
     0,
   };
-  if (!ot_dfd_iter_init_allow_noent (self->sysroot_fd, entries_path, &dfd_iter, &entries_exists,
+  if (!ot_dfd_iter_init_allow_noent (self->boot_fd, entries_path, &dfd_iter, &entries_exists,
                                      error))
     return FALSE;
   if (!entries_exists)
@@ -764,6 +826,31 @@ _ostree_sysroot_get_runstate_path (OstreeDeployment *deployment, const char *key
                           ostree_deployment_get_deployserial (deployment), key);
 }
 
+// Should be preferred over ostree_deployment_new as this also initializes cached
+// state for device/inode.
+OstreeDeployment *
+_ostree_sysroot_new_deployment_object (OstreeSysroot *self, const char *osname, const char *csum,
+                                       int deployserial, const char *bootcsum, int bootserial,
+                                       GError **error)
+{
+  if (!ensure_sysroot_fd (self, error))
+    return FALSE;
+
+  // This deployment isn't associated with an index.
+  g_autoptr (OstreeDeployment) ret
+      = ostree_deployment_new (-1, osname, csum, deployserial, bootcsum, bootserial);
+
+  g_autofree char *relpath = ostree_sysroot_get_deployment_dirpath (self, ret);
+  struct stat stbuf;
+  if (!glnx_fstatat (self->sysroot_fd, relpath, &stbuf, AT_SYMLINK_NOFOLLOW, error))
+    return NULL;
+  ret->devino_initialized = TRUE;
+  ret->device = stbuf.st_dev;
+  ret->inode = stbuf.st_ino;
+
+  return g_steal_pointer (&ret);
+}
+
 static gboolean
 parse_deployment (OstreeSysroot *self, const char *boot_link, OstreeDeployment **out_deployment,
                   GCancellable *cancellable, GError **error)
@@ -805,16 +892,16 @@ parse_deployment (OstreeSysroot *self, const char *boot_link, OstreeDeployment *
   if (!glnx_opendirat (self->sysroot_fd, relative_boot_link, TRUE, &deployment_dfd, error))
     return FALSE;
 
+  struct stat stbuf;
+  if (!glnx_fstat (deployment_dfd, &stbuf, error))
+    return FALSE;
+
   /* See if this is the booted deployment */
   const gboolean looking_for_booted_deployment
       = (self->root_is_ostree_booted && !self->booted_deployment);
   gboolean is_booted_deployment = FALSE;
   if (looking_for_booted_deployment)
     {
-      struct stat stbuf;
-      if (!glnx_fstat (deployment_dfd, &stbuf, error))
-        return FALSE;
-
       /* ostree-prepare-root records the (device, inode) pair of the underlying real deployment
        * directory (before we might have mounted a composefs or overlayfs on top).
        *
@@ -853,7 +940,6 @@ parse_deployment (OstreeSysroot *self, const char *boot_link, OstreeDeployment *
       ret_deployment, _OSTREE_SYSROOT_DEPLOYMENT_RUNSTATE_FLAG_DEVELOPMENT);
   g_autofree char *unlocked_transient_path = _ostree_sysroot_get_runstate_path (
       ret_deployment, _OSTREE_SYSROOT_DEPLOYMENT_RUNSTATE_FLAG_TRANSIENT);
-  struct stat stbuf;
   if (lstat (unlocked_development_path, &stbuf) == 0)
     ret_deployment->unlocked = OSTREE_DEPLOYMENT_UNLOCKED_DEVELOPMENT;
   else if (lstat (unlocked_transient_path, &stbuf) == 0)
@@ -871,7 +957,13 @@ parse_deployment (OstreeSysroot *self, const char *boot_link, OstreeDeployment *
       /* TODO: warn on unknown unlock types? */
     }
 
-  g_debug ("Deployment %s.%d unlocked=%d", treecsum, deployserial, ret_deployment->unlocked);
+  ret_deployment->devino_initialized = TRUE;
+  ret_deployment->device = stbuf.st_dev;
+  ret_deployment->inode = stbuf.st_ino;
+
+  g_debug ("Deployment %s.%d unlocked=%d dev=%" G_GUINT64_FORMAT " ino=%" G_GUINT64_FORMAT,
+           treecsum, deployserial, ret_deployment->unlocked, ret_deployment->device,
+           ret_deployment->inode);
 
   if (is_booted_deployment)
     self->booted_deployment = g_object_ref (ret_deployment);
@@ -1103,7 +1195,7 @@ _ostree_sysroot_reload_staged (OstreeSysroot *self, GError **error)
       if (target)
         {
           g_autoptr (OstreeDeployment) staged
-              = _ostree_sysroot_deserialize_deployment_from_variant (target, error);
+              = _ostree_sysroot_deserialize_deployment_from_variant (self, target, error);
           if (!staged)
             return FALSE;
 
@@ -1128,6 +1220,50 @@ _ostree_sysroot_reload_staged (OstreeSysroot *self, GError **error)
   return TRUE;
 }
 
+/* Reload state from /run/ostree/nextroot-booted */
+static gboolean
+_ostree_sysroot_reload_soft_reboot (OstreeSysroot *self, GError **error)
+{
+  GLNX_AUTO_PREFIX_ERROR ("Loading nextroot", error);
+  // Reset state
+  self->expecting_nextroot = FALSE;
+  g_clear_object (&self->soft_reboot_target_deployment);
+
+  glnx_autofd int fd = -1;
+  if (!ot_openat_ignore_enoent (AT_FDCWD, OTCORE_RUN_NEXTROOT_BOOTED, &fd, error))
+    return FALSE;
+  // If there's no such file, we're done
+  if (fd == -1)
+    {
+      g_debug ("No %s", OTCORE_RUN_NEXTROOT_BOOTED);
+      return TRUE;
+    }
+
+  // Parse the GVariant metadata from this; search for OTCORE_RUN_BOOTED_KEY_BACKING_ROOTDEVINO
+  // to find similar code.
+  g_autoptr (GVariant) metadata = NULL;
+  if (!ot_variant_read_fd (fd, 0, G_VARIANT_TYPE_VARDICT, TRUE, &metadata, error))
+    return glnx_prefix_error (error, "failed to read %s", OTCORE_RUN_NEXTROOT_BOOTED);
+
+  // Get the backing device/inode from metadata
+  guint64 backing_dev, backing_ino;
+  g_autoptr (GVariant) backing_devino = g_variant_lookup_value (
+      metadata, OTCORE_RUN_BOOTED_KEY_BACKING_ROOTDEVINO, G_VARIANT_TYPE ("(tt)"));
+  if (!backing_devino)
+    return glnx_throw (error, "Missing %s key in %s", OTCORE_RUN_BOOTED_KEY_BACKING_ROOTDEVINO,
+                       OTCORE_RUN_NEXTROOT_BOOTED);
+  // Load the device/inode, and we're done
+  g_variant_get (backing_devino, "(tt)", &backing_dev, &backing_ino);
+  g_debug ("Expecting nextroot dev %" G_GUINT64_FORMAT " ino %" G_GUINT64_FORMAT, backing_dev,
+           backing_ino);
+
+  self->expecting_nextroot = TRUE;
+  self->nextroot_device = (dev_t)backing_dev;
+  self->nextroot_inode = (ino_t)backing_ino;
+
+  return TRUE;
+}
+
 /* Loads the current bootversion, subbootversion, and deployments, starting from the
  * bootloader configs which are the source of truth.
  */
@@ -1144,6 +1280,9 @@ sysroot_load_from_bootloader_configs (OstreeSysroot *self, GCancellable *cancell
   int subbootversion = 0;
   if (!_ostree_sysroot_read_current_subbootversion (self, bootversion, &subbootversion, cancellable,
                                                     error))
+    return FALSE;
+
+  if (!_ostree_sysroot_reload_soft_reboot (self, error))
     return FALSE;
 
   g_autoptr (GPtrArray) boot_loader_configs = NULL;
@@ -1195,11 +1334,29 @@ sysroot_load_from_bootloader_configs (OstreeSysroot *self, GCancellable *cancell
   if (self->staged_deployment)
     g_ptr_array_insert (deployments, 0, g_object_ref (self->staged_deployment));
 
-  /* And then set their index variables */
+  /* Synchronize internal state now that we've loaded all deployments */
+  g_debug ("expecting nextroot: %d", self->expecting_nextroot);
   for (guint i = 0; i < deployments->len; i++)
     {
       OstreeDeployment *deployment = deployments->pdata[i];
       ostree_deployment_set_index (deployment, i);
+
+      g_assert (deployment->devino_initialized);
+      if (self->expecting_nextroot && deployment->device == self->nextroot_device
+          && deployment->inode == self->nextroot_inode)
+        {
+          deployment->soft_reboot_target = TRUE;
+          g_assert (!self->soft_reboot_target_deployment);
+          self->soft_reboot_target_deployment = g_object_ref (deployment);
+        }
+    }
+
+  if (self->expecting_nextroot && !self->soft_reboot_target_deployment)
+    {
+      g_debug ("Soft reboot target not found");
+      if (!glnx_unlinkat (AT_FDCWD, OTCORE_RUN_NEXTROOT_BOOTED, 0, error))
+        return FALSE;
+      self->expecting_nextroot = FALSE;
     }
 
   /* Determine whether we're "physical" or not, the first time we load deployments */
@@ -2108,6 +2265,8 @@ ostree_sysroot_deployment_unlock (OstreeSysroot *self, OstreeDeployment *deploym
   if (!glnx_opendirat (self->sysroot_fd, deployment_path, TRUE, &deployment_dfd, error))
     return FALSE;
 
+  g_autofree char *backing_relpath = _ostree_sysroot_get_deployment_backing_relpath (deployment);
+
   g_autoptr (OstreeSePolicy) sepolicy = ostree_sepolicy_new_at (deployment_dfd, cancellable, error);
   if (!sepolicy)
     return FALSE;
@@ -2121,10 +2280,9 @@ ostree_sysroot_deployment_unlock (OstreeSysroot *self, OstreeDeployment *deploym
     usr_mode = stbuf.st_mode;
   }
 
-  const char *ovl_options = NULL;
+  g_autofree char *ovl_options = NULL;
   static const char hotfix_ovl_options[]
       = "lowerdir=usr,upperdir=.usr-ovl-upper,workdir=.usr-ovl-work";
-  g_autofree char *unlock_ovldir = NULL;
 
   switch (unlocked_state)
     {
@@ -2141,18 +2299,22 @@ ostree_sysroot_deployment_unlock (OstreeSysroot *self, OstreeDeployment *deploym
           return FALSE;
         if (!mkdir_unmasked (deployment_dfd, ".usr-ovl-work", usr_mode, cancellable, error))
           return FALSE;
-        ovl_options = hotfix_ovl_options;
+        ovl_options = g_strdup (hotfix_ovl_options);
       }
       break;
     case OSTREE_DEPLOYMENT_UNLOCKED_DEVELOPMENT:
     case OSTREE_DEPLOYMENT_UNLOCKED_TRANSIENT:
       {
-        unlock_ovldir = g_strdup ("/var/tmp/ostree-unlock-ovl.XXXXXX");
-        /* We're just doing transient development/hacking?  Okay,
-         * stick the overlayfs bits in /var/tmp.
-         */
-        const char *development_ovl_upper;
-        const char *development_ovl_work;
+        // Holds the overlay backing data in the deployment backing dir, which
+        // ensures that (unlike our previous usage of /var/tmp) that it's on the same
+        // physical filesystem. It's valid to make /var/tmp a separate FS, but for
+        // this data it needs to scale to the root.
+        g_autofree char *usrovldir_relative
+            = g_build_filename (backing_relpath, OSTREE_DEPLOYMENT_USR_TRANSIENT_DIR, NULL);
+        // We explicitly don't want this data to persist, so if it happened
+        // to leak from a previous boot, ensure the dir is cleaned now.
+        if (!glnx_shutil_rm_rf_at (self->sysroot_fd, usrovldir_relative, cancellable, error))
+          return FALSE;
 
         /* Ensure that the directory is created with the same label as `/usr` */
         {
@@ -2163,18 +2325,26 @@ ostree_sysroot_deployment_unlock (OstreeSysroot *self, OstreeDeployment *deploym
           if (!_ostree_sepolicy_preparefscreatecon (&con, sepolicy, "/usr", usr_mode, error))
             return FALSE;
 
-          if (g_mkdtemp_full (unlock_ovldir, 0755) == NULL)
-            return glnx_throw_errno_prefix (error, "mkdtemp");
+          // Create a new backing dir.
+          if (!mkdir_unmasked (self->sysroot_fd, usrovldir_relative, usr_mode, cancellable, error))
+            return FALSE;
         }
 
-        development_ovl_upper = glnx_strjoina (unlock_ovldir, "/upper");
-        if (!mkdir_unmasked (AT_FDCWD, development_ovl_upper, usr_mode, cancellable, error))
+        // Open a fd for our new dir
+        int ovldir_fd = -1;
+        if (!glnx_opendirat (self->sysroot_fd, usrovldir_relative, FALSE, &ovldir_fd, error))
           return FALSE;
-        development_ovl_work = glnx_strjoina (unlock_ovldir, "/work");
-        if (!mkdir_unmasked (AT_FDCWD, development_ovl_work, usr_mode, cancellable, error))
+
+        // Create the work and upper dirs there
+        if (!mkdir_unmasked (ovldir_fd, "upper", usr_mode, cancellable, error))
           return FALSE;
-        ovl_options = glnx_strjoina ("lowerdir=usr,upperdir=", development_ovl_upper,
-                                     ",workdir=", development_ovl_work);
+        if (!mkdir_unmasked (ovldir_fd, "work", usr_mode, cancellable, error))
+          return FALSE;
+
+        // TODO investigate depending on the new mount API with overlayfs
+        ovl_options = g_strdup_printf ("lowerdir=usr,upperdir=/proc/self/fd/%d/upper"
+                                       ",workdir=/proc/self/fd/%d/work",
+                                       ovldir_fd, ovldir_fd);
       }
     }
 
@@ -2249,7 +2419,7 @@ ostree_sysroot_deployment_unlock (OstreeSysroot *self, OstreeDeployment *deploym
         if (!glnx_shutil_mkdir_p_at (AT_FDCWD, devpath_parent, 0755, cancellable, error))
           return FALSE;
 
-        if (!g_file_set_contents (devpath, unlock_ovldir, -1, error))
+        if (!g_file_set_contents (devpath, "", -1, error))
           return FALSE;
       }
     }

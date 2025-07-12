@@ -112,8 +112,14 @@
 /* Define if we have openssl */
 #undef HAVE_OPENSSL
 
+/* Define to 1 if you have the 'open_tree' function. */
+#undef HAVE_OPEN_TREE
+
 /* Define if we have libselinux.pc */
 #undef HAVE_SELINUX
+
+/* Define if we have soft reboots */
+#undef HAVE_SOFT_REBOOT
 
 /* Define if spki is supported */
 #undef HAVE_SPKI

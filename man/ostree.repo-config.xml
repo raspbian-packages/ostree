@@ -27,14 +27,6 @@ License along with this library. If not, see <https://www.gnu.org/licenses/>.
     <title>ostree.repo-config</title>
     <productname>OSTree</productname>
 
-    <authorgroup>
-      <author>
-        <contrib>Developer</contrib>
-        <firstname>Colin</firstname>
-        <surname>Walters</surname>
-        <email>walters@verbum.org</email>
-      </author>
-    </authorgroup>
   </refentryinfo>
 
   <refmeta>
@@ -414,6 +406,18 @@ License along with this library. If not, see <https://www.gnu.org/licenses/>.
           <literal>zipl</literal>.
         </para>
         </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><varname>boot-counting-tries</varname></term>
+        <listitem><para>Integer value controlling the number of maximum boot attempts. The boot
+        counting data is stored in the name of the boot loader entry. A boot loader entry file name
+        may contain a plus (+) followed by a number. This may optionally be followed by
+        a minus (-) followed by a second number. The dot (.) and file name suffix (conf or efi) must
+        immediately follow. More details in the
+        <ulink url="https://uapi-group.org/specifications/specs/boot_loader_specification/#boot-counting">
+        The Boot Loader Specification</ulink>
+        </para></listitem>
       </varlistentry>
 
       <varlistentry>

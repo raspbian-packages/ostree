@@ -140,7 +140,7 @@ operations.</p>
 <tr>
 <td class="parameter_name"><p>collection_id</p></td>
 <td class="parameter_description"><p>a collection ID, or <code class="literal">NULL</code> for a plain ref. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/nullable"><span class="acronym">nullable</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="NULL may be passed as the value in, out, in-out; or as a return value."><span class="acronym">nullable</span></acronym>]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>ref_name</p></td>
@@ -153,7 +153,7 @@ operations.</p>
 <div class="refsect3">
 <a name="ostree-collection-ref-new.returns"></a><h4>Returns</h4>
 <p>a new <span class="type">OstreeCollectionRef</span>. </p>
-<p><span class="annotation">[<a href="http://foldoc.org/transfer%20full"><span class="acronym">transfer full</span></a>]</span></p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
 <p class="since">Since: 2018.6</p>
 </div>
@@ -175,7 +175,7 @@ ostree_collection_ref_dup (<em class="parameter"><code>const <span class="type">
 <tbody><tr>
 <td class="parameter_name"><p>ref</p></td>
 <td class="parameter_description"><p>an <span class="type">OstreeCollectionRef</span>. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/not%20nullable"><span class="acronym">not nullable</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="NULL must not be passed as the value in, out, in-out; or as a return value."><span class="acronym">not nullable</span></acronym>]</span></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -183,7 +183,7 @@ ostree_collection_ref_dup (<em class="parameter"><code>const <span class="type">
 <a name="ostree-collection-ref-dup.returns"></a><h4>Returns</h4>
 <p>a newly allocated copy of <em class="parameter"><code>ref</code></em>
 . </p>
-<p><span class="annotation">[<a href="http://foldoc.org/transfer%20full"><span class="acronym">transfer full</span></a>]</span></p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
 <p class="since">Since: 2018.6</p>
 </div>
@@ -205,7 +205,7 @@ ostree_collection_ref_free (<em class="parameter"><code><span class="type">Ostre
 <tbody><tr>
 <td class="parameter_name"><p>ref</p></td>
 <td class="parameter_description"><p>an <span class="type">OstreeCollectionRef</span>. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/transfer%20full"><span class="acronym">transfer full</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -231,7 +231,7 @@ ostree_collection_ref_hash (<em class="parameter"><code><span class="type">gcons
 <tbody><tr>
 <td class="parameter_name"><p>ref</p></td>
 <td class="parameter_description"><p>an <span class="type">OstreeCollectionRef</span>. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/not%20nullable"><span class="acronym">not nullable</span></a>][<a href="http://foldoc.org/type"><span class="acronym">type</span></a> OstreeCollectionRef]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="NULL must not be passed as the value in, out, in-out; or as a return value."><span class="acronym">not nullable</span></acronym>][<acronym title="Override the parsed C type with given type."><span class="acronym">type</span></acronym> OstreeCollectionRef]</span></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -266,12 +266,12 @@ ref name, and <code class="literal">FALSE</code> otherwise. Both <em class="para
 <tr>
 <td class="parameter_name"><p>ref1</p></td>
 <td class="parameter_description"><p>an <span class="type">OstreeCollectionRef</span>. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/not%20nullable"><span class="acronym">not nullable</span></a>][<a href="http://foldoc.org/type"><span class="acronym">type</span></a> OstreeCollectionRef]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="NULL must not be passed as the value in, out, in-out; or as a return value."><span class="acronym">not nullable</span></acronym>][<acronym title="Override the parsed C type with given type."><span class="acronym">type</span></acronym> OstreeCollectionRef]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>ref2</p></td>
 <td class="parameter_description"><p>another <span class="type">OstreeCollectionRef</span>. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/not%20nullable"><span class="acronym">not nullable</span></a>][<a href="http://foldoc.org/type"><span class="acronym">type</span></a> OstreeCollectionRef]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="NULL must not be passed as the value in, out, in-out; or as a return value."><span class="acronym">not nullable</span></acronym>][<acronym title="Override the parsed C type with given type."><span class="acronym">type</span></acronym> OstreeCollectionRef]</span></td>
 </tr>
 </tbody>
 </table></div>
@@ -304,7 +304,7 @@ elements. <em class="parameter"><code>refs</code></em>
 <tbody><tr>
 <td class="parameter_name"><p>refs</p></td>
 <td class="parameter_description"><p><code class="literal">NULL</code>-terminated array of <span class="type">OstreeCollectionRefs</span>. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/array"><span class="acronym">array</span></a> zero-terminated=1]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="Parameter points to an array of items."><span class="acronym">array</span></acronym> zero-terminated=1]</span></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -312,7 +312,7 @@ elements. <em class="parameter"><code>refs</code></em>
 <a name="ostree-collection-ref-dupv.returns"></a><h4>Returns</h4>
 <p>a newly allocated copy of <em class="parameter"><code>refs</code></em>
 . </p>
-<p><span class="annotation">[<a href="http://foldoc.org/transfer%20full"><span class="acronym">transfer full</span></a>][<a href="http://foldoc.org/array"><span class="acronym">array</span></a> zero-terminated=1]</span></p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>][<acronym title="Parameter points to an array of items."><span class="acronym">array</span></acronym> zero-terminated=1]</span></p>
 </div>
 <p class="since">Since: 2018.6</p>
 </div>
@@ -336,7 +336,7 @@ must be <code class="literal">NULL</code>-terminated; it may be empty, but must 
 <tbody><tr>
 <td class="parameter_name"><p>refs</p></td>
 <td class="parameter_description"><p>an array of <span class="type">OstreeCollectionRefs</span>. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/transfer%20full"><span class="acronym">transfer full</span></a>][<a href="http://foldoc.org/array"><span class="acronym">array</span></a> zero-terminated=1]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>][<acronym title="Parameter points to an array of items."><span class="acronym">array</span></acronym> zero-terminated=1]</span></td>
 </tr></tbody>
 </table></div>
 </div>

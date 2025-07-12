@@ -73,6 +73,7 @@ _installed_or_uninstalled_test_scripts = \
 	tests/test-remote-headers.sh \
 	tests/test-remote-refs.sh \
 	tests/test-composefs.sh \
+	tests/test-backcompat-fsck.sh \
 	tests/test-payload-link.sh \
 	tests/test-commit-sign.sh \
 	tests/test-commit-timestamp.sh \
@@ -121,6 +122,7 @@ _installed_or_uninstalled_test_scripts = \
 	tests/test-osupdate-dtb.sh \
 	tests/test-admin-instutil-set-kargs.sh \
 	tests/test-admin-upgrade-not-backwards.sh \
+	tests/test-admin-boot-counting-tries.sh \
 	tests/test-admin-pull-deploy-commit.sh \
 	tests/test-admin-pull-deploy-split.sh \
 	tests/test-admin-locking.sh \
@@ -138,7 +140,6 @@ _installed_or_uninstalled_test_scripts = \
 	tests/test-concurrency.py \
 	tests/test-refs.sh \
 	tests/test-demo-buildsystem.sh \
-	tests/test-switchroot.sh \
 	tests/test-pull-contenturl.sh \
 	tests/test-pull-mirrorlist.sh \
 	tests/test-summary-update.sh \
@@ -280,7 +281,7 @@ endif
 
 _installed_or_uninstalled_test_programs = tests/test-varint tests/test-ot-unix-utils tests/test-bsdiff tests/test-otcore tests/test-mutable-tree \
 	tests/test-keyfile-utils tests/test-ot-opt-utils tests/test-ot-tool-util \
-	tests/test-checksum tests/test-lzma tests/test-rollsum \
+	tests/test-checksum tests/test-lzma tests/test-rollsum tests/test-bootconfig-parser-internals \
 	tests/test-basic-c tests/test-sysroot-c tests/test-pull-c tests/test-repo tests/test-include-ostree-h tests/test-kargs \
 	tests/test-rfc2616-dates tests/test-pem
 
@@ -347,6 +348,10 @@ endif
 tests_test_kargs_SOURCES = src/libostree/ostree-kernel-args.c tests/test-kargs.c
 tests_test_kargs_CFLAGS = $(TESTS_CFLAGS)
 tests_test_kargs_LDADD = $(TESTS_LDADD)
+
+tests_test_bootconfig_parser_internals_SOURCES = tests/test-bootconfig-parser-internals.c
+tests_test_bootconfig_parser_internals_CFLAGS = $(TESTS_CFLAGS)
+tests_test_bootconfig_parser_internals_LDADD = $(TESTS_LDADD)
 
 tests_test_repo_finder_config_SOURCES = tests/test-repo-finder-config.c
 tests_test_repo_finder_config_CFLAGS = $(TESTS_CFLAGS)
@@ -470,14 +475,6 @@ check-local:
 	echo "NOTE: Run the Rust installed tests (uninstalled) with ./tests/run-installed"
 dist_test_scripts += $(_installed_or_uninstalled_test_scripts)
 test_programs += $(_installed_or_uninstalled_test_programs)
-endif
-
-if !USE_LIBSOUP_OR_LIBSOUP3
-no-soup-for-you-warning:
-	@echo "WARNING: $(PACKAGE) was built without libsoup, which is currently" 1>&2
-	@echo "WARNING: required for many unit tests." 1>&2
-	sleep 10
-check: no-soup-for-you-warning
 endif
 
 # Unfortunately the glib test data APIs don't actually handle
