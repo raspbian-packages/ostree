@@ -104,7 +104,7 @@ Depends:
  libarchive-dev,
  libavahi-client-dev,
  libavahi-glib-dev,
- libcurl-dev,
+ libcurl4-openssl-dev | libcurl-dev,
  libglib2.0-dev,
  libgpg-error-dev,
  libgpgme-dev,
