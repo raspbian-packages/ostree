@@ -1,12 +1,14 @@
-ostree (2025.4-1) UNRELEASED; urgency=medium
+ostree (2025.4-1) unstable; urgency=medium
 
   * New upstream release
   * Rebase patch series
   * d/libostree-1-1.symbols: Update
   * d/copyright: Update
   * d/control: Add jq to Build-Depends and -tests Depends
+  * Prefer the OpenSSL flavour of libcurl.
+    This is the one that upstream is going to be testing with in practice.
 
- -- Simon McVittie <smcv@debian.org>  Sat, 12 Jul 2025 19:02:57 +0100
+ -- Simon McVittie <smcv@debian.org>  Thu, 14 Aug 2025 20:12:13 +0100
 
 ostree (2025.2-1) unstable; urgency=medium
 
