@@ -6,8 +6,11 @@ Uploaders:
  Matthias Klumpp <mak@debian.org>,
  Simon McVittie <smcv@debian.org>,
  Sjoerd Simons <sjoerd@debian.org>,
- Dylan Aïssi <daissi@debian.org>
+ Dylan Aïssi <daissi@debian.org>,
 Build-Depends:
+ debhelper (>= 13.11.6~),
+ debhelper-compat (= 13),
+ dh-sequence-gir,
  attr,
  autoconf,
  automake,
@@ -15,12 +18,8 @@ Build-Depends:
  bsdextrautils <!nocheck>,
  ca-certificates,
  cpio,
- debhelper (>= 13.11.6~),
- debhelper-compat (= 13),
- dh-sequence-gir,
  docbook-xml <!nodoc>,
  docbook-xsl <!nodoc>,
- libext2fs-dev,
  elfutils,
  fuse3:native,
  gir1.2-gio-2.0-dev,
@@ -36,6 +35,7 @@ Build-Depends:
  libavahi-glib-dev,
  libcap-dev,
  libcurl4-openssl-dev | libcurl-dev,
+ libext2fs-dev,
  libfuse3-dev,
  libglib2.0-dev,
  libgpgme-dev,
@@ -58,6 +58,7 @@ Standards-Version: 4.7.2
 Homepage: https://github.com/ostreedev/ostree/
 Vcs-Git: https://salsa.debian.org/debian/ostree.git
 Vcs-Browser: https://salsa.debian.org/debian/ostree
+X-Style: black
 
 Package: gir1.2-ostree-1.0
 Architecture: linux-any
@@ -119,8 +120,8 @@ Depends:
 Suggests:
  libostree-doc,
 Provides:
- ${gir:Provides},
  gir1.2-ostree-1.0-dev (= ${binary:Version}),
+ ${gir:Provides},
 Description: Development files for the libostree library
  libostree is a library for managing bootable, immutable, versioned
  filesystem trees. It is like git in that it checksums individual files

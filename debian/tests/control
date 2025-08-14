@@ -1,15 +1,31 @@
-Tests: flaky-concurrency
-Restrictions: flaky
-Depends: gnome-desktop-testing, ostree-tests
+Tests:
+ flaky-concurrency,
+Restrictions:
+ flaky,
+Depends:
+ gnome-desktop-testing,
+ ostree-tests,
 
-Tests: flaky-sysroot
+Tests:
+ flaky-sysroot,
 Architecture: s390x
-Restrictions: flaky
-Depends: gnome-desktop-testing, ostree-tests
+Restrictions:
+ flaky,
+Depends:
+ gnome-desktop-testing,
+ ostree-tests,
 
-Tests: gnome-desktop-testing
-Depends: gnome-desktop-testing, ostree-tests
+Tests:
+ gnome-desktop-testing,
+Depends:
+ gnome-desktop-testing,
+ ostree-tests,
 
-Tests: build
-Restrictions: superficial
-Depends: build-essential, libostree-dev, pkgconf
+Tests:
+ build,
+Restrictions:
+ superficial,
+Depends:
+ build-essential,
+ libostree-dev,
+ pkgconf,
