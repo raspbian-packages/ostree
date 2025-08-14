@@ -656,12 +656,12 @@ checkout_deployment_tree (OstreeSysroot *sysroot, OstreeRepo *repo, const char *
   // out if it's enabled, but not supported at compile time.
   // However, we don't load the keys here, because they may not exist, such
   // as in the initial deploy
-  g_autoptr (ComposefsConfig) composefs_config
-      = otcore_load_composefs_config ("", prepare_root_config, FALSE, error);
-  if (!composefs_config)
-    return glnx_prefix_error (error, "Reading composefs config");
+  g_autoptr (RootConfig) rootfs_config
+      = otcore_load_rootfs_config ("", prepare_root_config, FALSE, error);
+  if (!rootfs_config)
+    return glnx_prefix_error (error, "Reading rootfs config");
 
-  OtTristate composefs_enabled = composefs_config->enabled;
+  OtTristate composefs_enabled = rootfs_config->composefs_enabled;
   g_debug ("composefs enabled by config: %d repo: %d", composefs_enabled, repo->composefs_wanted);
   if (repo->composefs_wanted == OT_TRISTATE_YES)
     composefs_enabled = repo->composefs_wanted;
@@ -680,7 +680,7 @@ checkout_deployment_tree (OstreeSysroot *sysroot, OstreeRepo *repo, const char *
   g_auto (GVariantBuilder) cfs_checkout_opts_builder
       = G_VARIANT_BUILDER_INIT (G_VARIANT_TYPE_VARDICT);
   guint32 composefs_requested = 1;
-  if (composefs_config->require_verity)
+  if (rootfs_config->require_verity)
     composefs_requested = 2;
   g_variant_builder_add (&cfs_checkout_opts_builder, "{sv}", "verity",
                          g_variant_new_uint32 (composefs_requested));
@@ -4385,7 +4385,7 @@ ostree_sysroot_deployment_set_mutable (OstreeSysroot *self, OstreeDeployment *de
  * (i.e., have the same boot checksum).
  *
  * Returns: %TRUE if a soft-reboot is possible to the target deployment, %FALSE otherwise.
- * Since: TODO
+ * Since: 2025.3
  */
 gboolean
 ostree_sysroot_deployment_can_soft_reboot (OstreeSysroot *self, OstreeDeployment *deployment)
@@ -4438,7 +4438,7 @@ impl_clear_soft_reboot (void)
  * Prepare the specified deployment for a systemd soft-reboot by creating a new
  * root with it at `/run/nextroot`.
  *
- * Since: TODO
+ * Since: 2025.3
  */
 gboolean
 ostree_sysroot_deployment_set_soft_reboot (OstreeSysroot *self, OstreeDeployment *deployment,
@@ -4512,7 +4512,7 @@ ostree_sysroot_deployment_set_soft_reboot (OstreeSysroot *self, OstreeDeployment
  * If there is a soft reboot queued in /run/nextroot, clear it. If one
  * is not queued, this function successfully does nothing.
  *
- * Since: TODO
+ * Since: 2025.3
  */
 gboolean
 ostree_sysroot_clear_soft_reboot (OstreeSysroot *self, GCancellable *cancellable, GError **error)

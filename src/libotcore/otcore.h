@@ -66,21 +66,23 @@ GKeyFile *otcore_load_config (int rootfs, const char *filename, GError **error);
 
 typedef struct
 {
-  OtTristate enabled;
+  OtTristate composefs_enabled;
+  gboolean root_transient;
+  gboolean root_transient_ro;
   gboolean require_verity;
   gboolean is_signed;
   char *signature_pubkey;
   GPtrArray *pubkeys;
-} ComposefsConfig;
-void otcore_free_composefs_config (ComposefsConfig *config);
-G_DEFINE_AUTOPTR_CLEANUP_FUNC (ComposefsConfig, otcore_free_composefs_config)
+} RootConfig;
+void otcore_free_rootfs_config (RootConfig *config);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (RootConfig, otcore_free_rootfs_config)
 
-ComposefsConfig *otcore_load_composefs_config (const char *cmdline, GKeyFile *config,
-                                               gboolean load_keys, GError **error);
+RootConfig *otcore_load_rootfs_config (const char *cmdline, GKeyFile *config, gboolean load_keys,
+                                       GError **error);
 
 /**
  * otcore_mount_rootfs:
- * @composefs_config: Configuration for composefs.
+ * @rootfs_config: Configuration for root
  * @metadata_builder: (transfer none): GVariantBuilder to add metadata to.
  * @root_transient: Whether the root filesystem is transient.
  * @root_mountpoint: The mount point of the physical root filesystem.
@@ -94,10 +96,9 @@ ComposefsConfig *otcore_load_composefs_config (const char *cmdline, GKeyFile *co
  *
  * Returns: %TRUE on success, %FALSE on error.
  */
-gboolean otcore_mount_rootfs (ComposefsConfig *composefs_config, GVariantBuilder *metadata_builder,
-                              gboolean root_transient, const char *root_mountpoint,
-                              const char *deploy_path, const char *mount_target,
-                              bool *out_using_composefs, GError **error);
+gboolean otcore_mount_rootfs (RootConfig *rootfs_config, GVariantBuilder *metadata_builder,
+                              const char *root_mountpoint, const char *deploy_path,
+                              const char *mount_target, bool *out_using_composefs, GError **error);
 
 gboolean otcore_mount_etc (GKeyFile *config, GVariantBuilder *metadata_builder,
                            const char *mount_target, GError **error);
@@ -132,6 +133,7 @@ gboolean otcore_mount_etc (GKeyFile *config, GVariantBuilder *metadata_builder,
 #define OTCORE_PREPARE_ROOT_ENABLED_KEY "enabled"
 #define OTCORE_PREPARE_ROOT_KEYPATH_KEY "keypath"
 #define OTCORE_PREPARE_ROOT_TRANSIENT_KEY "transient"
+#define OTCORE_PREPARE_ROOT_TRANSIENT_RO_KEY "transient-ro"
 
 // For use with systemd soft reboots
 #define OTCORE_RUN_NEXTROOT "/run/nextroot"
@@ -152,6 +154,8 @@ gboolean otcore_mount_etc (GKeyFile *config, GVariantBuilder *metadata_builder,
 #define OTCORE_RUN_BOOTED_KEY_COMPOSEFS_SIGNATURE "composefs.signed"
 // This key will be present if the root is transient
 #define OTCORE_RUN_BOOTED_KEY_ROOT_TRANSIENT "root.transient"
+// This key will be present if the root is transient readonly
+#define OTCORE_RUN_BOOTED_KEY_ROOT_TRANSIENT_RO "root.transient-ro"
 // This key will be present if the sysroot-ro flag was found
 #define OTCORE_RUN_BOOTED_KEY_SYSROOT_RO "sysroot-ro"
 // Always holds the (device, inode) pair of the booted deployment

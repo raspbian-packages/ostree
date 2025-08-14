@@ -466,7 +466,7 @@
     <keyword type="function" name="ostree_deployment_is_pinned ()" link="ostree-ostree-deployment.html#ostree-deployment-is-pinned" since="2018.3"/>
     <keyword type="function" name="ostree_deployment_is_staged ()" link="ostree-ostree-deployment.html#ostree-deployment-is-staged" since="2018.3"/>
     <keyword type="function" name="ostree_deployment_is_finalization_locked ()" link="ostree-ostree-deployment.html#ostree-deployment-is-finalization-locked" since="2023.8"/>
-    <keyword type="function" name="ostree_deployment_is_soft_reboot_target ()" link="ostree-ostree-deployment.html#ostree-deployment-is-soft-reboot-target" since="TODO"/>
+    <keyword type="function" name="ostree_deployment_is_soft_reboot_target ()" link="ostree-ostree-deployment.html#ostree-deployment-is-soft-reboot-target" since="2025.3"/>
     <keyword type="function" name="ostree_deployment_set_index ()" link="ostree-ostree-deployment.html#ostree-deployment-set-index"/>
     <keyword type="function" name="ostree_deployment_set_bootserial ()" link="ostree-ostree-deployment.html#ostree-deployment-set-bootserial"/>
     <keyword type="function" name="ostree_deployment_set_bootconfig ()" link="ostree-ostree-deployment.html#ostree-deployment-set-bootconfig"/>
