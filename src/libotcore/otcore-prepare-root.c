@@ -384,6 +384,35 @@ composefs_error_message (int errsv)
 #endif
 
 /**
+ * otcore_mount_boot:
+ *
+ * Mount /boot as a bind mount for a deployment if it's on the same partition
+ * as the physical root.
+ */
+gboolean
+otcore_mount_boot (const char *physical_root, const char *deployment, GError **error)
+{
+  g_autofree char *boot_loader = g_build_filename (physical_root, "boot/loader", NULL);
+  struct stat stbuf;
+
+  /* If /boot is on the same partition, use a bind mount to make it visible
+   * at /boot inside the deployment.
+   */
+  if (!(lstat (boot_loader, &stbuf) == 0 && S_ISLNK (stbuf.st_mode)))
+    return TRUE;
+
+  g_autofree char *target_boot = g_build_filename (deployment, "boot", NULL);
+  if (!(lstat (target_boot, &stbuf) == 0 && S_ISDIR (stbuf.st_mode)))
+    return TRUE;
+
+  g_autofree char *src_boot = g_build_filename (physical_root, "boot", NULL);
+  if (mount (src_boot, target_boot, NULL, MS_BIND | MS_SILENT, NULL) < 0)
+    return glnx_throw (error, "failed to bind mount /boot");
+
+  return TRUE;
+}
+
+/**
  * otcore_mount_etc:
  *
  * Mount /etc for a deployment, assuming that the current process working directory is the source.
@@ -536,7 +565,8 @@ otcore_mount_rootfs (RootConfig *rootfs_config, GVariantBuilder *metadata_builde
       if (!validate_signature (commit_data, signatures, rootfs_config->pubkeys, error))
         return glnx_prefix_error (error, "No valid signatures found for public key");
 
-      g_print ("composefs+ostree: Validated commit signature using '%s'\n", composefs_pubkey);
+      ot_journal_print (LOG_INFO, "composefs+ostree: Validated commit signature using '%s'",
+                        composefs_pubkey);
       g_variant_builder_add (metadata_builder, "{sv}", OTCORE_RUN_BOOTED_KEY_COMPOSEFS_SIGNATURE,
                              g_variant_new_string (composefs_pubkey));
 
@@ -554,7 +584,7 @@ otcore_mount_rootfs (RootConfig *rootfs_config, GVariantBuilder *metadata_builde
 
       g_assert (rootfs_config->require_verity);
       cfs_options.flags |= LCFS_MOUNT_FLAGS_REQUIRE_VERITY;
-      g_print ("composefs: Verifying digest: %s\n", expected_digest);
+      ot_journal_print (LOG_INFO, "composefs: Verifying digest: %s", expected_digest);
       cfs_options.expected_fsverity_digest = expected_digest;
     }
   else if (rootfs_config->require_verity)
@@ -570,7 +600,8 @@ otcore_mount_rootfs (RootConfig *rootfs_config, GVariantBuilder *metadata_builde
                              g_variant_new_boolean (true));
       g_variant_builder_add (metadata_builder, "{sv}", OTCORE_RUN_BOOTED_KEY_COMPOSEFS_VERITY,
                              g_variant_new_boolean (using_verity));
-      g_print ("composefs: mounted successfully (verity=%s)\n", using_verity ? "true" : "false");
+      ot_journal_print (LOG_INFO, "composefs: mounted successfully (verity=%s)",
+                        using_verity ? "true" : "false");
     }
   else
     {
@@ -578,7 +609,7 @@ otcore_mount_rootfs (RootConfig *rootfs_config, GVariantBuilder *metadata_builde
       g_assert (rootfs_config->composefs_enabled != OT_TRISTATE_NO);
       if (rootfs_config->composefs_enabled == OT_TRISTATE_MAYBE && errsv == ENOENT)
         {
-          g_print ("composefs: No image present\n");
+          ot_journal_print (LOG_INFO, "composefs: No image present");
         }
       else
         {
