@@ -3370,7 +3370,7 @@ tests_test_commit_sign_sh_ext_LDADD = $(TESTS_LDADD)
 @ENABLE_INSTALLED_TESTS_EXCLUSIVE_TRUE@installed_test_programs = $(_installed_or_uninstalled_test_programs)
 
 # Not using $(libdir) here is intentional, dracut modules go in prefix/lib
-@BUILDOPT_DRACUT_TRUE@dracutmoddir = $(prefix)/lib/dracut/modules.d/98ostree
+@BUILDOPT_DRACUT_TRUE@dracutmoddir = $(prefix)/lib/dracut/modules.d/50ostree
 @BUILDOPT_DRACUT_TRUE@dracutmod_SCRIPTS = src/boot/dracut/module-setup.sh
 @BUILDOPT_DRACUT_CONF_TRUE@dracutconfdir = $(sysconfdir)/dracut.conf.d
 @BUILDOPT_DRACUT_CONF_TRUE@dracutconf_DATA = src/boot/dracut/ostree.conf
