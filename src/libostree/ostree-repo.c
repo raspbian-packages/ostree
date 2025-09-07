@@ -1521,6 +1521,27 @@ _ostree_repo_update_mtime (OstreeRepo *self, GError **error)
   return TRUE;
 }
 
+gboolean
+_ostree_repo_syncfs (OstreeRepo *self, GError **error)
+{
+
+  if (self->disable_fsync)
+    return TRUE;
+
+  gboolean is_system = ostree_repo_is_system (self);
+  if (is_system)
+    ot_journal_print (LOG_INFO, "Starting syncfs for system repo");
+  guint64 start_msec = g_get_monotonic_time () / 1000;
+  int repo_dfd = ostree_repo_get_dfd (self);
+  if (syncfs (repo_dfd) != 0)
+    return glnx_throw_errno_prefix (error, "syncfs(repo)");
+  guint64 end_msec = g_get_monotonic_time () / 1000;
+  if (is_system)
+    ot_journal_print (LOG_INFO, "Completed syncfs() for system repo in %" G_GUINT64_FORMAT " ms",
+                      end_msec - start_msec);
+  return TRUE;
+}
+
 /**
  * ostree_repo_get_config:
  * @self:
