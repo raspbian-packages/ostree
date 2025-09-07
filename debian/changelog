@@ -1,8 +1,10 @@
-ostree (2025.6-1) UNRELEASED; urgency=medium
+ostree (2025.6-1) unstable; urgency=medium
 
   * New upstream release
+  * d/ostree-boot.install: Be less specific about the filenames used.
+    2025.6 changed the sequence number for the dracut hook.
 
- -- Simon McVittie <smcv@debian.org>  Sun, 07 Sep 2025 15:36:58 +0100
+ -- Simon McVittie <smcv@debian.org>  Sun, 07 Sep 2025 17:21:45 +0100
 
 ostree (2025.5-1) unstable; urgency=medium
 
