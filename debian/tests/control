@@ -27,5 +27,6 @@ Restrictions:
  superficial,
 Depends:
  build-essential,
+ composefs [!alpha !hppa !m68k !sh4],
  libostree-dev,
  pkgconf,
