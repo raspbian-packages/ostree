@@ -1,6 +1,5 @@
 Source: ostree
 Section: admin
-Priority: optional
 Maintainer: Utopia Maintenance Team <pkg-utopia-maintainers@lists.alioth.debian.org>
 Uploaders:
  Matthias Klumpp <mak@debian.org>,
@@ -53,8 +52,7 @@ Build-Depends:
  zlib1g-dev,
 Build-Depends-Indep:
  libglib2.0-doc,
-Rules-Requires-Root: no
-Standards-Version: 4.7.2
+Standards-Version: 4.7.3
 Homepage: https://github.com/ostreedev/ostree/
 Vcs-Git: https://salsa.debian.org/debian/ostree.git
 Vcs-Browser: https://salsa.debian.org/debian/ostree
