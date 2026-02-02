@@ -140,8 +140,6 @@ Multi-Arch: foreign
 Section: doc
 Depends:
  ${misc:Depends},
-Suggests:
- devhelp,
 Description: Development documentation for the libostree library
  libostree provides a library and tools for managing bootable, immutable,
  versioned filesystem trees. See the ostree package's description for
