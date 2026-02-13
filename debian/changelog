@@ -1,3 +1,11 @@
+ostree (2025.7-3) unstable; urgency=medium
+
+  * Team upload
+  * Re-enable composefs support on architectures where it is available
+  * Update list of architectures where gjs is available
+
+ -- Jeremy Bícha <jbicha@ubuntu.com>  Fri, 13 Feb 2026 15:15:40 -0500
+
 ostree (2025.7-2) unstable; urgency=medium
 
   * Team upload
