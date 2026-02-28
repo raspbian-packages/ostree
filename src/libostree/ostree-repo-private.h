@@ -247,6 +247,7 @@ struct OstreeRepo
   GHashTable
       *bls_append_values;     /* Parsed key-values from bls-append-except-default key in config. */
   gboolean enable_bootprefix; /* If true, prepend bootloader entries with /boot */
+  guint boot_counting;
 
   OstreeRepo *parent_repo;
 };
@@ -393,6 +394,7 @@ gboolean _ostree_repo_load_file_bare (OstreeRepo *self, const char *checksum, in
                                       GError **error);
 
 gboolean _ostree_repo_update_mtime (OstreeRepo *self, GError **error);
+gboolean _ostree_repo_syncfs (OstreeRepo *self, GError **error);
 
 gboolean _ostree_repo_add_remote (OstreeRepo *self, OstreeRemote *remote);
 gboolean _ostree_repo_remove_remote (OstreeRepo *self, OstreeRemote *remote);

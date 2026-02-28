@@ -211,7 +211,7 @@ ostree_repo_file_get_xattrs (<em class="parameter"><code><a class="link" href="o
 <tr>
 <td class="parameter_name"><p>out_xattrs</p></td>
 <td class="parameter_description"><p>the extended attributes. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/out"><span class="acronym">out</span></a>][<a href="http://foldoc.org/optional"><span class="acronym">optional</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="Parameter for returning results. Default is transfer full."><span class="acronym">out</span></acronym>][<acronym title="NULL may be passed instead of a pointer to a location."><span class="acronym">optional</span></acronym>]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>cancellable</p></td>
@@ -235,7 +235,7 @@ ostree_repo_file_get_repo (<em class="parameter"><code><a class="link" href="ost
 <div class="refsect3">
 <a name="ostree-repo-file-get-repo.returns"></a><h4>Returns</h4>
 <p>Repository. </p>
-<p><span class="annotation">[<a href="http://foldoc.org/transfer%20none"><span class="acronym">transfer none</span></a>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -246,7 +246,7 @@ ostree_repo_file_get_root (<em class="parameter"><code><a class="link" href="ost
 <div class="refsect3">
 <a name="ostree-repo-file-get-root.returns"></a><h4>Returns</h4>
 <p>The root directory for the commit referenced by this file. </p>
-<p><span class="annotation">[<a href="http://foldoc.org/transfer%20none"><span class="acronym">transfer none</span></a>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -298,7 +298,7 @@ ostree_repo_file_tree_get_contents_checksum
 <a name="ostree-repo-file-tree-get-contents-checksum.returns"></a><h4>Returns</h4>
 <p>The SHA256 digest of the content object, or <code class="literal">NULL</code> if this is not a
 directory. </p>
-<p><span class="annotation">[<a href="http://foldoc.org/nullable"><span class="acronym">nullable</span></a>]</span></p>
+<p><span class="annotation">[<acronym title="NULL may be passed as the value in, out, in-out; or as a return value."><span class="acronym">nullable</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -326,7 +326,7 @@ ostree_repo_file_tree_get_metadata_checksum
 <a name="ostree-repo-file-tree-get-metadata-checksum.returns"></a><h4>Returns</h4>
 <p>The SHA256 digest of the metadata object, or <code class="literal">NULL</code> if this is not a
 directory. </p>
-<p><span class="annotation">[<a href="http://foldoc.org/nullable"><span class="acronym">nullable</span></a>]</span></p>
+<p><span class="annotation">[<acronym title="NULL may be passed as the value in, out, in-out; or as a return value."><span class="acronym">nullable</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -354,7 +354,7 @@ state.  It will also return <code class="literal">NULL</code> if this path is no
 <div class="refsect3">
 <a name="ostree-repo-file-tree-get-contents.returns"></a><h4>Returns</h4>
 <p>The GVariant representing the children of this directory. </p>
-<p><span class="annotation">[<a href="http://foldoc.org/nullable"><span class="acronym">nullable</span></a>]</span></p>
+<p><span class="annotation">[<acronym title="NULL may be passed as the value in, out, in-out; or as a return value."><span class="acronym">nullable</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -382,7 +382,7 @@ state.  It will also return <code class="literal">NULL</code> if this path is no
 <div class="refsect3">
 <a name="ostree-repo-file-tree-get-metadata.returns"></a><h4>Returns</h4>
 <p>The GVariant representing the metadata for this directory. </p>
-<p><span class="annotation">[<a href="http://foldoc.org/nullable"><span class="acronym">nullable</span></a>]</span></p>
+<p><span class="annotation">[<acronym title="NULL may be passed as the value in, out, in-out; or as a return value."><span class="acronym">nullable</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -421,12 +421,12 @@ ostree_repo_file_tree_find_child (<em class="parameter"><code><a class="link" hr
 <tr>
 <td class="parameter_name"><p>is_dir</p></td>
 <td class="parameter_description"><p>. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/out%20caller-allocates"><span class="acronym">out caller-allocates</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="Out parameter, where caller must allocate storage."><span class="acronym">out caller-allocates</span></acronym>]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>out_container</p></td>
 <td class="parameter_description"><p>. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/out"><span class="acronym">out</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="Parameter for returning results. Default is transfer full."><span class="acronym">out</span></acronym>]</span></td>
 </tr>
 </tbody>
 </table></div>
@@ -475,7 +475,7 @@ ostree_repo_file_tree_query_child (<em class="parameter"><code><a class="link" h
 <tr>
 <td class="parameter_name"><p>out_info</p></td>
 <td class="parameter_description"><p>the <span class="type">GFileInfo</span> of the child. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/out"><span class="acronym">out</span></a>][<a href="http://foldoc.org/transfer%20full"><span class="acronym">transfer full</span></a>][<a href="http://foldoc.org/optional"><span class="acronym">optional</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="Parameter for returning results. Default is transfer full."><span class="acronym">out</span></acronym>][<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>][<acronym title="NULL may be passed instead of a pointer to a location."><span class="acronym">optional</span></acronym>]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>cancellable</p></td>

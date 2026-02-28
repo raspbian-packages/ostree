@@ -51,6 +51,7 @@ libostree-1.so.1 libostree-1-1 #MINVER#
  LIBOSTREE_2024.7@LIBOSTREE_2024.7 2024.7
  LIBOSTREE_2025.1@LIBOSTREE_2025.1 2025.1
  LIBOSTREE_2025.2@LIBOSTREE_2025.2 2025.2
+ LIBOSTREE_2025.3@LIBOSTREE_2025.3 2025.3
  ostree_async_progress_copy_state@LIBOSTREE_2019.6 2019.6
  ostree_async_progress_finish@LIBOSTREE_2016.3 2016.4
  ostree_async_progress_get@LIBOSTREE_2017.6 2017.6
@@ -71,6 +72,8 @@ libostree-1.so.1 libostree-1-1 #MINVER#
  ostree_bootconfig_parser_clone@LIBOSTREE_2016.3 2016.4
  ostree_bootconfig_parser_get@LIBOSTREE_2016.3 2016.4
  ostree_bootconfig_parser_get_overlay_initrds@LIBOSTREE_2020.7 2020.7
+ ostree_bootconfig_parser_get_tries_done@LIBOSTREE_2025.3 2025.3
+ ostree_bootconfig_parser_get_tries_left@LIBOSTREE_2025.3 2025.3
  ostree_bootconfig_parser_get_type@LIBOSTREE_2016.3 2016.4
  ostree_bootconfig_parser_new@LIBOSTREE_2016.3 2016.4
  ostree_bootconfig_parser_parse@LIBOSTREE_2016.3 2016.4
@@ -143,6 +146,7 @@ libostree-1.so.1 libostree-1-1 #MINVER#
  ostree_deployment_hash@LIBOSTREE_2016.3 2016.4
  ostree_deployment_is_finalization_locked@LIBOSTREE_2023.8 2023.8
  ostree_deployment_is_pinned@LIBOSTREE_2018.3 2018.3
+ ostree_deployment_is_soft_reboot_target@LIBOSTREE_2025.3 2025.3
  ostree_deployment_is_staged@LIBOSTREE_2018.5 2018.5
  ostree_deployment_new@LIBOSTREE_2016.3 2016.4
  ostree_deployment_origin_remove_transient_state@LIBOSTREE_2018.3 2018.3
@@ -417,6 +421,7 @@ libostree-1.so.1 libostree-1-1 #MINVER#
  ostree_repo_write_commit_detached_metadata@LIBOSTREE_2016.3 2016.4
  ostree_repo_write_commit_with_time@LIBOSTREE_2016.3 2016.4
  ostree_repo_write_config@LIBOSTREE_2016.3 2016.4
+ ostree_repo_write_config_and_reload@LIBOSTREE_2025.3 2025.3
  ostree_repo_write_content@LIBOSTREE_2016.3 2016.4
  ostree_repo_write_content_async@LIBOSTREE_2016.3 2016.4
  ostree_repo_write_content_finish@LIBOSTREE_2016.3 2016.4
@@ -465,13 +470,16 @@ libostree-1.so.1 libostree-1-1 #MINVER#
  ostree_sysroot_change_finalization@LIBOSTREE_2023.8 2023.8
  ostree_sysroot_cleanup@LIBOSTREE_2016.3 2016.4
  ostree_sysroot_cleanup_prune_repo@LIBOSTREE_2018.6 2018.6
+ ostree_sysroot_clear_soft_reboot@LIBOSTREE_2025.3 2025.3
  ostree_sysroot_deploy_tree@LIBOSTREE_2016.3 2016.4
  ostree_sysroot_deploy_tree_with_options@LIBOSTREE_2020.7 2020.7
+ ostree_sysroot_deployment_can_soft_reboot@LIBOSTREE_2025.3 2025.3
  ostree_sysroot_deployment_kexec_load@LIBOSTREE_2025.1 2025.1
  ostree_sysroot_deployment_set_kargs@LIBOSTREE_2016.3 2016.4
  ostree_sysroot_deployment_set_kargs_in_place@LIBOSTREE_2022.5 2022.5
  ostree_sysroot_deployment_set_mutable@LIBOSTREE_2016.3 2016.4
  ostree_sysroot_deployment_set_pinned@LIBOSTREE_2018.3 2018.3
+ ostree_sysroot_deployment_set_soft_reboot@LIBOSTREE_2025.3 2025.3
  ostree_sysroot_deployment_unlock@LIBOSTREE_2016.4 2016.4
  ostree_sysroot_ensure_initialized@LIBOSTREE_2016.3 2016.4
  ostree_sysroot_get_booted_deployment@LIBOSTREE_2016.3 2016.4

@@ -25,6 +25,8 @@ if [ "${OSTREE_TEST_ALLOW_RANDOM:-}" != 1 ]; then
     skip "Non-deterministic test will fail if we are unlucky"
 fi
 
+skip_without_ostree_httpd
+
 COMMIT_SIGN=""
 if has_ostree_feature gpgme; then
     COMMIT_SIGN="--gpg-homedir=${TEST_GPG_KEYHOME} --gpg-sign=${TEST_GPG_KEYID_1}"

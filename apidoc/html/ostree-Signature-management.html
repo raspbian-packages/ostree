@@ -204,7 +204,7 @@ signing engines; they will not be initialized.</p>
 <div class="refsect3">
 <a name="ostree-sign-get-all.returns"></a><h4>Returns</h4>
 <p>an array of signing engines. </p>
-<p><span class="annotation">[<a href="http://foldoc.org/transfer%20full"><span class="acronym">transfer full</span></a>][<a href="http://foldoc.org/element-type"><span class="acronym">element-type</span></a> OstreeSign]</span></p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>][<acronym title="Generics and defining elements of containers and arrays."><span class="acronym">element-type</span></acronym> OstreeSign]</span></p>
 </div>
 <p class="since">Since: 2020.2</p>
 </div>
@@ -309,7 +309,7 @@ the public key(s) for verification with <a class="link" href="ostree-Signature-m
 <td class="parameter_name"><p>out_success_message</p></td>
 <td class="parameter_description"><p>success message returned by the signing
 engine. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/out"><span class="acronym">out</span></a>][<a href="http://foldoc.org/nullable"><span class="acronym">nullable</span></a>][<a href="http://foldoc.org/optional"><span class="acronym">optional</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="Parameter for returning results. Default is transfer full."><span class="acronym">out</span></acronym>][<acronym title="NULL may be passed as the value in, out, in-out; or as a return value."><span class="acronym">nullable</span></acronym>][<acronym title="NULL may be passed instead of a pointer to a location."><span class="acronym">optional</span></acronym>]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>cancellable</p></td>
@@ -369,7 +369,7 @@ the secret key with <a class="link" href="ostree-Signature-management.html#ostre
 <tr>
 <td class="parameter_name"><p>signature</p></td>
 <td class="parameter_description"><p>in case of success will contain signature. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/out"><span class="acronym">out</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="Parameter for returning results. Default is transfer full."><span class="acronym">out</span></acronym>]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>cancellable</p></td>
@@ -436,7 +436,7 @@ or <a class="link" href="ostree-Signature-management.html#ostree-sign-load-pk" t
 <td class="parameter_name"><p>out_success_message</p></td>
 <td class="parameter_description"><p>success message returned by the signing
 engine. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/out"><span class="acronym">out</span></a>][<a href="http://foldoc.org/nullable"><span class="acronym">nullable</span></a>][<a href="http://foldoc.org/optional"><span class="acronym">optional</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="Parameter for returning results. Default is transfer full."><span class="acronym">out</span></acronym>][<acronym title="NULL may be passed as the value in, out, in-out; or as a return value."><span class="acronym">nullable</span></acronym>][<acronym title="NULL may be passed instead of a pointer to a location."><span class="acronym">optional</span></acronym>]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>error</p></td>
@@ -489,7 +489,7 @@ ostree_sign_get_by_name (<em class="parameter"><code>const <span class="type">gc
 <div class="refsect3">
 <a name="ostree-sign-get-by-name.returns"></a><h4>Returns</h4>
 <p>New signing engine, or <code class="literal">NULL</code> if the engine is not known. </p>
-<p><span class="annotation">[<a href="http://foldoc.org/transfer%20full"><span class="acronym">transfer full</span></a>]</span></p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
 <p class="since">Since: 2020.2</p>
 </div>
@@ -519,7 +519,7 @@ ostree_sign_get_name (<em class="parameter"><code><a class="link" href="ostree-S
 <p>pointer to the name
 <em class="parameter"><code>NULL</code></em>
 in case of error (unlikely). </p>
-<p><span class="annotation">[<a href="http://foldoc.org/transfer%20none"><span class="acronym">transfer none</span></a>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 <p class="since">Since: 2020.2</p>
 </div>
@@ -694,7 +694,7 @@ current signing engine.</p>
 <p>pointer to the metadata format,
 <em class="parameter"><code>NULL</code></em>
 in case of error (unlikely). </p>
-<p><span class="annotation">[<a href="http://foldoc.org/transfer%20none"><span class="acronym">transfer none</span></a>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 <p class="since">Since: 2020.2</p>
 </div>
@@ -725,7 +725,7 @@ current signing engine.</p>
 <p>pointer to the metadata key name,
 <em class="parameter"><code>NULL</code></em>
 in case of error (unlikely). </p>
-<p><span class="annotation">[<a href="http://foldoc.org/transfer%20none"><span class="acronym">transfer none</span></a>]</span></p>
+<p><span class="annotation">[<acronym title="The data is owned by the callee, which is responsible of freeing it."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 <p class="since">Since: 2020.2</p>
 </div>
@@ -911,7 +911,7 @@ ostree_sign_read_pk (<em class="parameter"><code><a class="link" href="ostree-Si
 <div class="refsect3">
 <a name="ostree-sign-read-pk.returns"></a><h4>Returns</h4>
 <p>a <span class="type">OstreamBlobReader</span> or <code class="literal">NULL</code> on error. </p>
-<p><span class="annotation">[<a href="http://foldoc.org/transfer%20full"><span class="acronym">transfer full</span></a>]</span></p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
 <p class="since">Since: 2025.2</p>
 </div>
@@ -947,7 +947,7 @@ ostree_sign_read_sk (<em class="parameter"><code><a class="link" href="ostree-Si
 <div class="refsect3">
 <a name="ostree-sign-read-sk.returns"></a><h4>Returns</h4>
 <p>a <span class="type">OstreamBlobReader</span> or <code class="literal">NULL</code> on error. </p>
-<p><span class="annotation">[<a href="http://foldoc.org/transfer%20full"><span class="acronym">transfer full</span></a>]</span></p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
 </div>
 <p class="since">Since: 2025.2</p>
 </div>

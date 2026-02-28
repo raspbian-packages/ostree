@@ -241,7 +241,7 @@ If no match is found, the function returns <code class="literal">FALSE</code> an
 <td class="parameter_description"><p>return location for the index of the signature
 signed by <em class="parameter"><code>key_id</code></em>
 , or <code class="literal">NULL</code>. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/out"><span class="acronym">out</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="Parameter for returning results. Default is transfer full."><span class="acronym">out</span></acronym>]</span></td>
 </tr>
 </tbody>
 </table></div>
@@ -291,7 +291,7 @@ find the number of signatures in <em class="parameter"><code>result</code></em>
 <tr>
 <td class="parameter_name"><p>attrs</p></td>
 <td class="parameter_description"><p>Array of requested attributes. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/array"><span class="acronym">array</span></a> length=n_attrs]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="Parameter points to an array of items."><span class="acronym">array</span></acronym> length=n_attrs]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>n_attrs</p></td>
@@ -305,7 +305,7 @@ array</p></td>
 <div class="refsect3">
 <a name="ostree-gpg-verify-result-get.returns"></a><h4>Returns</h4>
 <p>a new, floating, <span class="type">GVariant</span> tuple. </p>
-<p><span class="annotation">[<a href="http://foldoc.org/transfer%20floating"><span class="acronym">transfer floating</span></a>]</span></p>
+<p><span class="annotation">[<acronym title="Alias for transfer none, used for objects with floating refs."><span class="acronym">transfer floating</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -361,7 +361,7 @@ available attribute.</p>
 <div class="refsect3">
 <a name="ostree-gpg-verify-result-get-all.returns"></a><h4>Returns</h4>
 <p>a new, floating, <span class="type">GVariant</span> tuple. </p>
-<p><span class="annotation">[<a href="http://foldoc.org/transfer%20floating"><span class="acronym">transfer floating</span></a>]</span></p>
+<p><span class="annotation">[<acronym title="Alias for transfer none, used for objects with floating refs."><span class="acronym">transfer floating</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -416,7 +416,7 @@ format.  Currently must be 0.</p>
 <tr>
 <td class="parameter_name"><p>line_prefix</p></td>
 <td class="parameter_description"><p>optional line prefix string. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/allow-none"><span class="acronym">allow-none</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="NULL is OK, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>flags</p></td>
@@ -464,7 +464,7 @@ and signature index.</p>
 <tr>
 <td class="parameter_name"><p>line_prefix</p></td>
 <td class="parameter_description"><p>optional line prefix string. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/allow-none"><span class="acronym">allow-none</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="NULL is OK, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>flags</p></td>
@@ -500,7 +500,7 @@ it will handle the <code class="literal">NULL</code> <em class="parameter"><code
 <tr>
 <td class="parameter_name"><p>result</p></td>
 <td class="parameter_description"><p>an <a class="link" href="ostree-GPG-signature-verification-results.html#OstreeGpgVerifyResult" title="OstreeGpgVerifyResult"><span class="type">OstreeGpgVerifyResult</span></a>. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<a href="http://foldoc.org/nullable"><span class="acronym">nullable</span></a>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="NULL may be passed as the value in, out, in-out; or as a return value."><span class="acronym">nullable</span></acronym>]</span></td>
 </tr>
 <tr>
 <td class="parameter_name"><p>error</p></td>

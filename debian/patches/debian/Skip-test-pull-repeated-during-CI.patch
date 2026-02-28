@@ -18,7 +18,7 @@ Signed-off-by: Simon McVittie <smcv@debian.org>
  1 file changed, 4 insertions(+)
 
 diff --git a/tests/test-pull-repeated.sh b/tests/test-pull-repeated.sh
-index b3e0074..0c77546 100755
+index 51113b6..4cfe4c7 100755
 --- a/tests/test-pull-repeated.sh
 +++ b/tests/test-pull-repeated.sh
 @@ -21,6 +21,10 @@ set -euo pipefail
@@ -29,6 +29,6 @@ index b3e0074..0c77546 100755
 +    skip "Non-deterministic test will fail if we are unlucky"
 +fi
 +
+ skip_without_ostree_httpd
+ 
  COMMIT_SIGN=""
- if has_ostree_feature gpgme; then
-     COMMIT_SIGN="--gpg-homedir=${TEST_GPG_KEYHOME} --gpg-sign=${TEST_GPG_KEYID_1}"

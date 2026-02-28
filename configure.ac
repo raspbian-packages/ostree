@@ -1,7 +1,7 @@
 AC_PREREQ([2.63])
 dnl To perform a release, follow the instructions in `docs/CONTRIBUTING.md`.
 m4_define([year_version], [2025])
-m4_define([release_version], [2])
+m4_define([release_version], [7])
 m4_define([package_version], [year_version.release_version])
 AC_INIT([libostree], [package_version], [walters@verbum.org])
 is_release_build=yes
@@ -96,6 +96,12 @@ dnl These bits attempt to mirror https://github.com/coreutils/gnulib/blob/e369b0
 AC_CHECK_FUNCS([nanotime clock_gettime])
 AC_STRUCT_TIMEZONE
 AC_CHECK_HEADER([sys/xattr.h],,[AC_MSG_ERROR([You must have sys/xattr.h from glibc])])
+
+dnl new mount api
+AC_CHECK_FUNCS([open_tree])
+AM_CONDITIONAL([HAVE_SOFT_REBOOT], [test x$ac_cv_func_open_tree = xyes])
+AM_COND_IF([HAVE_SOFT_REBOOT],
+  [AC_DEFINE([HAVE_SOFT_REBOOT], 1, [Define if we have soft reboots])])
 
 AS_IF([test "$YACC" != "bison -y"], [AC_MSG_ERROR([bison not found but required])])
 

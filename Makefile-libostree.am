@@ -107,8 +107,10 @@ libostree_1_la_SOURCES = \
 	src/libostree/ostree-sysroot-cleanup.c \
 	src/libostree/ostree-sysroot-deploy.c \
 	src/libostree/ostree-sysroot-upgrader.c \
+	src/libostree/ostree-soft-reboot.c \
 	src/libostree/ostree-impl-system-generator.c \
 	src/libostree/ostree-bootconfig-parser.c \
+	src/libostree/ostree-bootconfig-parser-private.h \
 	src/libostree/ostree-deployment.c \
 	src/libostree/ostree-bootloader.h \
 	src/libostree/ostree-bootloader.c \
@@ -191,6 +193,9 @@ libostree_1_la_CFLAGS = $(AM_CFLAGS) -I$(srcdir)/bsdiff -I$(srcdir)/libglnx -I$(
 	$(OT_INTERNAL_GIO_UNIX_CFLAGS) $(OT_INTERNAL_GPGME_CFLAGS) $(OT_DEP_LZMA_CFLAGS) $(OT_DEP_ZLIB_CFLAGS) $(OT_DEP_CRYPTO_CFLAGS) \
 	-fvisibility=hidden '-D_OSTREE_PUBLIC=__attribute__((visibility("default"))) extern' \
 	-DPKGLIBEXECDIR=\"$(pkglibexecdir)\"
+if BUILDOPT_USE_STATIC_COMPILER
+libostree_1_la_CFLAGS += -DOSTREE_PREPARE_ROOT_STATIC=1
+endif
 libostree_1_la_LDFLAGS = -version-number 1:0:0 -Bsymbolic-functions $(addprefix $(wl_versionscript_arg),$(symbol_files))
 libostree_1_la_LIBADD = libotutil.la libotcore.la libglnx.la libbsdiff.la $(OT_INTERNAL_GIO_UNIX_LIBS) $(OT_INTERNAL_GPGME_LIBS) \
                         $(OT_DEP_LZMA_LIBS) $(OT_DEP_ZLIB_LIBS) $(OT_DEP_CRYPTO_LIBS)

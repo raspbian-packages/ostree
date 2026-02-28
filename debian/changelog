@@ -1,9 +1,57 @@
-ostree (2025.2-1+rpi1) trixie-staging; urgency=medium
+ostree (2025.7-3+rpi1) forky-staging; urgency=medium
 
   [changes brought forward from 2020.8-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Tue, 15 Dec 2020 11:54:45 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Wed, 09 Apr 2025 14:39:47 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Sat, 28 Feb 2026 08:22:57 +0000
+
+ostree (2025.7-3) unstable; urgency=medium
+
+  * Team upload
+  * Re-enable composefs support on architectures where it is available
+  * Update list of architectures where gjs is available
+
+ -- Jeremy Bícha <jbicha@ubuntu.com>  Fri, 13 Feb 2026 15:15:40 -0500
+
+ostree (2025.7-2) unstable; urgency=medium
+
+  * Team upload
+  * libostree-doc: Remove unnecessary Suggests: devhelp
+  * Bump Standards Version to 4.7.3
+
+ -- Jeremy Bícha <jbicha@ubuntu.com>  Sun, 01 Feb 2026 23:22:51 -0500
+
+ostree (2025.7-1) unstable; urgency=medium
+
+  * New upstream release
+
+ -- Simon McVittie <smcv@debian.org>  Mon, 17 Nov 2025 10:55:41 +0000
+
+ostree (2025.6-1) unstable; urgency=medium
+
+  * New upstream release
+  * d/ostree-boot.install: Be less specific about the filenames used.
+    2025.6 changed the sequence number for the dracut hook.
+
+ -- Simon McVittie <smcv@debian.org>  Sun, 07 Sep 2025 17:21:45 +0100
+
+ostree (2025.5-1) unstable; urgency=medium
+
+  * New upstream release
+
+ -- Simon McVittie <smcv@debian.org>  Sat, 30 Aug 2025 11:11:13 +0100
+
+ostree (2025.4-1) unstable; urgency=medium
+
+  * New upstream release
+  * Rebase patch series
+  * d/libostree-1-1.symbols: Update
+  * d/copyright: Update
+  * d/control: Add jq to Build-Depends and -tests Depends
+  * Prefer the OpenSSL flavour of libcurl.
+    This is the one that upstream is going to be testing with in practice.
+
+ -- Simon McVittie <smcv@debian.org>  Thu, 14 Aug 2025 20:12:13 +0100
 
 ostree (2025.2-1) unstable; urgency=medium
 
