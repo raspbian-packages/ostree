@@ -1,8 +1,13 @@
-ostree (2026.1-1) UNRELEASED; urgency=medium
+ostree (2026.1-1) unstable; urgency=medium
 
   * New upstream release
+  * d/control: Replace transitional libselinux1-dev with libselinux-dev
+  * d/control: Simplify gobject-introspection dependency
+    as suggested in gobject-introspection/README.Debian.gz
+  * Standards-Version: 4.7.4 (no changes required)
+  * d/watch: Convert to v5 format
 
- -- Simon McVittie <smcv@debian.org>  Sat, 11 Apr 2026 10:43:20 +0100
+ -- Simon McVittie <smcv@debian.org>  Sat, 11 Apr 2026 13:40:07 +0100
 
 ostree (2025.7-3) unstable; urgency=medium
 
