@@ -32,7 +32,7 @@
  *
  * Since: 2017.4
  */
-#define OSTREE_YEAR_VERSION (2025)
+#define OSTREE_YEAR_VERSION (2026)
 
 /**
  * OSTREE_RELEASE_VERSION:
@@ -41,7 +41,7 @@
  *
  * Since: 2017.4
  */
-#define OSTREE_RELEASE_VERSION (7)
+#define OSTREE_RELEASE_VERSION (1)
 
 /**
  * OSTREE_VERSION
@@ -50,7 +50,7 @@
  *
  * Since: 2017.4
  */
-#define OSTREE_VERSION (2025.7)
+#define OSTREE_VERSION (2026.1)
 
 /**
  * OSTREE_VERSION_S:
@@ -60,7 +60,7 @@
  *
  * Since: 2017.4
  */
-#define OSTREE_VERSION_S "2025.7"
+#define OSTREE_VERSION_S "2026.1"
 
 #define OSTREE_ENCODE_VERSION(year,release) \
         ((year) << 16 | (release))
