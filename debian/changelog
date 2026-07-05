@@ -1,8 +1,11 @@
-ostree (2026.2-1) UNRELEASED; urgency=medium
+ostree (2026.2-1) unstable; urgency=medium
 
   * New upstream release
+  * Bump debhelper compat level to 14
+    - Remove ${misc:Depends} etc., now added automatically
+  * Use dpkg build API v1
 
- -- Simon McVittie <smcv@debian.org>  Sun, 05 Jul 2026 11:14:20 +0100
+ -- Simon McVittie <smcv@debian.org>  Sun, 05 Jul 2026 21:39:43 +0100
 
 ostree (2026.1-1) unstable; urgency=medium
 
