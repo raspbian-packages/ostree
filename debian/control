@@ -9,6 +9,7 @@ Uploaders:
 Build-Depends:
  debhelper-compat (= 14),
  dh-sequence-gir,
+ dpkg-build-api (= 1),
  attr,
  autoconf,
  automake,
