@@ -666,7 +666,8 @@ am__EXEEXT_6 = tests/test-varint$(EXEEXT) \
 	tests/test-pull-c$(EXEEXT) tests/test-repo$(EXEEXT) \
 	tests/test-include-ostree-h$(EXEEXT) tests/test-kargs$(EXEEXT) \
 	tests/test-rfc2616-dates$(EXEEXT) tests/test-pem$(EXEEXT) \
-	$(am__EXEEXT_4) $(am__EXEEXT_5)
+	tests/test-validate-utf8$(EXEEXT) $(am__EXEEXT_4) \
+	$(am__EXEEXT_5)
 @ENABLE_INSTALLED_TESTS_EXCLUSIVE_FALSE@am__EXEEXT_7 =  \
 @ENABLE_INSTALLED_TESTS_EXCLUSIVE_FALSE@	$(am__EXEEXT_6)
 am__EXEEXT_8 = tests/test-bloom$(EXEEXT) \
@@ -1577,6 +1578,17 @@ tests_test_sysroot_c_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(tests_test_sysroot_c_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
+am_tests_test_validate_utf8_OBJECTS =  \
+	src/libostree/tests_test_validate_utf8-ostree-core.$(OBJEXT) \
+	src/libostree/tests_test_validate_utf8-ostree-varint.$(OBJEXT) \
+	tests/test_validate_utf8-test-validate-utf8.$(OBJEXT)
+tests_test_validate_utf8_OBJECTS =  \
+	$(am_tests_test_validate_utf8_OBJECTS)
+tests_test_validate_utf8_DEPENDENCIES = $(am__DEPENDENCIES_18)
+tests_test_validate_utf8_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(tests_test_validate_utf8_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am_tests_test_varint_OBJECTS =  \
 	src/libostree/tests_test_varint-ostree-varint.$(OBJEXT) \
 	tests/test_varint-test-varint.$(OBJEXT)
@@ -1718,6 +1730,8 @@ am__depfiles_remade = bsdiff/$(DEPDIR)/libbsdiff_la-bsdiff.Plo \
 	src/libostree/$(DEPDIR)/tests_test_rfc2616_dates-ostree-date-utils.Po \
 	src/libostree/$(DEPDIR)/tests_test_rollsum-ostree-rollsum.Po \
 	src/libostree/$(DEPDIR)/tests_test_rollsum_cli-ostree-rollsum.Po \
+	src/libostree/$(DEPDIR)/tests_test_validate_utf8-ostree-core.Po \
+	src/libostree/$(DEPDIR)/tests_test_validate_utf8-ostree-varint.Po \
 	src/libostree/$(DEPDIR)/tests_test_varint-ostree-varint.Po \
 	src/libotcore/$(DEPDIR)/libotcore_la-otcore-ed25519-verify.Plo \
 	src/libotcore/$(DEPDIR)/libotcore_la-otcore-prepare-root.Plo \
@@ -1842,6 +1856,7 @@ am__depfiles_remade = bsdiff/$(DEPDIR)/libbsdiff_la-bsdiff.Plo \
 	tests/$(DEPDIR)/test_rollsum-test-rollsum.Po \
 	tests/$(DEPDIR)/test_rollsum_cli-test-rollsum-cli.Po \
 	tests/$(DEPDIR)/test_sysroot_c-test-sysroot-c.Po \
+	tests/$(DEPDIR)/test_validate_utf8-test-validate-utf8.Po \
 	tests/$(DEPDIR)/test_varint-test-varint.Po
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
@@ -1892,6 +1907,7 @@ SOURCES = $(libbsdiff_la_SOURCES) $(libbupsplit_la_SOURCES) \
 	$(tests_test_rfc2616_dates_SOURCES) \
 	$(tests_test_rollsum_SOURCES) \
 	$(tests_test_rollsum_cli_SOURCES) tests/test-sysroot-c.c \
+	$(tests_test_validate_utf8_SOURCES) \
 	$(tests_test_varint_SOURCES)
 DIST_SOURCES = $(libbsdiff_la_SOURCES) $(libbupsplit_la_SOURCES) \
 	$(libglnx_la_SOURCES) $(am__libostree_1_la_SOURCES_DIST) \
@@ -1925,6 +1941,7 @@ DIST_SOURCES = $(libbsdiff_la_SOURCES) $(libbupsplit_la_SOURCES) \
 	$(tests_test_rfc2616_dates_SOURCES) \
 	$(tests_test_rollsum_SOURCES) \
 	$(tests_test_rollsum_cli_SOURCES) tests/test-sysroot-c.c \
+	$(tests_test_validate_utf8_SOURCES) \
 	$(tests_test_varint_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
 	ctags-recursive dvi-recursive html-recursive info-recursive \
@@ -3262,8 +3279,8 @@ _installed_or_uninstalled_test_programs = tests/test-varint \
 	tests/test-bootconfig-parser-internals tests/test-basic-c \
 	tests/test-sysroot-c tests/test-pull-c tests/test-repo \
 	tests/test-include-ostree-h tests/test-kargs \
-	tests/test-rfc2616-dates tests/test-pem $(am__append_91) \
-	$(am__append_94)
+	tests/test-rfc2616-dates tests/test-pem \
+	tests/test-validate-utf8 $(am__append_91) $(am__append_94)
 @USE_LIBSOUP_OR_LIBSOUP3_TRUE@ostree_trivial_httpd_SOURCES = src/ostree/ostree-trivial-httpd.c
 @USE_LIBSOUP_OR_LIBSOUP3_TRUE@ostree_trivial_httpd_CFLAGS = $(common_tests_cflags) $(OT_INTERNAL_SOUP_CFLAGS)
 @USE_LIBSOUP_OR_LIBSOUP3_TRUE@ostree_trivial_httpd_LDADD = $(common_tests_ldadd) $(OT_INTERNAL_SOUP_LIBS)
@@ -3356,6 +3373,13 @@ tests_test_pem_SOURCES = \
 
 tests_test_pem_CFLAGS = $(TESTS_CFLAGS)
 tests_test_pem_LDADD = $(TESTS_LDADD)
+tests_test_validate_utf8_SOURCES = \
+	src/libostree/ostree-core.c \
+	src/libostree/ostree-varint.c \
+	tests/test-validate-utf8.c
+
+tests_test_validate_utf8_CFLAGS = $(TESTS_CFLAGS) $(libglnx_cflags)
+tests_test_validate_utf8_LDADD = $(TESTS_LDADD)
 tests_test_commit_sign_sh_ext_CFLAGS = $(TESTS_CFLAGS)
 tests_test_commit_sign_sh_ext_LDADD = $(TESTS_LDADD)
 @USE_GPGME_TRUE@tests_test_gpg_verify_result_SOURCES = \
@@ -4837,6 +4861,18 @@ tests/test_sysroot_c-test-sysroot-c.$(OBJEXT): tests/$(am__dirstamp) \
 tests/test-sysroot-c$(EXEEXT): $(tests_test_sysroot_c_OBJECTS) $(tests_test_sysroot_c_DEPENDENCIES) $(EXTRA_tests_test_sysroot_c_DEPENDENCIES) tests/$(am__dirstamp)
 	@rm -f tests/test-sysroot-c$(EXEEXT)
 	$(AM_V_CCLD)$(tests_test_sysroot_c_LINK) $(tests_test_sysroot_c_OBJECTS) $(tests_test_sysroot_c_LDADD) $(LIBS)
+src/libostree/tests_test_validate_utf8-ostree-core.$(OBJEXT):  \
+	src/libostree/$(am__dirstamp) \
+	src/libostree/$(DEPDIR)/$(am__dirstamp)
+src/libostree/tests_test_validate_utf8-ostree-varint.$(OBJEXT):  \
+	src/libostree/$(am__dirstamp) \
+	src/libostree/$(DEPDIR)/$(am__dirstamp)
+tests/test_validate_utf8-test-validate-utf8.$(OBJEXT):  \
+	tests/$(am__dirstamp) tests/$(DEPDIR)/$(am__dirstamp)
+
+tests/test-validate-utf8$(EXEEXT): $(tests_test_validate_utf8_OBJECTS) $(tests_test_validate_utf8_DEPENDENCIES) $(EXTRA_tests_test_validate_utf8_DEPENDENCIES) tests/$(am__dirstamp)
+	@rm -f tests/test-validate-utf8$(EXEEXT)
+	$(AM_V_CCLD)$(tests_test_validate_utf8_LINK) $(tests_test_validate_utf8_OBJECTS) $(tests_test_validate_utf8_LDADD) $(LIBS)
 src/libostree/tests_test_varint-ostree-varint.$(OBJEXT):  \
 	src/libostree/$(am__dirstamp) \
 	src/libostree/$(DEPDIR)/$(am__dirstamp)
@@ -5193,6 +5229,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@src/libostree/$(DEPDIR)/tests_test_rfc2616_dates-ostree-date-utils.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/libostree/$(DEPDIR)/tests_test_rollsum-ostree-rollsum.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/libostree/$(DEPDIR)/tests_test_rollsum_cli-ostree-rollsum.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/libostree/$(DEPDIR)/tests_test_validate_utf8-ostree-core.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/libostree/$(DEPDIR)/tests_test_validate_utf8-ostree-varint.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/libostree/$(DEPDIR)/tests_test_varint-ostree-varint.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/libotcore/$(DEPDIR)/libotcore_la-otcore-ed25519-verify.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/libotcore/$(DEPDIR)/libotcore_la-otcore-prepare-root.Plo@am__quote@ # am--include-marker
@@ -5317,6 +5355,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test_rollsum-test-rollsum.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test_rollsum_cli-test-rollsum-cli.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test_sysroot_c-test-sysroot-c.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test_validate_utf8-test-validate-utf8.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test_varint-test-varint.Po@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
@@ -7890,6 +7929,48 @@ tests/test_sysroot_c-test-sysroot-c.obj: tests/test-sysroot-c.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_test_sysroot_c_CFLAGS) $(CFLAGS) -c -o tests/test_sysroot_c-test-sysroot-c.obj `if test -f 'tests/test-sysroot-c.c'; then $(CYGPATH_W) 'tests/test-sysroot-c.c'; else $(CYGPATH_W) '$(srcdir)/tests/test-sysroot-c.c'; fi`
 
+src/libostree/tests_test_validate_utf8-ostree-core.o: src/libostree/ostree-core.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_test_validate_utf8_CFLAGS) $(CFLAGS) -MT src/libostree/tests_test_validate_utf8-ostree-core.o -MD -MP -MF src/libostree/$(DEPDIR)/tests_test_validate_utf8-ostree-core.Tpo -c -o src/libostree/tests_test_validate_utf8-ostree-core.o `test -f 'src/libostree/ostree-core.c' || echo '$(srcdir)/'`src/libostree/ostree-core.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/libostree/$(DEPDIR)/tests_test_validate_utf8-ostree-core.Tpo src/libostree/$(DEPDIR)/tests_test_validate_utf8-ostree-core.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/libostree/ostree-core.c' object='src/libostree/tests_test_validate_utf8-ostree-core.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_test_validate_utf8_CFLAGS) $(CFLAGS) -c -o src/libostree/tests_test_validate_utf8-ostree-core.o `test -f 'src/libostree/ostree-core.c' || echo '$(srcdir)/'`src/libostree/ostree-core.c
+
+src/libostree/tests_test_validate_utf8-ostree-core.obj: src/libostree/ostree-core.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_test_validate_utf8_CFLAGS) $(CFLAGS) -MT src/libostree/tests_test_validate_utf8-ostree-core.obj -MD -MP -MF src/libostree/$(DEPDIR)/tests_test_validate_utf8-ostree-core.Tpo -c -o src/libostree/tests_test_validate_utf8-ostree-core.obj `if test -f 'src/libostree/ostree-core.c'; then $(CYGPATH_W) 'src/libostree/ostree-core.c'; else $(CYGPATH_W) '$(srcdir)/src/libostree/ostree-core.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/libostree/$(DEPDIR)/tests_test_validate_utf8-ostree-core.Tpo src/libostree/$(DEPDIR)/tests_test_validate_utf8-ostree-core.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/libostree/ostree-core.c' object='src/libostree/tests_test_validate_utf8-ostree-core.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_test_validate_utf8_CFLAGS) $(CFLAGS) -c -o src/libostree/tests_test_validate_utf8-ostree-core.obj `if test -f 'src/libostree/ostree-core.c'; then $(CYGPATH_W) 'src/libostree/ostree-core.c'; else $(CYGPATH_W) '$(srcdir)/src/libostree/ostree-core.c'; fi`
+
+src/libostree/tests_test_validate_utf8-ostree-varint.o: src/libostree/ostree-varint.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_test_validate_utf8_CFLAGS) $(CFLAGS) -MT src/libostree/tests_test_validate_utf8-ostree-varint.o -MD -MP -MF src/libostree/$(DEPDIR)/tests_test_validate_utf8-ostree-varint.Tpo -c -o src/libostree/tests_test_validate_utf8-ostree-varint.o `test -f 'src/libostree/ostree-varint.c' || echo '$(srcdir)/'`src/libostree/ostree-varint.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/libostree/$(DEPDIR)/tests_test_validate_utf8-ostree-varint.Tpo src/libostree/$(DEPDIR)/tests_test_validate_utf8-ostree-varint.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/libostree/ostree-varint.c' object='src/libostree/tests_test_validate_utf8-ostree-varint.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_test_validate_utf8_CFLAGS) $(CFLAGS) -c -o src/libostree/tests_test_validate_utf8-ostree-varint.o `test -f 'src/libostree/ostree-varint.c' || echo '$(srcdir)/'`src/libostree/ostree-varint.c
+
+src/libostree/tests_test_validate_utf8-ostree-varint.obj: src/libostree/ostree-varint.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_test_validate_utf8_CFLAGS) $(CFLAGS) -MT src/libostree/tests_test_validate_utf8-ostree-varint.obj -MD -MP -MF src/libostree/$(DEPDIR)/tests_test_validate_utf8-ostree-varint.Tpo -c -o src/libostree/tests_test_validate_utf8-ostree-varint.obj `if test -f 'src/libostree/ostree-varint.c'; then $(CYGPATH_W) 'src/libostree/ostree-varint.c'; else $(CYGPATH_W) '$(srcdir)/src/libostree/ostree-varint.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/libostree/$(DEPDIR)/tests_test_validate_utf8-ostree-varint.Tpo src/libostree/$(DEPDIR)/tests_test_validate_utf8-ostree-varint.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/libostree/ostree-varint.c' object='src/libostree/tests_test_validate_utf8-ostree-varint.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_test_validate_utf8_CFLAGS) $(CFLAGS) -c -o src/libostree/tests_test_validate_utf8-ostree-varint.obj `if test -f 'src/libostree/ostree-varint.c'; then $(CYGPATH_W) 'src/libostree/ostree-varint.c'; else $(CYGPATH_W) '$(srcdir)/src/libostree/ostree-varint.c'; fi`
+
+tests/test_validate_utf8-test-validate-utf8.o: tests/test-validate-utf8.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_test_validate_utf8_CFLAGS) $(CFLAGS) -MT tests/test_validate_utf8-test-validate-utf8.o -MD -MP -MF tests/$(DEPDIR)/test_validate_utf8-test-validate-utf8.Tpo -c -o tests/test_validate_utf8-test-validate-utf8.o `test -f 'tests/test-validate-utf8.c' || echo '$(srcdir)/'`tests/test-validate-utf8.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_validate_utf8-test-validate-utf8.Tpo tests/$(DEPDIR)/test_validate_utf8-test-validate-utf8.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='tests/test-validate-utf8.c' object='tests/test_validate_utf8-test-validate-utf8.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_test_validate_utf8_CFLAGS) $(CFLAGS) -c -o tests/test_validate_utf8-test-validate-utf8.o `test -f 'tests/test-validate-utf8.c' || echo '$(srcdir)/'`tests/test-validate-utf8.c
+
+tests/test_validate_utf8-test-validate-utf8.obj: tests/test-validate-utf8.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_test_validate_utf8_CFLAGS) $(CFLAGS) -MT tests/test_validate_utf8-test-validate-utf8.obj -MD -MP -MF tests/$(DEPDIR)/test_validate_utf8-test-validate-utf8.Tpo -c -o tests/test_validate_utf8-test-validate-utf8.obj `if test -f 'tests/test-validate-utf8.c'; then $(CYGPATH_W) 'tests/test-validate-utf8.c'; else $(CYGPATH_W) '$(srcdir)/tests/test-validate-utf8.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_validate_utf8-test-validate-utf8.Tpo tests/$(DEPDIR)/test_validate_utf8-test-validate-utf8.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='tests/test-validate-utf8.c' object='tests/test_validate_utf8-test-validate-utf8.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_test_validate_utf8_CFLAGS) $(CFLAGS) -c -o tests/test_validate_utf8-test-validate-utf8.obj `if test -f 'tests/test-validate-utf8.c'; then $(CYGPATH_W) 'tests/test-validate-utf8.c'; else $(CYGPATH_W) '$(srcdir)/tests/test-validate-utf8.c'; fi`
+
 src/libostree/tests_test_varint-ostree-varint.o: src/libostree/ostree-varint.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_test_varint_CFLAGS) $(CFLAGS) -MT src/libostree/tests_test_varint-ostree-varint.o -MD -MP -MF src/libostree/$(DEPDIR)/tests_test_varint-ostree-varint.Tpo -c -o src/libostree/tests_test_varint-ostree-varint.o `test -f 'src/libostree/ostree-varint.c' || echo '$(srcdir)/'`src/libostree/ostree-varint.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/libostree/$(DEPDIR)/tests_test_varint-ostree-varint.Tpo src/libostree/$(DEPDIR)/tests_test_varint-ostree-varint.Po
@@ -8852,6 +8933,13 @@ tests/test-rfc2616-dates.log: tests/test-rfc2616-dates$(EXEEXT)
 tests/test-pem.log: tests/test-pem$(EXEEXT)
 	@p='tests/test-pem$(EXEEXT)'; \
 	b='tests/test-pem'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+tests/test-validate-utf8.log: tests/test-validate-utf8$(EXEEXT)
+	@p='tests/test-validate-utf8$(EXEEXT)'; \
+	b='tests/test-validate-utf8'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -10153,6 +10241,8 @@ distclean: distclean-recursive
 	-rm -f src/libostree/$(DEPDIR)/tests_test_rfc2616_dates-ostree-date-utils.Po
 	-rm -f src/libostree/$(DEPDIR)/tests_test_rollsum-ostree-rollsum.Po
 	-rm -f src/libostree/$(DEPDIR)/tests_test_rollsum_cli-ostree-rollsum.Po
+	-rm -f src/libostree/$(DEPDIR)/tests_test_validate_utf8-ostree-core.Po
+	-rm -f src/libostree/$(DEPDIR)/tests_test_validate_utf8-ostree-varint.Po
 	-rm -f src/libostree/$(DEPDIR)/tests_test_varint-ostree-varint.Po
 	-rm -f src/libotcore/$(DEPDIR)/libotcore_la-otcore-ed25519-verify.Plo
 	-rm -f src/libotcore/$(DEPDIR)/libotcore_la-otcore-prepare-root.Plo
@@ -10277,6 +10367,7 @@ distclean: distclean-recursive
 	-rm -f tests/$(DEPDIR)/test_rollsum-test-rollsum.Po
 	-rm -f tests/$(DEPDIR)/test_rollsum_cli-test-rollsum-cli.Po
 	-rm -f tests/$(DEPDIR)/test_sysroot_c-test-sysroot-c.Po
+	-rm -f tests/$(DEPDIR)/test_validate_utf8-test-validate-utf8.Po
 	-rm -f tests/$(DEPDIR)/test_varint-test-varint.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
@@ -10459,6 +10550,8 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f src/libostree/$(DEPDIR)/tests_test_rfc2616_dates-ostree-date-utils.Po
 	-rm -f src/libostree/$(DEPDIR)/tests_test_rollsum-ostree-rollsum.Po
 	-rm -f src/libostree/$(DEPDIR)/tests_test_rollsum_cli-ostree-rollsum.Po
+	-rm -f src/libostree/$(DEPDIR)/tests_test_validate_utf8-ostree-core.Po
+	-rm -f src/libostree/$(DEPDIR)/tests_test_validate_utf8-ostree-varint.Po
 	-rm -f src/libostree/$(DEPDIR)/tests_test_varint-ostree-varint.Po
 	-rm -f src/libotcore/$(DEPDIR)/libotcore_la-otcore-ed25519-verify.Plo
 	-rm -f src/libotcore/$(DEPDIR)/libotcore_la-otcore-prepare-root.Plo
@@ -10583,6 +10676,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f tests/$(DEPDIR)/test_rollsum-test-rollsum.Po
 	-rm -f tests/$(DEPDIR)/test_rollsum_cli-test-rollsum-cli.Po
 	-rm -f tests/$(DEPDIR)/test_sysroot_c-test-sysroot-c.Po
+	-rm -f tests/$(DEPDIR)/test_validate_utf8-test-validate-utf8.Po
 	-rm -f tests/$(DEPDIR)/test_varint-test-varint.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic

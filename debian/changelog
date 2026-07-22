@@ -1,9 +1,18 @@
-ostree (2026.1-1+rpi1) forky-staging; urgency=medium
+ostree (2026.2-1+rpi1) forky-staging; urgency=medium
 
   [changes brought forward from 2020.8-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Tue, 15 Dec 2020 11:54:45 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Tue, 14 Apr 2026 13:38:48 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Wed, 22 Jul 2026 03:14:28 +0000
+
+ostree (2026.2-1) unstable; urgency=medium
+
+  * New upstream release
+  * Bump debhelper compat level to 14
+    - Remove ${misc:Depends} etc., now added automatically
+  * Use dpkg build API v1
+
+ -- Simon McVittie <smcv@debian.org>  Sun, 05 Jul 2026 21:39:43 +0100
 
 ostree (2026.1-1) unstable; urgency=medium
 

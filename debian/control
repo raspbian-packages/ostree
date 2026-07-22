@@ -7,9 +7,9 @@ Uploaders:
  Sjoerd Simons <sjoerd@debian.org>,
  Dylan Aïssi <daissi@debian.org>,
 Build-Depends:
- debhelper (>= 13.11.6~),
- debhelper-compat (= 13),
+ debhelper-compat (= 14),
  dh-sequence-gir,
+ dpkg-build-api (= 1),
  attr,
  autoconf,
  automake,
@@ -63,9 +63,6 @@ Package: gir1.2-ostree-1.0
 Architecture: linux-any
 Multi-Arch: same
 Section: introspection
-Depends:
- ${gir:Depends},
- ${misc:Depends},
 Description: content-addressed filesystem for operating system binaries (introspection)
  libostree provides a library and tools for managing bootable, immutable,
  versioned filesystem trees. See the ostree package's description for
@@ -77,11 +74,6 @@ Description: content-addressed filesystem for operating system binaries (introsp
 Package: libostree-1-1
 Architecture: linux-any
 Section: libs
-Depends:
- ${misc:Depends},
- ${shlibs:Depends},
-Pre-Depends:
- ${misc:Pre-Depends},
 Multi-Arch: same
 Description: content-addressed filesystem for operating system binaries (library)
  libostree is a library for managing bootable, immutable, versioned
@@ -115,13 +107,10 @@ Depends:
  libsystemd-dev,
  pkgconf,
  zlib1g-dev,
- ${gir:Depends},
- ${misc:Depends},
 Suggests:
  libostree-doc,
 Provides:
  gir1.2-ostree-1.0-dev (= ${binary:Version}),
- ${gir:Provides},
 Description: Development files for the libostree library
  libostree is a library for managing bootable, immutable, versioned
  filesystem trees. It is like git in that it checksums individual files
@@ -140,8 +129,6 @@ Build-Profiles: <!nodoc>
 Architecture: all
 Multi-Arch: foreign
 Section: doc
-Depends:
- ${misc:Depends},
 Description: Development documentation for the libostree library
  libostree provides a library and tools for managing bootable, immutable,
  versioned filesystem trees. See the ostree package's description for
@@ -151,9 +138,6 @@ Description: Development documentation for the libostree library
 
 Package: ostree
 Architecture: linux-any
-Depends:
- ${misc:Depends},
- ${shlibs:Depends},
 Breaks:
  flatpak-builder (<< 1.2.1-2~),
 Description: content-addressed filesystem for operating system binaries
@@ -173,8 +157,6 @@ Package: ostree-boot
 Architecture: linux-any
 Depends:
  ostree (= ${binary:Version}),
- ${misc:Depends},
- ${shlibs:Depends},
 Recommends:
  dracut,
  grub-efi-amd64 | grub-pc | extlinux | syslinux | u-boot,
@@ -215,8 +197,6 @@ Depends:
  ostree,
  python3,
  python3-yaml,
- ${misc:Depends},
- ${shlibs:Depends},
 Description: content-addressed filesystem for operating system binaries - tests
  libostree provides a library and tools for managing bootable, immutable,
  versioned filesystem trees. See the ostree package's description for
