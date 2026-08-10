@@ -1,3 +1,13 @@
+ostree (2026.3-1) UNRELEASED; urgency=medium
+
+  * New upstream release
+    - Prevent heap buffer overflow on 32-bit systems
+      (RHEL-189207, no known CVE)
+    - Set memory limits for LZMA decoding to prevent resource exhaustion
+      (RHEL-189208, no known CVE)
+
+ -- Simon McVittie <smcv@debian.org>  Mon, 10 Aug 2026 11:09:00 +0100
+
 ostree (2026.2-1) unstable; urgency=medium
 
   * New upstream release
