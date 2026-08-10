@@ -1,4 +1,4 @@
-ostree (2026.3-1) UNRELEASED; urgency=medium
+ostree (2026.3-1) unstable; urgency=medium
 
   * New upstream release
     - Prevent heap buffer overflow on 32-bit systems if downloading from an
@@ -7,8 +7,9 @@ ostree (2026.3-1) UNRELEASED; urgency=medium
     - Set memory limits for LZMA decoding to prevent resource exhaustion if
       downloading from an attacker-controlled OSTree repository
       (GHSA-7cgc-gp99-6jmm, RHEL-189208, no known CVE)
+  * d/libostree-1-1.symbols: Update
 
- -- Simon McVittie <smcv@debian.org>  Mon, 10 Aug 2026 11:09:00 +0100
+ -- Simon McVittie <smcv@debian.org>  Mon, 10 Aug 2026 11:20:12 +0100
 
 ostree (2026.2-1) unstable; urgency=medium
 
