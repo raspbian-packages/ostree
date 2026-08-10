@@ -1,10 +1,12 @@
 ostree (2026.3-1) UNRELEASED; urgency=medium
 
   * New upstream release
-    - Prevent heap buffer overflow on 32-bit systems
-      (RHEL-189207, no known CVE)
-    - Set memory limits for LZMA decoding to prevent resource exhaustion
-      (RHEL-189208, no known CVE)
+    - Prevent heap buffer overflow on 32-bit systems if downloading from an
+      attacker-controlled OSTree repository
+      (GHSA-xppc-j946-vcj7, RHEL-189207, no known CVE)
+    - Set memory limits for LZMA decoding to prevent resource exhaustion if
+      downloading from an attacker-controlled OSTree repository
+      (GHSA-7cgc-gp99-6jmm, RHEL-189208, no known CVE)
 
  -- Simon McVittie <smcv@debian.org>  Mon, 10 Aug 2026 11:09:00 +0100
 
