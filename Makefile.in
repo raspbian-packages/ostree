@@ -1440,6 +1440,7 @@ am_tests_test_lzma_OBJECTS =  \
 	src/libostree/tests_test_lzma-ostree-lzma-common.$(OBJEXT) \
 	src/libostree/tests_test_lzma-ostree-lzma-compressor.$(OBJEXT) \
 	src/libostree/tests_test_lzma-ostree-lzma-decompressor.$(OBJEXT) \
+	src/libotutil/tests_test_lzma-ot-fs-utils.$(OBJEXT) \
 	tests/test_lzma-test-lzma.$(OBJEXT)
 tests_test_lzma_OBJECTS = $(am_tests_test_lzma_OBJECTS)
 tests_test_lzma_DEPENDENCIES = $(am__DEPENDENCIES_18) \
@@ -1749,6 +1750,7 @@ am__depfiles_remade = bsdiff/$(DEPDIR)/libbsdiff_la-bsdiff.Plo \
 	src/libotutil/$(DEPDIR)/libotutil_la-ot-variant-utils.Plo \
 	src/libotutil/$(DEPDIR)/libotutil_la-ul-jsonwrt.Plo \
 	src/libotutil/$(DEPDIR)/libotutil_la-zbase32.Plo \
+	src/libotutil/$(DEPDIR)/tests_test_lzma-ot-fs-utils.Po \
 	src/ostree/$(DEPDIR)/ostree-main.Po \
 	src/ostree/$(DEPDIR)/ostree-ot-admin-builtin-boot-complete.Po \
 	src/ostree/$(DEPDIR)/ostree-ot-admin-builtin-cleanup.Po \
@@ -2704,8 +2706,8 @@ ACLOCAL_AMFLAGS = -I buildutil -I libglnx ${ACLOCAL_FLAGS}
 
 # Jekyll docs
 GITIGNOREFILES = aclocal.m4 build-aux/ buildutil/*.m4 config.h.in \
-	gtk-doc.make ci-build/ fastbuild-*.qcow2 _kola_temp/ target/ \
-	Cargo.lock docs/.bundle/ docs/Gemfile.lock docs/_site/ \
+	gtk-doc.make ci-build/ fastbuild-*.qcow2 _kola_temp/ .cosa/ \
+	target/ Cargo.lock docs/.bundle/ docs/Gemfile.lock docs/_site/ \
 	docs/reference/ docs/vendor/ $(NULL) $(am__append_73)
 OT_INTERNAL_GIO_UNIX_CFLAGS = $(OT_DEP_GIO_UNIX_CFLAGS)
 OT_INTERNAL_GIO_UNIX_LIBS = $(OT_DEP_GIO_UNIX_LIBS)
@@ -3357,7 +3359,7 @@ tests_test_ot_opt_utils_LDADD = $(TESTS_LDADD)
 tests_test_ot_tool_util_CFLAGS = $(TESTS_CFLAGS)
 tests_test_ot_tool_util_LDADD = $(TESTS_LDADD)
 tests_test_lzma_SOURCES = src/libostree/ostree-lzma-common.c src/libostree/ostree-lzma-compressor.c \
-	src/libostree/ostree-lzma-decompressor.c tests/test-lzma.c
+	src/libostree/ostree-lzma-decompressor.c src/libotutil/ot-fs-utils.c tests/test-lzma.c
 
 tests_test_lzma_CFLAGS = $(TESTS_CFLAGS) $(OT_DEP_LZMA_CFLAGS)
 tests_test_lzma_LDADD = $(TESTS_LDADD) $(OT_DEP_LZMA_LIBS)
@@ -4750,6 +4752,9 @@ src/libostree/tests_test_lzma-ostree-lzma-compressor.$(OBJEXT):  \
 src/libostree/tests_test_lzma-ostree-lzma-decompressor.$(OBJEXT):  \
 	src/libostree/$(am__dirstamp) \
 	src/libostree/$(DEPDIR)/$(am__dirstamp)
+src/libotutil/tests_test_lzma-ot-fs-utils.$(OBJEXT):  \
+	src/libotutil/$(am__dirstamp) \
+	src/libotutil/$(DEPDIR)/$(am__dirstamp)
 tests/test_lzma-test-lzma.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 
@@ -5248,6 +5253,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@src/libotutil/$(DEPDIR)/libotutil_la-ot-variant-utils.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/libotutil/$(DEPDIR)/libotutil_la-ul-jsonwrt.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/libotutil/$(DEPDIR)/libotutil_la-zbase32.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/libotutil/$(DEPDIR)/tests_test_lzma-ot-fs-utils.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/ostree/$(DEPDIR)/ostree-main.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/ostree/$(DEPDIR)/ostree-ot-admin-builtin-boot-complete.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/ostree/$(DEPDIR)/ostree-ot-admin-builtin-cleanup.Po@am__quote@ # am--include-marker
@@ -7634,6 +7640,20 @@ src/libostree/tests_test_lzma-ostree-lzma-decompressor.obj: src/libostree/ostree
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/libostree/ostree-lzma-decompressor.c' object='src/libostree/tests_test_lzma-ostree-lzma-decompressor.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_test_lzma_CFLAGS) $(CFLAGS) -c -o src/libostree/tests_test_lzma-ostree-lzma-decompressor.obj `if test -f 'src/libostree/ostree-lzma-decompressor.c'; then $(CYGPATH_W) 'src/libostree/ostree-lzma-decompressor.c'; else $(CYGPATH_W) '$(srcdir)/src/libostree/ostree-lzma-decompressor.c'; fi`
+
+src/libotutil/tests_test_lzma-ot-fs-utils.o: src/libotutil/ot-fs-utils.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_test_lzma_CFLAGS) $(CFLAGS) -MT src/libotutil/tests_test_lzma-ot-fs-utils.o -MD -MP -MF src/libotutil/$(DEPDIR)/tests_test_lzma-ot-fs-utils.Tpo -c -o src/libotutil/tests_test_lzma-ot-fs-utils.o `test -f 'src/libotutil/ot-fs-utils.c' || echo '$(srcdir)/'`src/libotutil/ot-fs-utils.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/libotutil/$(DEPDIR)/tests_test_lzma-ot-fs-utils.Tpo src/libotutil/$(DEPDIR)/tests_test_lzma-ot-fs-utils.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/libotutil/ot-fs-utils.c' object='src/libotutil/tests_test_lzma-ot-fs-utils.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_test_lzma_CFLAGS) $(CFLAGS) -c -o src/libotutil/tests_test_lzma-ot-fs-utils.o `test -f 'src/libotutil/ot-fs-utils.c' || echo '$(srcdir)/'`src/libotutil/ot-fs-utils.c
+
+src/libotutil/tests_test_lzma-ot-fs-utils.obj: src/libotutil/ot-fs-utils.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_test_lzma_CFLAGS) $(CFLAGS) -MT src/libotutil/tests_test_lzma-ot-fs-utils.obj -MD -MP -MF src/libotutil/$(DEPDIR)/tests_test_lzma-ot-fs-utils.Tpo -c -o src/libotutil/tests_test_lzma-ot-fs-utils.obj `if test -f 'src/libotutil/ot-fs-utils.c'; then $(CYGPATH_W) 'src/libotutil/ot-fs-utils.c'; else $(CYGPATH_W) '$(srcdir)/src/libotutil/ot-fs-utils.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/libotutil/$(DEPDIR)/tests_test_lzma-ot-fs-utils.Tpo src/libotutil/$(DEPDIR)/tests_test_lzma-ot-fs-utils.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/libotutil/ot-fs-utils.c' object='src/libotutil/tests_test_lzma-ot-fs-utils.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_test_lzma_CFLAGS) $(CFLAGS) -c -o src/libotutil/tests_test_lzma-ot-fs-utils.obj `if test -f 'src/libotutil/ot-fs-utils.c'; then $(CYGPATH_W) 'src/libotutil/ot-fs-utils.c'; else $(CYGPATH_W) '$(srcdir)/src/libotutil/ot-fs-utils.c'; fi`
 
 tests/test_lzma-test-lzma.o: tests/test-lzma.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_test_lzma_CFLAGS) $(CFLAGS) -MT tests/test_lzma-test-lzma.o -MD -MP -MF tests/$(DEPDIR)/test_lzma-test-lzma.Tpo -c -o tests/test_lzma-test-lzma.o `test -f 'tests/test-lzma.c' || echo '$(srcdir)/'`tests/test-lzma.c
@@ -10260,6 +10280,7 @@ distclean: distclean-recursive
 	-rm -f src/libotutil/$(DEPDIR)/libotutil_la-ot-variant-utils.Plo
 	-rm -f src/libotutil/$(DEPDIR)/libotutil_la-ul-jsonwrt.Plo
 	-rm -f src/libotutil/$(DEPDIR)/libotutil_la-zbase32.Plo
+	-rm -f src/libotutil/$(DEPDIR)/tests_test_lzma-ot-fs-utils.Po
 	-rm -f src/ostree/$(DEPDIR)/ostree-main.Po
 	-rm -f src/ostree/$(DEPDIR)/ostree-ot-admin-builtin-boot-complete.Po
 	-rm -f src/ostree/$(DEPDIR)/ostree-ot-admin-builtin-cleanup.Po
@@ -10569,6 +10590,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f src/libotutil/$(DEPDIR)/libotutil_la-ot-variant-utils.Plo
 	-rm -f src/libotutil/$(DEPDIR)/libotutil_la-ul-jsonwrt.Plo
 	-rm -f src/libotutil/$(DEPDIR)/libotutil_la-zbase32.Plo
+	-rm -f src/libotutil/$(DEPDIR)/tests_test_lzma-ot-fs-utils.Po
 	-rm -f src/ostree/$(DEPDIR)/ostree-main.Po
 	-rm -f src/ostree/$(DEPDIR)/ostree-ot-admin-builtin-boot-complete.Po
 	-rm -f src/ostree/$(DEPDIR)/ostree-ot-admin-builtin-cleanup.Po

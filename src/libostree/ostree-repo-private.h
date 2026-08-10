@@ -360,7 +360,8 @@ gboolean _ostree_repo_import_object (OstreeRepo *self, OstreeRepo *source, Ostre
 
 gboolean _ostree_repo_commit_tmpf_final (OstreeRepo *self, const char *checksum,
                                          OstreeObjectType objtype, GLnxTmpfile *tmpf,
-                                         GCancellable *cancellable, GError **error);
+                                         gboolean *out_existed, GCancellable *cancellable,
+                                         GError **error);
 
 typedef struct
 {
@@ -467,7 +468,7 @@ OstreeRepoAutoTransaction *_ostree_repo_auto_transaction_new (OstreeRepo *repo);
 
 typedef struct OstreeComposefsTarget OstreeComposefsTarget;
 
-GType ostree_composefs_target_get_type (void) G_GNUC_CONST;
+GType ostree_composefs_target_get_type (void);
 OstreeComposefsTarget *ostree_composefs_target_new (void);
 OstreeComposefsTarget *ostree_composefs_target_ref (OstreeComposefsTarget *target);
 void ostree_composefs_target_unref (OstreeComposefsTarget *target);
