@@ -56,6 +56,14 @@ typedef struct
   GPtrArray *modes;
   GHashTable *xattr_set; /* GVariant(ayay) -> offset */
   GPtrArray *xattrs;
+  /* Running total of the serialized size of the unique entries in modes/
+   * xattrs above.  payload->len and operations->len track their own
+   * GStrings directly, but the mode/xattr tables are separate GVariant
+   * arrays only assembled into their final form in finish_part(), so this
+   * is tracked incrementally as entries are added; see
+   * write_unique_variant_chunk() and current_part_size_estimate().
+   */
+  guint64 tables_size;
   GLnxTmpfile part_tmpf;
   GVariant *header;
 } OstreeStaticDeltaPartBuilder;
@@ -251,6 +259,21 @@ finish_part (OstreeStaticDeltaBuilder *builder, GError **error)
     g_variant_ref_sink (delta_part_content);
   }
 
+  /* Reject parts whose uncompressed payload exceeds the hard limit that
+   * consumers enforce (OSTREE_STATIC_DELTA_PART_MAX_USIZE_BYTES).  Without
+   * this check, a large --max-chunk-size would produce deltas that every
+   * client rejects at apply time (CVE / RHEL-189208).
+   */
+  {
+    gsize payload_size = g_variant_get_size (delta_part_content);
+    if (payload_size > OSTREE_STATIC_DELTA_PART_MAX_USIZE_BYTES)
+      return glnx_throw (error,
+                         "Delta part %u uncompressed payload size %" G_GSIZE_FORMAT
+                         " bytes exceeds maximum %" G_GUINT64_FORMAT "; reduce --max-chunk-size",
+                         builder->parts->len, payload_size,
+                         (guint64)OSTREE_STATIC_DELTA_PART_MAX_USIZE_BYTES);
+  }
+
   /* Hardcode xz for now */
   compressor = (GConverter *)_ostree_lzma_compressor_new (NULL);
   compression_type_char = 'x';
@@ -368,8 +391,23 @@ write_unique_variant_chunk (OstreeStaticDeltaPartBuilder *current_part, GHashTab
   target_offsetp = GUINT_TO_POINTER (offset);
   g_hash_table_insert (hash, g_variant_ref (key), target_offsetp);
   g_ptr_array_add (ordered, key);
+  current_part->tables_size += g_variant_get_size (key);
 
   return offset;
+}
+
+/* Estimate the eventual serialized size of current_part's payload GVariant
+ * (see finish_part()), so callers deciding whether to start a new part can
+ * account for the mode/xattr tables and operations bytecode, not just the
+ * raw content bytes in ->payload.  This doesn't need to be exact -- it's a
+ * lower bound (GVariant framing adds a little more) used only to decide
+ * when to proactively split a part; finish_part() enforces the real hard
+ * limit against the actual serialized size once a part is complete.
+ */
+static gsize
+current_part_size_estimate (OstreeStaticDeltaPartBuilder *part)
+{
+  return part->payload->len + part->operations->len + part->tables_size;
 }
 
 static gboolean
@@ -439,7 +477,7 @@ process_one_object (OstreeRepo *repo, OstreeStaticDeltaBuilder *builder,
 
   /* Check to see if this delta is maximum size */
   if (current_part->objects->len > 0
-      && current_part->payload->len + content_size > builder->max_chunk_size_bytes)
+      && current_part_size_estimate (current_part) + content_size > builder->max_chunk_size_bytes)
     {
       current_part = allocate_part (builder, error);
       if (current_part == NULL)
@@ -653,7 +691,8 @@ process_one_rollsum (OstreeRepo *repo, OstreeStaticDeltaBuilder *builder,
   OstreeStaticDeltaPartBuilder *current_part = *current_part_val;
 
   /* Check to see if this delta has gone over maximum size */
-  if (current_part->objects->len > 0 && current_part->payload->len > builder->max_chunk_size_bytes)
+  if (current_part->objects->len > 0
+      && current_part_size_estimate (current_part) > builder->max_chunk_size_bytes)
     {
       current_part = allocate_part (builder, error);
       if (current_part == NULL)
@@ -769,7 +808,8 @@ process_one_bsdiff (OstreeRepo *repo, OstreeStaticDeltaBuilder *builder,
   OstreeStaticDeltaPartBuilder *current_part = *current_part_val;
 
   /* Check to see if this delta has gone over maximum size */
-  if (current_part->objects->len > 0 && current_part->payload->len > builder->max_chunk_size_bytes)
+  if (current_part->objects->len > 0
+      && current_part_size_estimate (current_part) > builder->max_chunk_size_bytes)
     {
       current_part = allocate_part (builder, error);
       if (current_part == NULL)
@@ -1237,7 +1277,7 @@ get_fallback_headers (OstreeRepo *self, OstreeStaticDeltaBuilder *builder, GVari
  * are known:
  *   - min-fallback-size: u: Minimum uncompressed size in megabytes to use fallback, 0 to disable
  * fallbacks
- *   - max-chunk-size: u: Maximum size in megabytes of a delta part
+ *   - max-chunk-size: u: Maximum size in megabytes of a delta part (hard cap: 512 MiB)
  *   - max-bsdiff-size: u: Maximum size in megabytes to consider bsdiff compression
  *   for input files
  *   - compression: y: Compression type: 0=none, x=lzma, g=gzip
