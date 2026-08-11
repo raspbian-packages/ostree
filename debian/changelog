@@ -1,12 +1,18 @@
+ostree (2026.3-2) UNRELEASED; urgency=medium
+
+  * Mention #1144105, #1144106 in previous changelog entry
+
+ -- Simon McVittie <smcv@debian.org>  Tue, 11 Aug 2026 10:25:22 +0100
+
 ostree (2026.3-1) unstable; urgency=medium
 
   * New upstream release
     - Prevent heap buffer overflow on 32-bit systems if downloading from an
       attacker-controlled OSTree repository
-      (GHSA-xppc-j946-vcj7, RHEL-189207, no known CVE)
+      (GHSA-xppc-j946-vcj7, RHEL-189207, no known CVE; Closes: #1144106)
     - Set memory limits for LZMA decoding to prevent resource exhaustion if
       downloading from an attacker-controlled OSTree repository
-      (GHSA-7cgc-gp99-6jmm, RHEL-189208, no known CVE)
+      (GHSA-7cgc-gp99-6jmm, RHEL-189208, no known CVE; Closes: #1144105)
   * d/libostree-1-1.symbols: Update
 
  -- Simon McVittie <smcv@debian.org>  Mon, 10 Aug 2026 11:20:12 +0100
