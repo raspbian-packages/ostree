@@ -1,0 +1,23 @@
+From: Zibran Khan <kali834x@gmail.com>
+Date: Wed, 19 Aug 2026 19:33:11 +0530
+Subject: static-delta: validate bspatch payload offset and length
+
+Origin: https://github.com/ostreedev/ostree/pull/3647
+Applied-upstream: 2026.5, commit:84ca25e8a09da15fb96b81e87a5778b6db7dd05f
+---
+ src/libostree/ostree-repo-static-delta-processing.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/libostree/ostree-repo-static-delta-processing.c b/src/libostree/ostree-repo-static-delta-processing.c
+index 5fcec2d..99a87c6 100644
+--- a/src/libostree/ostree-repo-static-delta-processing.c
++++ b/src/libostree/ostree-repo-static-delta-processing.c
+@@ -403,6 +403,8 @@ dispatch_bspatch (OstreeRepo *repo, StaticDeltaExecutionState *state, GCancellab
+     return FALSE;
+   if (!read_varuint64 (state, &length, error))
+     return FALSE;
++  if (!validate_ofs (state, offset, length, error))
++    return FALSE;
+ 
+   if (state->stats_only)
+     return TRUE; /* Early return */
