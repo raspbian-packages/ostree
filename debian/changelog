@@ -1,5 +1,8 @@
-ostree (2026.3-2) UNRELEASED; urgency=medium
+ostree (2026.4-1) UNRELEASED; urgency=medium
 
+  * New upstream release
+    - Fix regression when downloading large Flatpak apps/runtimes
+      (reopens: #1144105) (Closes: #1144283)
   * Mention #1144105, #1144106 in previous changelog entry
 
  -- Simon McVittie <smcv@debian.org>  Tue, 11 Aug 2026 10:25:22 +0100
