@@ -8,7 +8,7 @@
 <link rel="up" href="reference.html" title="API Reference">
 <link rel="prev" href="ostree-Core-repository-independent-functions.html" title="Core repository-independent functions">
 <link rel="next" href="ostree-In-memory-modifiable-filesystem-tree.html" title="In-memory modifiable filesystem tree">
-<meta name="generator" content="GTK-Doc V1.34.0 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.33.1 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -1346,6 +1346,14 @@
 </td>
 <td class="function_name">
 <a class="link" href="ostree-OstreeRepo.html#ostree-repo-verify-summary" title="ostree_repo_verify_summary ()">ostree_repo_verify_summary</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<a class="link" href="ostree-GPG-signature-verification-results.html#OstreeGpgVerifyResult" title="OstreeGpgVerifyResult"><span class="returnvalue">OstreeGpgVerifyResult</span></a> *
+</td>
+<td class="function_name">
+<a class="link" href="ostree-OstreeRepo.html#ostree-repo-verify-local-summary" title="ostree_repo_verify_local_summary ()">ostree_repo_verify_local_summary</a> <span class="c_punctuation">()</span>
 </td>
 </tr>
 <tr>
@@ -9825,6 +9833,77 @@ ostree_repo_verify_summary (<em class="parameter"><code><a class="link" href="os
 </div>
 <hr>
 <div class="refsect2">
+<a name="ostree-repo-verify-local-summary"></a><h3>ostree_repo_verify_local_summary ()</h3>
+<pre class="programlisting"><a class="link" href="ostree-GPG-signature-verification-results.html#OstreeGpgVerifyResult" title="OstreeGpgVerifyResult"><span class="returnvalue">OstreeGpgVerifyResult</span></a> *
+ostree_repo_verify_local_summary (<em class="parameter"><code><a class="link" href="ostree-OstreeRepo.html#OstreeRepo" title="OstreeRepo"><span class="type">OstreeRepo</span></a> *self</code></em>,
+                                  <em class="parameter"><code><span class="type">GBytes</span> *summary</code></em>,
+                                  <em class="parameter"><code><span class="type">GBytes</span> *signatures</code></em>,
+                                  <em class="parameter"><code><span class="type">GFile</span> *keyfiledir</code></em>,
+                                  <em class="parameter"><code><span class="type">GFile</span> *extra_keyring</code></em>,
+                                  <em class="parameter"><code><span class="type">GCancellable</span> *cancellable</code></em>,
+                                  <em class="parameter"><code><span class="type">GError</span> **error</code></em>);</pre>
+<p>Verify <em class="parameter"><code>signatures</code></em>
+ for <em class="parameter"><code>summary</code></em>
+ data using GPG keys in the given keyring (GPG
+homedir), and return an <a class="link" href="ostree-GPG-signature-verification-results.html#OstreeGpgVerifyResult" title="OstreeGpgVerifyResult"><span class="type">OstreeGpgVerifyResult</span></a>.</p>
+<p>This is intended to be used on a server repository, for verifying the
+signatures on the summary file it exports. Use <a class="link" href="ostree-OstreeRepo.html#ostree-repo-verify-summary" title="ostree_repo_verify_summary ()"><code class="function">ostree_repo_verify_summary()</code></a>
+to verify the summary file from a configured remote in a repository.</p>
+<div class="refsect3">
+<a name="ostree-repo-verify-local-summary.parameters"></a><h4>Parameters</h4>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody>
+<tr>
+<td class="parameter_name"><p>self</p></td>
+<td class="parameter_description"><p>Repo</p></td>
+<td class="parameter_annotations"> </td>
+</tr>
+<tr>
+<td class="parameter_name"><p>summary</p></td>
+<td class="parameter_description"><p>Summary data as a <span class="type">GBytes</span></p></td>
+<td class="parameter_annotations"> </td>
+</tr>
+<tr>
+<td class="parameter_name"><p>signatures</p></td>
+<td class="parameter_description"><p>Summary signatures as a <span class="type">GBytes</span></p></td>
+<td class="parameter_annotations"> </td>
+</tr>
+<tr>
+<td class="parameter_name"><p>keyringdir</p></td>
+<td class="parameter_description"><p>Path to directory GPG keyrings; overrides built-in default if given. </p></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="NULL may be passed as the value in, out, in-out; or as a return value."><span class="acronym">nullable</span></acronym>]</span></td>
+</tr>
+<tr>
+<td class="parameter_name"><p>extra_keyring</p></td>
+<td class="parameter_description"><p>Path to additional keyring file (not a directory). </p></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="NULL may be passed as the value in, out, in-out; or as a return value."><span class="acronym">nullable</span></acronym>]</span></td>
+</tr>
+<tr>
+<td class="parameter_name"><p>cancellable</p></td>
+<td class="parameter_description"><p>Cancellable</p></td>
+<td class="parameter_annotations"> </td>
+</tr>
+<tr>
+<td class="parameter_name"><p>error</p></td>
+<td class="parameter_description"><p>Error</p></td>
+<td class="parameter_annotations"> </td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="ostree-repo-verify-local-summary.returns"></a><h4>Returns</h4>
+<p>an <a class="link" href="ostree-GPG-signature-verification-results.html#OstreeGpgVerifyResult" title="OstreeGpgVerifyResult"><span class="type">OstreeGpgVerifyResult</span></a>, or <code class="literal">NULL</code> on error. </p>
+<p><span class="annotation">[<acronym title="The caller owns the data, and is responsible for free it."><span class="acronym">transfer full</span></acronym>]</span></p>
+</div>
+</div>
+<hr>
+<div class="refsect2">
 <a name="ostree-repo-regenerate-metadata"></a><h3>ostree_repo_regenerate_metadata ()</h3>
 <pre class="programlisting"><span class="returnvalue">gboolean</span>
 ostree_repo_regenerate_metadata (<em class="parameter"><code><a class="link" href="ostree-OstreeRepo.html#OstreeRepo" title="OstreeRepo"><span class="type">OstreeRepo</span></a> *self</code></em>,
@@ -10770,6 +10849,6 @@ modes outside of 0775.</p>
 </div>
 </div>
 <div class="footer">
-<hr>Generated by GTK-Doc V1.34.0</div>
+<hr>Generated by GTK-Doc V1.33.1</div>
 </body>
 </html>

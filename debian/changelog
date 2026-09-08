@@ -1,9 +1,37 @@
-ostree (2026.2-1+rpi1) forky-staging; urgency=medium
+ostree (2026.4-1+rpi1) forky-staging; urgency=medium
 
   [changes brought forward from 2020.8-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Tue, 15 Dec 2020 11:54:45 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Wed, 22 Jul 2026 03:14:28 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Tue, 08 Sep 2026 04:50:59 +0000
+
+ostree (2026.4-1) unstable; urgency=medium
+
+  * New upstream release
+    - Fix regression when downloading large Flatpak apps/runtimes
+      (reopens: #1144105) (Closes: #1144283)
+  * d/p/static-delta-validate-bspatch-payload-offset-and-length.patch:
+    Add post-release patch to fix offset validation.
+    This was an out-of-bounds read when downloading from a
+    malicious/crafted ostree repository, but is not believed to
+    be practically exploitable for anything worse than a crash
+    (denial-of-service).
+  * Mention #1144105, #1144106 in previous changelog entry
+
+ -- Simon McVittie <smcv@debian.org>  Thu, 20 Aug 2026 20:16:44 +0100
+
+ostree (2026.3-1) unstable; urgency=medium
+
+  * New upstream release
+    - Prevent heap buffer overflow on 32-bit systems if downloading from an
+      attacker-controlled OSTree repository
+      (GHSA-xppc-j946-vcj7, RHEL-189207, no known CVE; Closes: #1144106)
+    - Set memory limits for LZMA decoding to prevent resource exhaustion if
+      downloading from an attacker-controlled OSTree repository
+      (GHSA-7cgc-gp99-6jmm, RHEL-189208, no known CVE; Closes: #1144105)
+  * d/libostree-1-1.symbols: Update
+
+ -- Simon McVittie <smcv@debian.org>  Mon, 10 Aug 2026 11:20:12 +0100
 
 ostree (2026.2-1) unstable; urgency=medium
 

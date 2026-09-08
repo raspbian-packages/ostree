@@ -677,7 +677,7 @@ _ostree_static_delta_part_open (GInputStream *part_in, GBytes *inline_part_bytes
         {
           int part_fd = g_file_descriptor_based_get_fd ((GFileDescriptorBased *)part_in);
 
-          /* No compression, no checksums - a fast path */
+          /* No compression - a fast path */
           if (!ot_variant_read_fd (part_fd, 1,
                                    G_VARIANT_TYPE (OSTREE_STATIC_DELTA_PART_PAYLOAD_FORMAT_V0),
                                    trusted, &ret_part, error))
