@@ -266,6 +266,9 @@ _ostree_static_delta_part_execute (OstreeRepo *repo, GVariant *objects, GVariant
   ret = TRUE;
 out:
   _ostree_repo_bare_content_cleanup (&state->content_out);
+  glnx_close_fd (&state->read_source_fd);
+  g_clear_pointer (&state->read_source_object, g_free);
+  g_clear_pointer (&state->xattrs, g_variant_unref);
   return ret;
 }
 
@@ -361,6 +364,13 @@ do_content_open_generic (OstreeRepo *repo, StaticDeltaExecutionState *state,
   if (!read_varuint64 (state, &xattr_offset, error))
     return FALSE;
 
+  if (mode_offset >= g_variant_n_children (state->mode_dict))
+    return glnx_throw (error, "Static delta mode offset %" G_GUINT64_FORMAT " out of range",
+                       mode_offset);
+  if (xattr_offset >= g_variant_n_children (state->xattr_dict))
+    return glnx_throw (error, "Static delta xattr offset %" G_GUINT64_FORMAT " out of range",
+                       xattr_offset);
+
   g_autoptr (GVariant) modev = g_variant_get_child_value (state->mode_dict, mode_offset);
   guint32 uid, gid, mode;
   g_variant_get (modev, "(uuu)", &uid, &gid, &mode);
@@ -398,10 +408,13 @@ dispatch_bspatch (OstreeRepo *repo, StaticDeltaExecutionState *state, GCancellab
                   GError **error)
 {
   guint64 offset, length;
+  (void)repo;
 
   if (!read_varuint64 (state, &offset, error))
     return FALSE;
   if (!read_varuint64 (state, &length, error))
+    return FALSE;
+  if (!validate_ofs (state, offset, length, error))
     return FALSE;
 
   if (state->stats_only)
@@ -414,11 +427,9 @@ dispatch_bspatch (OstreeRepo *repo, StaticDeltaExecutionState *state, GCancellab
       if (!input_mfile)
         return FALSE;
 
-      /* Guard against integer truncation on 32-bit systems: g_malloc0() takes
-       * gsize which is 32-bit on those platforms, but bspatch() uses the full
-       * int64_t newsize.  Without this check a crafted content_size > G_MAXSIZE
-       * would allocate a truncated (small) buffer while bspatch() writes using
-       * the full 64-bit value, causing a heap buffer overflow.
+      /* Guard against integer truncation on 32-bit systems: mmap() takes gsize
+       * while bspatch() uses int64_t. Without this check the mapped region and
+       * the size used by bspatch() could differ.
        * (CVE / RHEL-189207, CWE-680, CWE-122)
        */
       if (G_UNLIKELY (state->content_size > G_MAXSIZE || state->content_size > (guint64)G_MAXINT64))
@@ -430,10 +441,10 @@ dispatch_bspatch (OstreeRepo *repo, StaticDeltaExecutionState *state, GCancellab
           return FALSE;
         }
 
-      const gsize alloc_size = (gsize)state->content_size;
-      const int64_t newsize = (int64_t)state->content_size;
-
-      g_autofree guchar *buf = g_malloc0 (alloc_size);
+      guint8 *buf;
+      size_t buflen;
+      if (!_ostree_repo_bare_content_map (&state->content_out, &buf, &buflen, cancellable, error))
+        return FALSE;
 
       struct bzpatch_opaque_s opaque;
       opaque.state = state;
@@ -443,12 +454,11 @@ dispatch_bspatch (OstreeRepo *repo, StaticDeltaExecutionState *state, GCancellab
       stream.read = bspatch_read;
       stream.opaque = &opaque;
       if (bspatch ((const guint8 *)g_mapped_file_get_contents (input_mfile),
-                   g_mapped_file_get_length (input_mfile), buf, newsize, &stream)
+                   g_mapped_file_get_length (input_mfile), buf, (int64_t)buflen, &stream)
           < 0)
         return glnx_throw (error, "bsdiff patch failed");
 
-      if (!_ostree_repo_bare_content_write (repo, &state->content_out, buf, state->content_size,
-                                            cancellable, error))
+      if (!_ostree_repo_bare_content_finish_mapped (&state->content_out, cancellable, error))
         return FALSE;
     }
 

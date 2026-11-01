@@ -28,11 +28,13 @@
 #include <libglnx.h>
 #include <linux/fs.h>
 #include <locale.h>
+#include <stdint.h>
 #include <sys/ioctl.h>
 #include <sys/statvfs.h>
 
 #include "ostree-autocleanups.h"
 #include "ostree-repo-private.h"
+#include "ostree-repo-static-delta-private.h"
 #include "ostree-types.h"
 
 /* Test fixture. Creates a temporary directory. */
@@ -548,6 +550,95 @@ test_repo_lock_multi_thread (Fixture *fixture, gconstpointer test_data)
 /* Test that writing duplicate content objects within a single transaction does
  * not spuriously trigger the min-free-space check.
  */
+static guint64
+expected_min_free_space_bytes (OstreeRepo *repo)
+{
+  struct statvfs stvfsbuf;
+  if (TEMP_FAILURE_RETRY (fstatvfs (repo->repo_dir_fd, &stvfsbuf)) < 0)
+    g_assert_not_reached ();
+
+  /* Mirrors min_free_space_calculate_reserved_bytes(): the smaller of the two
+   * configured limits is enforced. */
+  guint64 total_bytes = (guint64)stvfsbuf.f_frsize * stvfsbuf.f_blocks;
+  guint64 from_mb = repo->min_free_space_mb > 0 ? (guint64)repo->min_free_space_mb << 20 : 0;
+  guint64 from_pct = repo->min_free_space_percent > 0
+                         ? (guint64)((double)total_bytes * (repo->min_free_space_percent / 100.0))
+                         : 0;
+
+  if (from_mb > 0 && from_pct > 0)
+    return MIN (from_mb, from_pct);
+  else if (from_mb > 0)
+    return from_mb;
+  else
+    return from_pct;
+}
+
+static void
+reload_config_with (OstreeRepo *repo, GKeyFile *config, const char *size, const char *percent)
+{
+  g_autoptr (GError) error = NULL;
+  g_key_file_remove_key (config, "core", "min-free-space-size", NULL);
+  g_key_file_remove_key (config, "core", "min-free-space-percent", NULL);
+  if (size != NULL)
+    g_key_file_set_string (config, "core", "min-free-space-size", size);
+  if (percent != NULL)
+    g_key_file_set_string (config, "core", "min-free-space-percent", percent);
+  g_assert_true (ostree_repo_write_config_and_reload (repo, config, &error));
+  g_assert_no_error (error);
+}
+
+static void
+test_repo_get_min_free_space_limits (Fixture *fixture, gconstpointer test_data)
+{
+  g_autoptr (GError) error = NULL;
+  g_autoptr (OstreeRepo) repo = ostree_repo_create_at (
+      fixture->tmpdir.fd, ".", OSTREE_REPO_MODE_ARCHIVE, NULL, NULL, &error);
+  g_assert_no_error (error);
+  g_autoptr (GKeyFile) config = ostree_repo_copy_config (repo);
+  guint64 bytes = 0;
+
+  /* Only min-free-space-size is set; the reserved bytes are exact. */
+  reload_config_with (repo, config, "500MB", NULL);
+  g_assert_cmpuint (repo->min_free_space_percent, ==, 0);
+  g_assert_cmpuint (repo->min_free_space_mb, ==, 500);
+  g_assert_true (ostree_repo_get_min_free_space_bytes (repo, &bytes, &error));
+  g_assert_no_error (error);
+  g_assert_cmpuint (bytes, ==, (guint64)500 << 20);
+
+  /* Only min-free-space-percent is set; match the percentage. */
+  reload_config_with (repo, config, NULL, "97");
+  g_assert_cmpuint (repo->min_free_space_percent, ==, 97);
+  g_assert_cmpuint (repo->min_free_space_mb, ==, 0);
+  g_assert_true (ostree_repo_get_min_free_space_bytes (repo, &bytes, &error));
+  g_assert_no_error (error);
+  g_assert_cmpuint (bytes, ==, expected_min_free_space_bytes (repo));
+
+  /* Both are set; the smaller of the two limits is enforced. */
+  reload_config_with (repo, config, "500MB", "97");
+  g_assert_cmpuint (repo->min_free_space_percent, ==, 97);
+  g_assert_cmpuint (repo->min_free_space_mb, ==, 500);
+  g_assert_true (ostree_repo_get_min_free_space_bytes (repo, &bytes, &error));
+  g_assert_no_error (error);
+  g_assert_cmpuint (bytes, ==, expected_min_free_space_bytes (repo));
+
+  /* Neither is set; the default of min(3%, 1GB) applies. */
+  reload_config_with (repo, config, NULL, NULL);
+  g_assert_cmpuint (repo->min_free_space_percent, ==, 3);
+  g_assert_cmpuint (repo->min_free_space_mb, ==, 1024);
+  g_assert_true (ostree_repo_get_min_free_space_bytes (repo, &bytes, &error));
+  g_assert_no_error (error);
+  g_assert_cmpuint (bytes, ==, expected_min_free_space_bytes (repo));
+
+  /* Reloading only a size after the default must clear the stale percent value,
+   * and setting the size to zero disables the check entirely. */
+  reload_config_with (repo, config, "1MB", NULL);
+  g_assert_cmpuint (repo->min_free_space_percent, ==, 0);
+  g_assert_cmpuint (repo->min_free_space_mb, ==, 1);
+  reload_config_with (repo, config, "0MB", NULL);
+  g_assert_cmpuint (repo->min_free_space_percent, ==, 0);
+  g_assert_cmpuint (repo->min_free_space_mb, ==, 0);
+}
+
 static void
 test_min_free_space_dup_content (Fixture *fixture, gconstpointer test_data)
 {
@@ -727,17 +818,229 @@ test_min_free_space_reflinked_content (Fixture *fixture, gconstpointer test_data
   g_assert_no_error (error);
 }
 
+static GVariant *
+delta_bytes (const void *data, size_t len)
+{
+  return g_variant_new_fixed_array (G_VARIANT_TYPE_BYTE, data, len, 1);
+}
+
+static void
+delta_varuint (GByteArray *ops, uint64_t value)
+{
+  do
+    {
+      uint8_t byte = value & 0x7f;
+      value >>= 7;
+      if (value)
+        byte |= 0x80;
+      g_byte_array_append (ops, &byte, 1);
+    }
+  while (value);
+}
+
+typedef struct
+{
+  size_t len;
+  gboolean write_first;
+  gboolean repeat_patch;
+} DeltaPatchTest;
+
+/* Exercise the real opcode executor and commit path, including a WRITE after
+ * BSPATCH. Checking the stored bytes independently of the accumulated checksum
+ * catches an incorrect file offset after mapped output.
+ */
+static void
+test_delta_bspatch_write (Fixture *fixture, gconstpointer test_data)
+{
+  const DeltaPatchTest *test = test_data;
+  const size_t len = test->len;
+  const size_t expected_len = len * (test->repeat_patch ? 2 : 1) + 1;
+  g_autoptr (GError) error = NULL;
+  g_autoptr (OstreeRepo) repo = ostree_repo_create_at (
+      fixture->tmpdir.fd, "repo", OSTREE_REPO_MODE_BARE_USER_ONLY, NULL, NULL, &error);
+  g_assert_no_error (error);
+  g_autoptr (OstreeRepo) reference = ostree_repo_create_at (
+      fixture->tmpdir.fd, "reference", OSTREE_REPO_MODE_BARE_USER_ONLY, NULL, NULL, &error);
+  g_assert_no_error (error);
+  g_autofree uint8_t *expected = g_malloc (expected_len);
+  memset (expected, 'A', expected_len);
+  expected[test->write_first ? 0 : expected_len - 1] = 'D';
+  g_autofree char *expected_checksum = ostree_repo_write_regfile_inline (
+      reference, NULL, 0, 0, S_IFREG | 0644, NULL, expected, expected_len, NULL, &error);
+  g_assert_no_error (error);
+  g_autofree char *source_checksum = ostree_repo_write_regfile_inline (
+      repo, NULL, 0, 0, S_IFREG | 0644, NULL, (const uint8_t *)"Dld", 3, NULL, &error);
+  g_assert_no_error (error);
+
+  uint8_t source_bytes[OSTREE_SHA256_DIGEST_LEN];
+  ostree_checksum_inplace_to_bytes (source_checksum, source_bytes);
+  g_autoptr (GByteArray) payload = g_byte_array_new ();
+  g_byte_array_append (payload, source_bytes, sizeof (source_bytes));
+  if (len > 0)
+    {
+      /* A bspatch control triple: no diff bytes, len literal bytes, no seek. */
+      uint64_t control[] = { 0, GUINT64_TO_LE (len), 0 };
+      g_byte_array_append (payload, (const uint8_t *)control, sizeof (control));
+      g_byte_array_append (payload, expected + (test->write_first ? 1 : 0), len);
+    }
+  const size_t patch_len = payload->len - sizeof (source_bytes);
+  const size_t write_offset = payload->len;
+  g_byte_array_append (payload, (const uint8_t *)"D", 1);
+
+  g_autoptr (GByteArray) ops = g_byte_array_new ();
+  g_byte_array_append (ops, (const uint8_t *)"r", 1);
+  delta_varuint (ops, 0);
+  g_byte_array_append (ops, (const uint8_t *)"o", 1);
+  delta_varuint (ops, 0);
+  delta_varuint (ops, 0);
+  delta_varuint (ops, len);
+  if (test->write_first)
+    {
+      /* Read the prefix D from the source object before patching. */
+      g_byte_array_append (ops, (const uint8_t *)"w", 1);
+      delta_varuint (ops, 1);
+      delta_varuint (ops, 0);
+    }
+  for (size_t i = 0; i < (test->repeat_patch ? 2 : 1); i++)
+    {
+      g_byte_array_append (ops, (const uint8_t *)"B", 1);
+      delta_varuint (ops, sizeof (source_bytes));
+      delta_varuint (ops, patch_len);
+    }
+  if (!test->write_first)
+    {
+      g_byte_array_append (ops, (const uint8_t *)"Rw", 2);
+      delta_varuint (ops, 1);
+      delta_varuint (ops, write_offset);
+    }
+  g_byte_array_append (ops, (const uint8_t *)"c", 1);
+
+  GVariant *mode = g_variant_new ("(uuu)", 0, 0, GUINT32_TO_BE (S_IFREG | 0644));
+  GVariant *xattrs = g_variant_new_array (G_VARIANT_TYPE ("(ayay)"), NULL, 0);
+  g_autoptr (GVariant) part = g_variant_ref_sink (g_variant_new (
+      "(@a(uuu)@aa(ayay)@ay@ay)", g_variant_new_array (G_VARIANT_TYPE ("(uuu)"), &mode, 1),
+      g_variant_new_array (G_VARIANT_TYPE ("a(ayay)"), &xattrs, 1),
+      delta_bytes (payload->data, payload->len), delta_bytes (ops->data, ops->len)));
+  uint8_t objects[1 + OSTREE_SHA256_DIGEST_LEN] = { OSTREE_OBJECT_TYPE_FILE };
+  ostree_checksum_inplace_to_bytes (expected_checksum, objects + 1);
+
+  /* The commit is just a container for this object-only delta; no refs are set. */
+  uint8_t zero_checksum[OSTREE_SHA256_DIGEST_LEN] = { 0 };
+  g_autoptr (GVariant) commit = g_variant_ref_sink (g_variant_new (
+      "(@a{sv}@ay@a(say)sst@ay@ay)", g_variant_new_array (G_VARIANT_TYPE ("{sv}"), NULL, 0),
+      delta_bytes (NULL, 0), g_variant_new_array (G_VARIANT_TYPE ("(say)"), NULL, 0), "", "",
+      (guint64)0, delta_bytes (zero_checksum, sizeof (zero_checksum)),
+      delta_bytes (zero_checksum, sizeof (zero_checksum))));
+  g_autofree char *commit_checksum = g_compute_checksum_for_data (
+      G_CHECKSUM_SHA256, g_variant_get_data (commit), g_variant_get_size (commit));
+  uint8_t commit_bytes[OSTREE_SHA256_DIGEST_LEN];
+  ostree_checksum_inplace_to_bytes (commit_checksum, commit_bytes);
+  char commit_b64[44];
+  ostree_checksum_b64_inplace_from_bytes (commit_bytes, commit_b64);
+  g_autofree char *inline_path = g_strdup_printf ("deltas/%.2s/%s/0", commit_b64, commit_b64 + 2);
+  GVariantBuilder metadata;
+  g_variant_builder_init (&metadata, G_VARIANT_TYPE_VARDICT);
+  g_variant_builder_add (
+      &metadata, "{sv}", inline_path,
+      g_variant_new ("(y@ay)", 0,
+                     delta_bytes (g_variant_get_data (part), g_variant_get_size (part))));
+  /* Inline parts are covered by the superblock, so their part checksum is unused. */
+  GVariant *header
+      = g_variant_new ("(u@aytt@ay)", 0, delta_bytes (zero_checksum, sizeof (zero_checksum)),
+                       (guint64)(1 + g_variant_get_size (part)), (guint64)expected_len,
+                       delta_bytes (objects, sizeof (objects)));
+  GVariant *children[] = {
+    g_variant_builder_end (&metadata),
+    g_variant_new_uint64 (0),
+    delta_bytes (NULL, 0),
+    delta_bytes (commit_bytes, sizeof (commit_bytes)),
+    commit,
+    delta_bytes (NULL, 0),
+    g_variant_new_array (G_VARIANT_TYPE ("(uayttay)"), &header, 1),
+    g_variant_new_array (G_VARIANT_TYPE ("(yaytt)"), NULL, 0),
+  };
+  g_autoptr (GVariant) superblock
+      = g_variant_ref_sink (g_variant_new_tuple (children, G_N_ELEMENTS (children)));
+  g_assert_true (
+      g_variant_is_of_type (superblock, G_VARIANT_TYPE (OSTREE_STATIC_DELTA_SUPERBLOCK_FORMAT)));
+  g_autofree char *superblock_path = g_build_filename (fixture->tmpdir.path, "superblock", NULL);
+  g_assert_true (g_file_set_contents (superblock_path, g_variant_get_data (superblock),
+                                      g_variant_get_size (superblock), &error));
+  g_assert_no_error (error);
+  g_autoptr (GFile) delta_dir = g_file_new_for_path (fixture->tmpdir.path);
+  gboolean applied
+      = ostree_repo_static_delta_execute_offline (repo, delta_dir, FALSE, NULL, &error);
+  const char *fault = g_getenv ("OSTREE_TEST_FALLOCATE_ERROR");
+  if (fault && *fault)
+    {
+      int expected_errno = g_str_equal (fault, "enosys")   ? ENOSYS
+                           : g_str_equal (fault, "enospc") ? ENOSPC
+                                                           : EIO;
+      g_assert_false (applied);
+      g_assert_error (error, G_IO_ERROR, g_io_error_from_errno (expected_errno));
+      g_clear_error (&error);
+      gboolean have_object;
+      g_assert_true (ostree_repo_has_object (repo, OSTREE_OBJECT_TYPE_FILE, expected_checksum,
+                                             &have_object, NULL, &error));
+      g_assert_no_error (error);
+      g_assert_false (have_object);
+      g_autofree char *tmp_path = g_build_filename (fixture->tmpdir.path, "repo", "tmp", NULL);
+      g_autoptr (GDir) tmp = g_dir_open (tmp_path, 0, &error);
+      g_assert_no_error (error);
+      const char *name;
+      while ((name = g_dir_read_name (tmp)))
+        g_assert_cmpstr (name, ==, "cache");
+      return;
+    }
+  g_assert_no_error (error);
+  g_assert_true (applied);
+  g_autoptr (GInputStream) input = NULL;
+  g_assert_true (ostree_repo_load_file (repo, expected_checksum, &input, NULL, NULL, NULL, &error));
+  g_assert_no_error (error);
+  g_autofree uint8_t *actual = g_malloc (expected_len + 1);
+  size_t bytes_read;
+  g_assert_true (
+      g_input_stream_read_all (input, actual, expected_len + 1, &bytes_read, NULL, &error));
+  g_assert_no_error (error);
+  g_assert_cmpmem (actual, bytes_read, expected, expected_len);
+}
+
 int
 main (int argc, char **argv)
 {
   setlocale (LC_ALL, "");
   g_test_init (&argc, &argv, NULL);
 
+  static const DeltaPatchTest patch_tests[] = {
+    { 0, FALSE, FALSE },     { 3, FALSE, FALSE },
+    { 65537, FALSE, FALSE }, { 1024 * 1024 + 1, FALSE, FALSE },
+    { 3, TRUE, FALSE },      { 3, FALSE, TRUE },
+    { 65537, TRUE, FALSE },  { 65537, FALSE, TRUE },
+  };
+
   g_test_add ("/repo/hash", Fixture, NULL, setup, test_repo_hash, teardown);
+  g_test_add ("/repo/delta/bspatch-write-empty", Fixture, &patch_tests[0], setup,
+              test_delta_bspatch_write, teardown);
+  g_test_add ("/repo/delta/bspatch-write", Fixture, &patch_tests[1], setup,
+              test_delta_bspatch_write, teardown);
+  g_test_add ("/repo/delta/bspatch-write-multi-chunk", Fixture, &patch_tests[2], setup,
+              test_delta_bspatch_write, teardown);
+  g_test_add ("/repo/delta/bspatch-write-checksum-chunks", Fixture, &patch_tests[3], setup,
+              test_delta_bspatch_write, teardown);
+  g_test_add ("/repo/delta/write-bspatch", Fixture, &patch_tests[4], setup,
+              test_delta_bspatch_write, teardown);
+  g_test_add ("/repo/delta/repeated-bspatch", Fixture, &patch_tests[5], setup,
+              test_delta_bspatch_write, teardown);
+  g_test_add ("/repo/delta/write-bspatch-multi-chunk", Fixture, &patch_tests[6], setup,
+              test_delta_bspatch_write, teardown);
+  g_test_add ("/repo/delta/repeated-bspatch-multi-chunk", Fixture, &patch_tests[7], setup,
+              test_delta_bspatch_write, teardown);
   g_test_add ("/repo/hash/closed", Fixture, NULL, setup, test_repo_hash_closed, teardown);
   g_test_add ("/repo/equal", Fixture, NULL, setup, test_repo_equal, teardown);
   g_test_add ("/repo/get_min_free_space", Fixture, NULL, setup, test_repo_get_min_free_space,
               teardown);
+  g_test_add ("/repo/get_min_free_space_limits", Fixture, NULL, setup,
+              test_repo_get_min_free_space_limits, teardown);
   g_test_add ("/repo/write_regfile_api", Fixture, NULL, setup, test_write_regfile_api, teardown);
   g_test_add ("/repo/min_free_space_dup_content", Fixture, NULL, setup,
               test_min_free_space_dup_content, teardown);

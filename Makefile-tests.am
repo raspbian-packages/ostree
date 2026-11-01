@@ -47,7 +47,7 @@ endif
 uninstalled_test_data = tests/ostree-symlink-stamp tests/ostree-prepare-root-symlink-stamp \
 			tests/ostree-remount-symlink-stamp
 
-dist_uninstalled_test_scripts = tests/test-symbols.sh tests/coccinelle.sh
+dist_uninstalled_test_scripts = tests/test-symbols.sh tests/coccinelle.sh tests/test-delta-fallocate.sh
 
 # This logic implements ENABLE_INSTALLED_TESTS_EXCLUSIVE; see below.
 # The goal here if installed tests are enabled, we explicitly make the

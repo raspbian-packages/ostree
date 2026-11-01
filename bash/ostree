@@ -813,6 +813,7 @@ _ostree_prune() {
         --delete-commit
         --depth
         --keep-younger-than
+        --keep-unreferenced-younger-than
         --repo
         --retain-branch-depth
     "
@@ -994,6 +995,7 @@ _ostree_remote_add() {
         --if-not-exists
         --force
         --no-gpg-verify
+        --no-sign-verify
     "
 
     local options_with_args="
@@ -1002,6 +1004,7 @@ _ostree_remote_add() {
         --gpg-import
         --repo
         --set
+        --sign-verify
         --sysroot
     "
 
