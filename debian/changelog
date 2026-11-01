@@ -1,4 +1,4 @@
-ostree (2026.6-1) UNRELEASED; urgency=medium
+ostree (2026.6-1) unstable; urgency=medium
 
   * New upstream release
     - Prevent symlink traversal if applying a malicious union-mode checkout
@@ -15,8 +15,9 @@ ostree (2026.6-1) UNRELEASED; urgency=medium
     provide link-rewriting for cross-references.
   * d/salsa-ci.yml: Exercise arm64 cross-compilation
   * d/salsa-ci.yml: Exercise nocheck and nodoc builds
+  * d/ostree-boot.lintian-overrides: Silence a false positive
 
- -- Simon McVittie <smcv@debian.org>  Sun, 01 Nov 2026 14:54:02 +0000
+ -- Simon McVittie <smcv@debian.org>  Sun, 01 Nov 2026 17:32:24 +0000
 
 ostree (2026.4-1) unstable; urgency=medium
 
