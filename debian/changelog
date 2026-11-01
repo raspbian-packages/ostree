@@ -1,3 +1,16 @@
+ostree (2026.6-1) UNRELEASED; urgency=medium
+
+  * New upstream release
+    - Prevent symlink traversal if applying a malicious union-mode checkout
+      (GHSA-7pq7-3pmj-9wp6; not believed to be exploitable via Flatpak which
+      does not use layered union checkouts; also not believed to be
+      relevant to OS deployments such as bootc and "plain ostree", because
+      applying a malicious OS update would be a vulnerabilty anyway)
+    - Prevent deletion outside deployment root via crafted whiteouts
+      (GHSA-cp2j-qv7x-wcw4; same mitigations as above)
+
+ -- Simon McVittie <smcv@debian.org>  Sun, 01 Nov 2026 14:34:15 +0000
+
 ostree (2026.4-1) unstable; urgency=medium
 
   * New upstream release
