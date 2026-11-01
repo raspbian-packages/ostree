@@ -8,8 +8,15 @@ ostree (2026.6-1) UNRELEASED; urgency=medium
       applying a malicious OS update would be a vulnerabilty anyway)
     - Prevent deletion outside deployment root via crafted whiteouts
       (GHSA-cp2j-qv7x-wcw4; same mitigations as above)
+  * d/p/static-delta-validate-bspatch-payload-offset-and-length.patch:
+    Drop patch that was applied upstream
+  * d/control: Remove Build-Depends-Indep: libglib2.0-doc.
+    GLib documentation is no longer built with gtk-doc, so it doesn't
+    provide link-rewriting for cross-references.
+  * d/salsa-ci.yml: Exercise arm64 cross-compilation
+  * d/salsa-ci.yml: Exercise nocheck and nodoc builds
 
- -- Simon McVittie <smcv@debian.org>  Sun, 01 Nov 2026 14:34:15 +0000
+ -- Simon McVittie <smcv@debian.org>  Sun, 01 Nov 2026 14:54:02 +0000
 
 ostree (2026.4-1) unstable; urgency=medium
 
