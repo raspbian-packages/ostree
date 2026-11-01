@@ -3,4 +3,6 @@ include:
   - https://salsa.debian.org/salsa-ci-team/pipeline/raw/master/recipes/debian.yml
 
 variables:
+  BUILD_PROFILES: nocheck,nodoc
   SALSA_CI_DISABLE_CROSSBUILD_ARM64: 0
+  SALSA_CI_ENABLE_BUILD_PACKAGE_PROFILES: 1
