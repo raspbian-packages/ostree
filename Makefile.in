@@ -3109,7 +3109,7 @@ ostree_remount_LDADD = $(AM_LDFLAGS) $(OT_INTERNAL_GIO_UNIX_LIBS) \
 uninstalled_test_data = tests/ostree-symlink-stamp \
 	tests/ostree-prepare-root-symlink-stamp \
 	tests/ostree-remount-symlink-stamp $(am__append_84)
-dist_uninstalled_test_scripts = tests/test-symbols.sh tests/coccinelle.sh
+dist_uninstalled_test_scripts = tests/test-symbols.sh tests/coccinelle.sh tests/test-delta-fallocate.sh
 
 # This logic implements ENABLE_INSTALLED_TESTS_EXCLUSIVE; see below.
 # The goal here if installed tests are enabled, we explicitly make the
@@ -9805,6 +9805,13 @@ tests/test-symbols.sh.log: tests/test-symbols.sh
 tests/coccinelle.sh.log: tests/coccinelle.sh
 	@p='tests/coccinelle.sh'; \
 	b='tests/coccinelle.sh'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+tests/test-delta-fallocate.sh.log: tests/test-delta-fallocate.sh
+	@p='tests/test-delta-fallocate.sh'; \
+	b='tests/test-delta-fallocate.sh'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \

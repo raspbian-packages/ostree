@@ -213,8 +213,13 @@ ostree_gpg_verify_result_lookup (<em class="parameter"><code><a class="link" hre
 .  If a match is found,
 the function returns <code class="literal">TRUE</code> and sets <em class="parameter"><code>out_signature_index</code></em>
  so that further
-signature details can be obtained through <a class="link" href="ostree-GPG-signature-verification-results.html#ostree-gpg-verify-result-get" title="ostree_gpg_verify_result_get ()"><code class="function">ostree_gpg_verify_result_get()</code></a>.
-If no match is found, the function returns <code class="literal">FALSE</code> and leaves
+signature details can be obtained through <a class="link" href="ostree-GPG-signature-verification-results.html#ostree-gpg-verify-result-get" title="ostree_gpg_verify_result_get ()"><code class="function">ostree_gpg_verify_result_get()</code></a>.</p>
+<p>If <em class="parameter"><code>key_id</code></em>
+ is a subkey fingerprint suffixed with <code class="literal">!</code>, the search will look
+for a signature from exactly that subkey. Otherwise, the search will look for
+a signature from any subkey in the primary key for <em class="parameter"><code>key_id</code></em>
+.</p>
+<p>If no match is found, the function returns <code class="literal">FALSE</code> and leaves
 <em class="parameter"><code>out_signature_index</code></em>
  unchanged.</p>
 <div class="refsect3">
