@@ -375,13 +375,13 @@ bin_PROGRAMS = ostree$(EXEEXT) $(am__EXEEXT_1)
 sbin_PROGRAMS =
 libexec_PROGRAMS =
 pkglibexec_PROGRAMS =
-noinst_PROGRAMS = $(am__EXEEXT_17) tests/test-rollsum-cli$(EXEEXT) \
+noinst_PROGRAMS = $(am__EXEEXT_18) tests/test-rollsum-cli$(EXEEXT) \
 	tests/test-commit-sign-sh-ext$(EXEEXT)
-ostree_boot_PROGRAMS = $(am__EXEEXT_18) $(am__EXEEXT_19)
-TESTS = $(am__EXEEXT_8) $(am__EXEEXT_26) \
-	$(dist_uninstalled_test_scripts) $(am__EXEEXT_14)
-installed_test_PROGRAMS = $(am__EXEEXT_16)
-check_PROGRAMS = $(am__EXEEXT_13) $(am__EXEEXT_14) $(am__EXEEXT_15)
+ostree_boot_PROGRAMS = $(am__EXEEXT_19) $(am__EXEEXT_20)
+TESTS = $(am__EXEEXT_9) $(am__EXEEXT_27) \
+	$(dist_uninstalled_test_scripts) $(am__EXEEXT_15)
+installed_test_PROGRAMS = $(am__EXEEXT_17)
+check_PROGRAMS = $(am__EXEEXT_14) $(am__EXEEXT_15) $(am__EXEEXT_16)
 @ENABLE_ALWAYS_BUILD_TESTS_TRUE@am__append_1 = $(all_test_ltlibs)
 @ENABLE_ALWAYS_BUILD_TESTS_TRUE@am__append_2 = $(all_test_programs)
 @ENABLE_ALWAYS_BUILD_TESTS_TRUE@am__append_3 = $(all_test_scripts)
@@ -562,30 +562,31 @@ check_PROGRAMS = $(am__EXEEXT_13) $(am__EXEEXT_14) $(am__EXEEXT_15)
 
 @USE_LIBSOUP_OR_LIBSOUP3_TRUE@am__append_92 = ostree-trivial-httpd
 @USE_AVAHI_TRUE@am__append_93 = tests/test-repo-finder-avahi
-@USE_LIBARCHIVE_TRUE@am__append_94 = tests/test-libarchive-import
-@USE_GPGME_TRUE@am__append_95 = \
+@USE_CURL_OR_SOUP_TRUE@am__append_94 = tests/test-fetcher-uri
+@USE_LIBARCHIVE_TRUE@am__append_95 = tests/test-libarchive-import
+@USE_GPGME_TRUE@am__append_96 = \
 @USE_GPGME_TRUE@	tests/gpg-verify-data/README.md \
 @USE_GPGME_TRUE@	$(NULL)
 
-@ENABLE_INSTALLED_TESTS_EXCLUSIVE_FALSE@am__append_96 = $(_installed_or_uninstalled_test_scripts)
-@ENABLE_INSTALLED_TESTS_EXCLUSIVE_FALSE@am__append_97 = $(_installed_or_uninstalled_test_programs)
-@ENABLE_INSTALLED_TESTS_TRUE@am__append_98 = install-installed-tests-extra
+@ENABLE_INSTALLED_TESTS_EXCLUSIVE_FALSE@am__append_97 = $(_installed_or_uninstalled_test_scripts)
+@ENABLE_INSTALLED_TESTS_EXCLUSIVE_FALSE@am__append_98 = $(_installed_or_uninstalled_test_programs)
+@ENABLE_INSTALLED_TESTS_TRUE@am__append_99 = install-installed-tests-extra
 
 # Allow the distcheck install under $prefix test to pass
-@BUILDOPT_SYSTEMD_TRUE@am__append_99 = --with-systemdsystemunitdir='$${libdir}/systemd/system'
+@BUILDOPT_SYSTEMD_TRUE@am__append_100 = --with-systemdsystemunitdir='$${libdir}/systemd/system'
 
 # We're using the system grub2-mkconfig generator
-@BUILDOPT_BUILTIN_GRUB2_MKCONFIG_FALSE@am__append_100 = src/boot/grub2/grub2-15_ostree
-@BUILDOPT_BUILTIN_GRUB2_MKCONFIG_FALSE@am__append_101 = install-grub2-config-hook
+@BUILDOPT_BUILTIN_GRUB2_MKCONFIG_FALSE@am__append_101 = src/boot/grub2/grub2-15_ostree
+@BUILDOPT_BUILTIN_GRUB2_MKCONFIG_FALSE@am__append_102 = install-grub2-config-hook
 # We're using our internal generator
-@BUILDOPT_BUILTIN_GRUB2_MKCONFIG_TRUE@am__append_102 = src/boot/grub2/ostree-grub-generator
-@BUILDOPT_FUSE_TRUE@@ENABLE_MAN_TRUE@am__append_103 = rofiles-fuse.1
-@ENABLE_MAN_TRUE@@USE_GPGME_TRUE@am__append_104 = ostree-gpg-sign.1
-@ENABLE_MAN_HTML_TRUE@@ENABLE_MAN_TRUE@am__append_105 = $(manhtml_files)
-@ENABLE_MAN_TRUE@am__append_106 = man/index.xml $(man1_MANS:.1=.xml) \
+@BUILDOPT_BUILTIN_GRUB2_MKCONFIG_TRUE@am__append_103 = src/boot/grub2/ostree-grub-generator
+@BUILDOPT_FUSE_TRUE@@ENABLE_MAN_TRUE@am__append_104 = rofiles-fuse.1
+@ENABLE_MAN_TRUE@@USE_GPGME_TRUE@am__append_105 = ostree-gpg-sign.1
+@ENABLE_MAN_HTML_TRUE@@ENABLE_MAN_TRUE@am__append_106 = $(manhtml_files)
+@ENABLE_MAN_TRUE@am__append_107 = man/index.xml $(man1_MANS:.1=.xml) \
 @ENABLE_MAN_TRUE@	$(man5_MANS:.5=.xml) $(man8_MANS:.8=.xml) \
 @ENABLE_MAN_TRUE@	$(XSLT_HTML_STYLESHEET)
-@ENABLE_MAN_TRUE@am__append_107 = \
+@ENABLE_MAN_TRUE@am__append_108 = \
 @ENABLE_MAN_TRUE@	$(man1_MANS) \
 @ENABLE_MAN_TRUE@	$(man5_MANS) \
 @ENABLE_MAN_TRUE@	$(man8_MANS) \
@@ -648,11 +649,12 @@ am__installdirs = "$(DESTDIR)$(bindir)" \
 	"$(DESTDIR)$(libostreeincludedir)"
 am__EXEEXT_2 =
 @USE_AVAHI_TRUE@am__EXEEXT_3 = tests/test-repo-finder-avahi$(EXEEXT)
-@USE_GPGME_TRUE@am__EXEEXT_4 = tests/test-gpg-verify-result$(EXEEXT) \
+@USE_CURL_OR_SOUP_TRUE@am__EXEEXT_4 = tests/test-fetcher-uri$(EXEEXT)
+@USE_GPGME_TRUE@am__EXEEXT_5 = tests/test-gpg-verify-result$(EXEEXT) \
 @USE_GPGME_TRUE@	$(am__EXEEXT_2)
-@USE_LIBARCHIVE_TRUE@am__EXEEXT_5 =  \
+@USE_LIBARCHIVE_TRUE@am__EXEEXT_6 =  \
 @USE_LIBARCHIVE_TRUE@	tests/test-libarchive-import$(EXEEXT)
-am__EXEEXT_6 = tests/test-varint$(EXEEXT) \
+am__EXEEXT_7 = tests/test-varint$(EXEEXT) \
 	tests/test-ot-unix-utils$(EXEEXT) tests/test-bsdiff$(EXEEXT) \
 	tests/test-otcore$(EXEEXT) tests/test-mutable-tree$(EXEEXT) \
 	tests/test-keyfile-utils$(EXEEXT) \
@@ -664,31 +666,32 @@ am__EXEEXT_6 = tests/test-varint$(EXEEXT) \
 	tests/test-pull-c$(EXEEXT) tests/test-repo$(EXEEXT) \
 	tests/test-include-ostree-h$(EXEEXT) tests/test-kargs$(EXEEXT) \
 	tests/test-rfc2616-dates$(EXEEXT) tests/test-pem$(EXEEXT) \
-	tests/test-validate-utf8$(EXEEXT) $(am__EXEEXT_4) \
-	$(am__EXEEXT_5)
-@ENABLE_INSTALLED_TESTS_EXCLUSIVE_FALSE@am__EXEEXT_7 =  \
-@ENABLE_INSTALLED_TESTS_EXCLUSIVE_FALSE@	$(am__EXEEXT_6)
-am__EXEEXT_8 = tests/test-bloom$(EXEEXT) \
+	tests/test-validate-utf8$(EXEEXT) $(am__EXEEXT_5) \
+	$(am__EXEEXT_6)
+@ENABLE_INSTALLED_TESTS_EXCLUSIVE_FALSE@am__EXEEXT_8 =  \
+@ENABLE_INSTALLED_TESTS_EXCLUSIVE_FALSE@	$(am__EXEEXT_7)
+am__EXEEXT_9 = tests/test-bloom$(EXEEXT) \
 	tests/test-repo-finder-config$(EXEEXT) \
 	tests/test-repo-finder-mount$(EXEEXT) $(am__EXEEXT_2) \
-	$(am__EXEEXT_3) $(am__EXEEXT_7)
-@ENABLE_INSTALLED_TESTS_EXCLUSIVE_TRUE@am__EXEEXT_9 = $(am__EXEEXT_6)
-@USE_LIBSOUP_OR_LIBSOUP3_TRUE@am__EXEEXT_10 =  \
+	$(am__EXEEXT_3) $(am__EXEEXT_4) $(am__EXEEXT_8)
+@ENABLE_INSTALLED_TESTS_EXCLUSIVE_TRUE@am__EXEEXT_10 =  \
+@ENABLE_INSTALLED_TESTS_EXCLUSIVE_TRUE@	$(am__EXEEXT_7)
+@USE_LIBSOUP_OR_LIBSOUP3_TRUE@am__EXEEXT_11 =  \
 @USE_LIBSOUP_OR_LIBSOUP3_TRUE@	ostree-trivial-httpd$(EXEEXT)
-am__EXEEXT_11 = tests/get-byte-order$(EXEEXT) \
+am__EXEEXT_12 = tests/get-byte-order$(EXEEXT) \
 	tests/repo-finder-mount$(EXEEXT) $(am__EXEEXT_2) \
-	$(am__EXEEXT_10)
-am__EXEEXT_12 = $(am__EXEEXT_8) $(am__EXEEXT_9) $(am__EXEEXT_11)
-@ENABLE_ALWAYS_BUILD_TESTS_FALSE@am__EXEEXT_13 = $(am__EXEEXT_12)
-am__EXEEXT_14 = test-libglnx-xattrs$(EXEEXT) \
+	$(am__EXEEXT_11)
+am__EXEEXT_13 = $(am__EXEEXT_9) $(am__EXEEXT_10) $(am__EXEEXT_12)
+@ENABLE_ALWAYS_BUILD_TESTS_FALSE@am__EXEEXT_14 = $(am__EXEEXT_13)
+am__EXEEXT_15 = test-libglnx-xattrs$(EXEEXT) \
 	test-libglnx-fdio$(EXEEXT) test-libglnx-errors$(EXEEXT) \
 	test-libglnx-macros$(EXEEXT) test-libglnx-shutil$(EXEEXT)
-@BUILDOPT_SYSTEMD_FALSE@am__EXEEXT_15 = ostree-remount$(EXEEXT)
-@ENABLE_INSTALLED_TESTS_TRUE@am__EXEEXT_16 = $(am__EXEEXT_8) \
-@ENABLE_INSTALLED_TESTS_TRUE@	$(am__EXEEXT_9) $(am__EXEEXT_11)
-@ENABLE_ALWAYS_BUILD_TESTS_TRUE@am__EXEEXT_17 = $(am__EXEEXT_12)
-@BUILDOPT_SYSTEMD_TRUE@am__EXEEXT_18 = ostree-remount$(EXEEXT)
-@BUILDOPT_USE_STATIC_COMPILER_FALSE@am__EXEEXT_19 = ostree-prepare-root$(EXEEXT)
+@BUILDOPT_SYSTEMD_FALSE@am__EXEEXT_16 = ostree-remount$(EXEEXT)
+@ENABLE_INSTALLED_TESTS_TRUE@am__EXEEXT_17 = $(am__EXEEXT_9) \
+@ENABLE_INSTALLED_TESTS_TRUE@	$(am__EXEEXT_10) $(am__EXEEXT_12)
+@ENABLE_ALWAYS_BUILD_TESTS_TRUE@am__EXEEXT_18 = $(am__EXEEXT_13)
+@BUILDOPT_SYSTEMD_TRUE@am__EXEEXT_19 = ostree-remount$(EXEEXT)
+@BUILDOPT_USE_STATIC_COMPILER_FALSE@am__EXEEXT_20 = ostree-prepare-root$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS) $(installed_test_PROGRAMS) \
 	$(libexec_PROGRAMS) $(noinst_PROGRAMS) $(ostree_boot_PROGRAMS) \
 	$(pkglibexec_PROGRAMS) $(sbin_PROGRAMS) \
@@ -1387,6 +1390,17 @@ tests_test_commit_sign_sh_ext_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(tests_test_commit_sign_sh_ext_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
+am__tests_test_fetcher_uri_SOURCES_DIST =  \
+	src/libostree/ostree-fetcher-uri.c tests/test-fetcher-uri.c
+@USE_CURL_OR_SOUP_TRUE@am_tests_test_fetcher_uri_OBJECTS = src/libostree/tests_test_fetcher_uri-ostree-fetcher-uri.$(OBJEXT) \
+@USE_CURL_OR_SOUP_TRUE@	tests/test_fetcher_uri-test-fetcher-uri.$(OBJEXT)
+tests_test_fetcher_uri_OBJECTS = $(am_tests_test_fetcher_uri_OBJECTS)
+@USE_CURL_OR_SOUP_TRUE@tests_test_fetcher_uri_DEPENDENCIES =  \
+@USE_CURL_OR_SOUP_TRUE@	$(am__DEPENDENCIES_18)
+tests_test_fetcher_uri_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(tests_test_fetcher_uri_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am__tests_test_gpg_verify_result_SOURCES_DIST =  \
 	src/libostree/ostree-gpg-verify-result-private.h \
 	tests/test-gpg-verify-result.c
@@ -1721,6 +1735,7 @@ am__depfiles_remade = bsdiff/$(DEPDIR)/libbsdiff_la-bsdiff.Plo \
 	src/libostree/$(DEPDIR)/tests_test_bloom-ostree-bloom.Po \
 	src/libostree/$(DEPDIR)/tests_test_checksum-ostree-core.Po \
 	src/libostree/$(DEPDIR)/tests_test_checksum-ostree-varint.Po \
+	src/libostree/$(DEPDIR)/tests_test_fetcher_uri-ostree-fetcher-uri.Po \
 	src/libostree/$(DEPDIR)/tests_test_kargs-ostree-kernel-args.Po \
 	src/libostree/$(DEPDIR)/tests_test_lzma-ostree-lzma-common.Po \
 	src/libostree/$(DEPDIR)/tests_test_lzma-ostree-lzma-compressor.Po \
@@ -1836,6 +1851,7 @@ am__depfiles_remade = bsdiff/$(DEPDIR)/libbsdiff_la-bsdiff.Plo \
 	tests/$(DEPDIR)/test_bsdiff-test-bsdiff.Po \
 	tests/$(DEPDIR)/test_checksum-test-checksum.Po \
 	tests/$(DEPDIR)/test_commit_sign_sh_ext-test-commit-sign-sh-ext.Po \
+	tests/$(DEPDIR)/test_fetcher_uri-test-fetcher-uri.Po \
 	tests/$(DEPDIR)/test_gpg_verify_result-test-gpg-verify-result.Po \
 	tests/$(DEPDIR)/test_include_ostree_h-test-include-ostree-h.Po \
 	tests/$(DEPDIR)/test_kargs-test-kargs.Po \
@@ -1894,6 +1910,7 @@ SOURCES = $(libbsdiff_la_SOURCES) $(libbupsplit_la_SOURCES) \
 	$(tests_test_bootconfig_parser_internals_SOURCES) \
 	tests/test-bsdiff.c $(tests_test_checksum_SOURCES) \
 	tests/test-commit-sign-sh-ext.c \
+	$(tests_test_fetcher_uri_SOURCES) \
 	$(tests_test_gpg_verify_result_SOURCES) \
 	$(tests_test_include_ostree_h_SOURCES) \
 	$(tests_test_kargs_SOURCES) tests/test-keyfile-utils.c \
@@ -1927,6 +1944,7 @@ DIST_SOURCES = $(libbsdiff_la_SOURCES) $(libbupsplit_la_SOURCES) \
 	$(tests_test_bootconfig_parser_internals_SOURCES) \
 	tests/test-bsdiff.c $(tests_test_checksum_SOURCES) \
 	tests/test-commit-sign-sh-ext.c \
+	$(am__tests_test_fetcher_uri_SOURCES_DIST) \
 	$(am__tests_test_gpg_verify_result_SOURCES_DIST) \
 	$(tests_test_include_ostree_h_SOURCES) \
 	$(tests_test_kargs_SOURCES) tests/test-keyfile-utils.c \
@@ -2169,15 +2187,15 @@ am__set_TESTS_bases = \
   bases=`echo $$bases`
 AM_TESTSUITE_SUMMARY_HEADER = ' for $(PACKAGE_STRING)'
 RECHECK_LOGS = $(TEST_LOGS)
-am__EXEEXT_20 = tests/test-remote-gpg-import.sh \
+am__EXEEXT_21 = tests/test-remote-gpg-import.sh \
 	tests/test-remote-gpg-list-keys.sh \
 	tests/test-gpg-signed-commit.sh tests/test-admin-gpg.sh \
 	$(am__EXEEXT_2)
-@USE_GPGME_TRUE@am__EXEEXT_21 = $(am__EXEEXT_20)
-am__EXEEXT_22 = tests/test-core.js tests/test-remotes-config-dir.js \
+@USE_GPGME_TRUE@am__EXEEXT_22 = $(am__EXEEXT_21)
+am__EXEEXT_23 = tests/test-core.js tests/test-remotes-config-dir.js \
 	tests/test-sizes.js tests/test-sysroot.js $(am__EXEEXT_2)
-@BUILDOPT_GJS_TRUE@am__EXEEXT_23 = $(js_tests) $(am__EXEEXT_22)
-am__EXEEXT_24 = tests/test-basic.sh \
+@BUILDOPT_GJS_TRUE@am__EXEEXT_24 = $(js_tests) $(am__EXEEXT_23)
+am__EXEEXT_25 = tests/test-basic.sh \
 	tests/test-basic-bare-split-xattrs.sh tests/test-basic-user.sh \
 	tests/test-basic-user-only.sh tests/test-basic-root.sh \
 	tests/test-cli-extensions.sh tests/test-pull-subpath.sh \
@@ -2242,11 +2260,11 @@ am__EXEEXT_24 = tests/test-basic.sh \
 	tests/test-signed-commit-dummy.sh tests/test-signed-pull.sh \
 	tests/test-pre-signed-pull.sh \
 	tests/test-signed-pull-summary.sh $(am__EXEEXT_2) \
-	$(am__append_77) $(am__append_79) $(am__EXEEXT_21) \
-	$(am__append_83) $(am__append_86) $(am__EXEEXT_23)
-@ENABLE_INSTALLED_TESTS_EXCLUSIVE_FALSE@am__EXEEXT_25 =  \
-@ENABLE_INSTALLED_TESTS_EXCLUSIVE_FALSE@	$(am__EXEEXT_24)
-am__EXEEXT_26 = $(am__EXEEXT_2) $(am__EXEEXT_25)
+	$(am__append_77) $(am__append_79) $(am__EXEEXT_22) \
+	$(am__append_83) $(am__append_86) $(am__EXEEXT_24)
+@ENABLE_INSTALLED_TESTS_EXCLUSIVE_FALSE@am__EXEEXT_26 =  \
+@ENABLE_INSTALLED_TESTS_EXCLUSIVE_FALSE@	$(am__EXEEXT_25)
+am__EXEEXT_27 = $(am__EXEEXT_2) $(am__EXEEXT_26)
 TEST_SUITE_LOG = test-suite.log
 TEST_EXTENSIONS = @EXEEXT@ .test
 LOG_COMPILE = $(LOG_COMPILER) $(AM_LOG_FLAGS) $(LOG_FLAGS)
@@ -2561,7 +2579,7 @@ AM_CFLAGS = -std=gnu99 -fno-strict-aliasing $(WARN_CFLAGS)
 # Allow the distcheck install under $prefix test to pass
 AM_DISTCHECK_CONFIGURE_FLAGS = --enable-gtk-doc --enable-man \
 	--disable-maintainer-mode $(NULL) $(am__append_74) \
-	$(am__append_99) \
+	$(am__append_100) \
 	BASH_COMPLETIONSDIR='$${datadir}/bash-completion/completions'
 SUBDIRS = . $(am__append_15)
 NULL = 
@@ -2575,7 +2593,7 @@ CLEANFILES = $(am__append_13) $(top_builddir)/libglnx-config.h \
 	tests/ostree-remount-symlink-stamp \
 	tests/rofiles-fuse-symlink-stamp tests/ostree \
 	tests/ostree-prepare-root tests/ostree-remount \
-	tests/rofiles-fuse $(am__append_107)
+	tests/rofiles-fuse $(am__append_108)
 EXTRA_DIST = $(all_dist_test_scripts) $(all_dist_test_data) autogen.sh \
 	COPYING README.md libglnx/README.md libglnx/COPYING \
 	libglnx/LICENSES/LGPL-2.0-or-later.txt \
@@ -2595,7 +2613,7 @@ EXTRA_DIST = $(all_dist_test_scripts) $(all_dist_test_data) autogen.sh \
 	tests/ostree.supp $(NULL) $(am__append_78) $(am__append_80) \
 	$(am__append_82) $(am__append_85) $(am__append_87) \
 	$(am__append_89) tests/libtest.sh $(am__append_90) \
-	$(am__append_95) tests/libostreetest.h tests/libtest.sh \
+	$(am__append_96) tests/libostreetest.h tests/libtest.sh \
 	$(NULL) src/boot/dracut/module-setup.sh \
 	src/boot/dracut/ostree.conf src/boot/mkinitcpio \
 	src/boot/ostree-boot-complete.service \
@@ -2605,10 +2623,10 @@ EXTRA_DIST = $(all_dist_test_scripts) $(all_dist_test_data) autogen.sh \
 	src/boot/ostree-finalize-staged-hold.service \
 	src/boot/ostree-state-overlay@.service \
 	src/boot/grub2/grub2-15_ostree \
-	src/boot/grub2/ostree-grub-generator $(NULL) $(am__append_106)
+	src/boot/grub2/ostree-grub-generator $(NULL) $(am__append_107)
 bin_SCRIPTS = 
 lib_LTLIBRARIES = libostree-1.la
-pkglibexec_SCRIPTS = $(am__append_100)
+pkglibexec_SCRIPTS = $(am__append_101)
 noinst_LTLIBRARIES = $(am__append_1) libglnx.la libbsdiff.la \
 	libotutil.la libotcore.la libbupsplit.la libostreetest.la
 privlibdir = $(pkglibdir)
@@ -2622,7 +2640,7 @@ typelibdir = $(libdir)/girepository-1.0
 typelib_DATA = $(am__append_47)
 gsettings_SCHEMAS = 
 ostree_bootdir = $(prefix)/lib/ostree
-ostree_boot_SCRIPTS = $(am__append_59) $(am__append_102)
+ostree_boot_SCRIPTS = $(am__append_59) $(am__append_103)
 
 # We should probably consider flipping the default for DEBUG.  Also,
 # include the builddir in $PATH so we find our just-built ostree
@@ -2648,7 +2666,7 @@ installed_test_SCRIPTS = $(am__append_10)
 installed_test_DATA = $(am__append_11)
 nobase_installed_test_DATA = 
 noinst_SCRIPTS = $(am__append_3)
-noinst_DATA = $(am__append_4) $(am__append_105)
+noinst_DATA = $(am__append_4) $(am__append_106)
 check_LTLIBRARIES = $(am__append_5)
 check_SCRIPTS = $(am__append_7)
 check_DATA = $(am__append_8)
@@ -2680,8 +2698,8 @@ all_test_ltlibs = $(test_ltlibraries) $(uninstalled_test_ltlibraries) $(installe
 # This initializes some more variables
 
 # This is a special facility to chain together hooks easily
-INSTALL_DATA_HOOKS = install-mkdir-remotes-d-hook $(am__append_98) \
-	$(am__append_101)
+INSTALL_DATA_HOOKS = install-mkdir-remotes-d-hook $(am__append_99) \
+	$(am__append_102)
 ALL_LOCAL_RULES = 
 shortened_sysconfdir = $$(echo "$(sysconfdir)" | sed -e 's|^$(prefix)||' -e 's|^/||')
 OSTREE_GITREV = $(shell cd $(srcdir) && if command -v git >/dev/null 2>&1 && test -d .git; then git describe --abbrev=42 --tags --always HEAD; fi)
@@ -3116,10 +3134,10 @@ dist_uninstalled_test_scripts = tests/test-symbols.sh tests/coccinelle.sh tests/
 # tests *only* run installed, to avoid having to run them twice in CI.
 # This overrides the glib-tap.mk emphasis on doing both, if we'd
 # used e.g. `dist_test_scripts`.
-dist_test_scripts = $(NULL) $(am__append_96)
+dist_test_scripts = $(NULL) $(am__append_97)
 test_programs = tests/test-bloom tests/test-repo-finder-config \
 	tests/test-repo-finder-mount $(NULL) $(am__append_93) \
-	$(am__append_97)
+	$(am__append_94) $(am__append_98)
 _installed_or_uninstalled_test_scripts = tests/test-basic.sh \
 	tests/test-basic-bare-split-xattrs.sh tests/test-basic-user.sh \
 	tests/test-basic-user-only.sh tests/test-basic-root.sh \
@@ -3271,7 +3289,7 @@ _installed_or_uninstalled_test_programs = tests/test-varint \
 	tests/test-sysroot-c tests/test-pull-c tests/test-repo \
 	tests/test-include-ostree-h tests/test-kargs \
 	tests/test-rfc2616-dates tests/test-pem \
-	tests/test-validate-utf8 $(am__append_91) $(am__append_94)
+	tests/test-validate-utf8 $(am__append_91) $(am__append_95)
 @USE_LIBSOUP_OR_LIBSOUP3_TRUE@ostree_trivial_httpd_SOURCES = src/ostree/ostree-trivial-httpd.c
 @USE_LIBSOUP_OR_LIBSOUP3_TRUE@ostree_trivial_httpd_CFLAGS = $(common_tests_cflags) $(OT_INTERNAL_SOUP_CFLAGS)
 @USE_LIBSOUP_OR_LIBSOUP3_TRUE@ostree_trivial_httpd_LDADD = $(common_tests_ldadd) $(OT_INTERNAL_SOUP_LIBS)
@@ -3291,6 +3309,9 @@ tests_test_rollsum_LDADD = $(bupsplitpath) $(TESTS_LDADD) $(OT_DEP_ZLIB_LIBS)
 tests_test_bloom_SOURCES = src/libostree/ostree-bloom.c tests/test-bloom.c
 tests_test_bloom_CFLAGS = $(TESTS_CFLAGS)
 tests_test_bloom_LDADD = $(TESTS_LDADD)
+@USE_CURL_OR_SOUP_TRUE@tests_test_fetcher_uri_SOURCES = src/libostree/ostree-fetcher-uri.c tests/test-fetcher-uri.c
+@USE_CURL_OR_SOUP_TRUE@tests_test_fetcher_uri_CFLAGS = $(TESTS_CFLAGS)
+@USE_CURL_OR_SOUP_TRUE@tests_test_fetcher_uri_LDADD = $(TESTS_LDADD)
 tests_test_include_ostree_h_SOURCES = tests/test-include-ostree-h.c
 # Don't use TESTS_CFLAGS so we test if the public header can be included by external programs
 tests_test_include_ostree_h_CFLAGS = $(AM_CFLAGS) $(OT_INTERNAL_GIO_UNIX_CFLAGS) -I$(srcdir)/src/libostree -I$(builddir)/src/libostree
@@ -3431,7 +3452,7 @@ tests_test_commit_sign_sh_ext_LDADD = $(TESTS_LDADD)
 @ENABLE_MAN_TRUE@	ostree-reset.1 ostree-rev-parse.1 \
 @ENABLE_MAN_TRUE@	ostree-show.1 ostree-sign.1 ostree-summary.1 \
 @ENABLE_MAN_TRUE@	ostree-static-delta.1 ostree-prepare-root.1 \
-@ENABLE_MAN_TRUE@	$(am__append_103) $(am__append_104)
+@ENABLE_MAN_TRUE@	$(am__append_104) $(am__append_105)
 @ENABLE_MAN_TRUE@man5_files = ostree.repo.5 ostree.repo-config.5
 @ENABLE_MAN_TRUE@man8_files = ostree-state-overlay@.service.8
 @ENABLE_MAN_TRUE@man1_MANS = $(addprefix man/,$(man1_files))
@@ -4754,6 +4775,15 @@ tests/test_commit_sign_sh_ext-test-commit-sign-sh-ext.$(OBJEXT):  \
 tests/test-commit-sign-sh-ext$(EXEEXT): $(tests_test_commit_sign_sh_ext_OBJECTS) $(tests_test_commit_sign_sh_ext_DEPENDENCIES) $(EXTRA_tests_test_commit_sign_sh_ext_DEPENDENCIES) tests/$(am__dirstamp)
 	@rm -f tests/test-commit-sign-sh-ext$(EXEEXT)
 	$(AM_V_CCLD)$(tests_test_commit_sign_sh_ext_LINK) $(tests_test_commit_sign_sh_ext_OBJECTS) $(tests_test_commit_sign_sh_ext_LDADD) $(LIBS)
+src/libostree/tests_test_fetcher_uri-ostree-fetcher-uri.$(OBJEXT):  \
+	src/libostree/$(am__dirstamp) \
+	src/libostree/$(DEPDIR)/$(am__dirstamp)
+tests/test_fetcher_uri-test-fetcher-uri.$(OBJEXT):  \
+	tests/$(am__dirstamp) tests/$(DEPDIR)/$(am__dirstamp)
+
+tests/test-fetcher-uri$(EXEEXT): $(tests_test_fetcher_uri_OBJECTS) $(tests_test_fetcher_uri_DEPENDENCIES) $(EXTRA_tests_test_fetcher_uri_DEPENDENCIES) tests/$(am__dirstamp)
+	@rm -f tests/test-fetcher-uri$(EXEEXT)
+	$(AM_V_CCLD)$(tests_test_fetcher_uri_LINK) $(tests_test_fetcher_uri_OBJECTS) $(tests_test_fetcher_uri_LDADD) $(LIBS)
 tests/test_gpg_verify_result-test-gpg-verify-result.$(OBJEXT):  \
 	tests/$(am__dirstamp) tests/$(DEPDIR)/$(am__dirstamp)
 
@@ -5269,6 +5299,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@src/libostree/$(DEPDIR)/tests_test_bloom-ostree-bloom.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/libostree/$(DEPDIR)/tests_test_checksum-ostree-core.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/libostree/$(DEPDIR)/tests_test_checksum-ostree-varint.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/libostree/$(DEPDIR)/tests_test_fetcher_uri-ostree-fetcher-uri.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/libostree/$(DEPDIR)/tests_test_kargs-ostree-kernel-args.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/libostree/$(DEPDIR)/tests_test_lzma-ostree-lzma-common.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/libostree/$(DEPDIR)/tests_test_lzma-ostree-lzma-compressor.Po@am__quote@ # am--include-marker
@@ -5384,6 +5415,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test_bsdiff-test-bsdiff.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test_checksum-test-checksum.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test_commit_sign_sh_ext-test-commit-sign-sh-ext.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test_fetcher_uri-test-fetcher-uri.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test_gpg_verify_result-test-gpg-verify-result.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test_include_ostree_h-test-include-ostree-h.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test_kargs-test-kargs.Po@am__quote@ # am--include-marker
@@ -7559,6 +7591,34 @@ tests/test_commit_sign_sh_ext-test-commit-sign-sh-ext.obj: tests/test-commit-sig
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_test_commit_sign_sh_ext_CFLAGS) $(CFLAGS) -c -o tests/test_commit_sign_sh_ext-test-commit-sign-sh-ext.obj `if test -f 'tests/test-commit-sign-sh-ext.c'; then $(CYGPATH_W) 'tests/test-commit-sign-sh-ext.c'; else $(CYGPATH_W) '$(srcdir)/tests/test-commit-sign-sh-ext.c'; fi`
 
+src/libostree/tests_test_fetcher_uri-ostree-fetcher-uri.o: src/libostree/ostree-fetcher-uri.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_test_fetcher_uri_CFLAGS) $(CFLAGS) -MT src/libostree/tests_test_fetcher_uri-ostree-fetcher-uri.o -MD -MP -MF src/libostree/$(DEPDIR)/tests_test_fetcher_uri-ostree-fetcher-uri.Tpo -c -o src/libostree/tests_test_fetcher_uri-ostree-fetcher-uri.o `test -f 'src/libostree/ostree-fetcher-uri.c' || echo '$(srcdir)/'`src/libostree/ostree-fetcher-uri.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/libostree/$(DEPDIR)/tests_test_fetcher_uri-ostree-fetcher-uri.Tpo src/libostree/$(DEPDIR)/tests_test_fetcher_uri-ostree-fetcher-uri.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/libostree/ostree-fetcher-uri.c' object='src/libostree/tests_test_fetcher_uri-ostree-fetcher-uri.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_test_fetcher_uri_CFLAGS) $(CFLAGS) -c -o src/libostree/tests_test_fetcher_uri-ostree-fetcher-uri.o `test -f 'src/libostree/ostree-fetcher-uri.c' || echo '$(srcdir)/'`src/libostree/ostree-fetcher-uri.c
+
+src/libostree/tests_test_fetcher_uri-ostree-fetcher-uri.obj: src/libostree/ostree-fetcher-uri.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_test_fetcher_uri_CFLAGS) $(CFLAGS) -MT src/libostree/tests_test_fetcher_uri-ostree-fetcher-uri.obj -MD -MP -MF src/libostree/$(DEPDIR)/tests_test_fetcher_uri-ostree-fetcher-uri.Tpo -c -o src/libostree/tests_test_fetcher_uri-ostree-fetcher-uri.obj `if test -f 'src/libostree/ostree-fetcher-uri.c'; then $(CYGPATH_W) 'src/libostree/ostree-fetcher-uri.c'; else $(CYGPATH_W) '$(srcdir)/src/libostree/ostree-fetcher-uri.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/libostree/$(DEPDIR)/tests_test_fetcher_uri-ostree-fetcher-uri.Tpo src/libostree/$(DEPDIR)/tests_test_fetcher_uri-ostree-fetcher-uri.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/libostree/ostree-fetcher-uri.c' object='src/libostree/tests_test_fetcher_uri-ostree-fetcher-uri.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_test_fetcher_uri_CFLAGS) $(CFLAGS) -c -o src/libostree/tests_test_fetcher_uri-ostree-fetcher-uri.obj `if test -f 'src/libostree/ostree-fetcher-uri.c'; then $(CYGPATH_W) 'src/libostree/ostree-fetcher-uri.c'; else $(CYGPATH_W) '$(srcdir)/src/libostree/ostree-fetcher-uri.c'; fi`
+
+tests/test_fetcher_uri-test-fetcher-uri.o: tests/test-fetcher-uri.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_test_fetcher_uri_CFLAGS) $(CFLAGS) -MT tests/test_fetcher_uri-test-fetcher-uri.o -MD -MP -MF tests/$(DEPDIR)/test_fetcher_uri-test-fetcher-uri.Tpo -c -o tests/test_fetcher_uri-test-fetcher-uri.o `test -f 'tests/test-fetcher-uri.c' || echo '$(srcdir)/'`tests/test-fetcher-uri.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_fetcher_uri-test-fetcher-uri.Tpo tests/$(DEPDIR)/test_fetcher_uri-test-fetcher-uri.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='tests/test-fetcher-uri.c' object='tests/test_fetcher_uri-test-fetcher-uri.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_test_fetcher_uri_CFLAGS) $(CFLAGS) -c -o tests/test_fetcher_uri-test-fetcher-uri.o `test -f 'tests/test-fetcher-uri.c' || echo '$(srcdir)/'`tests/test-fetcher-uri.c
+
+tests/test_fetcher_uri-test-fetcher-uri.obj: tests/test-fetcher-uri.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_test_fetcher_uri_CFLAGS) $(CFLAGS) -MT tests/test_fetcher_uri-test-fetcher-uri.obj -MD -MP -MF tests/$(DEPDIR)/test_fetcher_uri-test-fetcher-uri.Tpo -c -o tests/test_fetcher_uri-test-fetcher-uri.obj `if test -f 'tests/test-fetcher-uri.c'; then $(CYGPATH_W) 'tests/test-fetcher-uri.c'; else $(CYGPATH_W) '$(srcdir)/tests/test-fetcher-uri.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_fetcher_uri-test-fetcher-uri.Tpo tests/$(DEPDIR)/test_fetcher_uri-test-fetcher-uri.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='tests/test-fetcher-uri.c' object='tests/test_fetcher_uri-test-fetcher-uri.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_test_fetcher_uri_CFLAGS) $(CFLAGS) -c -o tests/test_fetcher_uri-test-fetcher-uri.obj `if test -f 'tests/test-fetcher-uri.c'; then $(CYGPATH_W) 'tests/test-fetcher-uri.c'; else $(CYGPATH_W) '$(srcdir)/tests/test-fetcher-uri.c'; fi`
+
 tests/test_gpg_verify_result-test-gpg-verify-result.o: tests/test-gpg-verify-result.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_test_gpg_verify_result_CFLAGS) $(CFLAGS) -MT tests/test_gpg_verify_result-test-gpg-verify-result.o -MD -MP -MF tests/$(DEPDIR)/test_gpg_verify_result-test-gpg-verify-result.Tpo -c -o tests/test_gpg_verify_result-test-gpg-verify-result.o `test -f 'tests/test-gpg-verify-result.c' || echo '$(srcdir)/'`tests/test-gpg-verify-result.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_gpg_verify_result-test-gpg-verify-result.Tpo tests/$(DEPDIR)/test_gpg_verify_result-test-gpg-verify-result.Po
@@ -8832,6 +8892,13 @@ tests/test-repo-finder-mount.log: tests/test-repo-finder-mount$(EXEEXT)
 tests/test-repo-finder-avahi.log: tests/test-repo-finder-avahi$(EXEEXT)
 	@p='tests/test-repo-finder-avahi$(EXEEXT)'; \
 	b='tests/test-repo-finder-avahi'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+tests/test-fetcher-uri.log: tests/test-fetcher-uri$(EXEEXT)
+	@p='tests/test-fetcher-uri$(EXEEXT)'; \
+	b='tests/test-fetcher-uri'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -10271,6 +10338,7 @@ distclean: distclean-recursive
 	-rm -f src/libostree/$(DEPDIR)/tests_test_bloom-ostree-bloom.Po
 	-rm -f src/libostree/$(DEPDIR)/tests_test_checksum-ostree-core.Po
 	-rm -f src/libostree/$(DEPDIR)/tests_test_checksum-ostree-varint.Po
+	-rm -f src/libostree/$(DEPDIR)/tests_test_fetcher_uri-ostree-fetcher-uri.Po
 	-rm -f src/libostree/$(DEPDIR)/tests_test_kargs-ostree-kernel-args.Po
 	-rm -f src/libostree/$(DEPDIR)/tests_test_lzma-ostree-lzma-common.Po
 	-rm -f src/libostree/$(DEPDIR)/tests_test_lzma-ostree-lzma-compressor.Po
@@ -10386,6 +10454,7 @@ distclean: distclean-recursive
 	-rm -f tests/$(DEPDIR)/test_bsdiff-test-bsdiff.Po
 	-rm -f tests/$(DEPDIR)/test_checksum-test-checksum.Po
 	-rm -f tests/$(DEPDIR)/test_commit_sign_sh_ext-test-commit-sign-sh-ext.Po
+	-rm -f tests/$(DEPDIR)/test_fetcher_uri-test-fetcher-uri.Po
 	-rm -f tests/$(DEPDIR)/test_gpg_verify_result-test-gpg-verify-result.Po
 	-rm -f tests/$(DEPDIR)/test_include_ostree_h-test-include-ostree-h.Po
 	-rm -f tests/$(DEPDIR)/test_kargs-test-kargs.Po
@@ -10581,6 +10650,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f src/libostree/$(DEPDIR)/tests_test_bloom-ostree-bloom.Po
 	-rm -f src/libostree/$(DEPDIR)/tests_test_checksum-ostree-core.Po
 	-rm -f src/libostree/$(DEPDIR)/tests_test_checksum-ostree-varint.Po
+	-rm -f src/libostree/$(DEPDIR)/tests_test_fetcher_uri-ostree-fetcher-uri.Po
 	-rm -f src/libostree/$(DEPDIR)/tests_test_kargs-ostree-kernel-args.Po
 	-rm -f src/libostree/$(DEPDIR)/tests_test_lzma-ostree-lzma-common.Po
 	-rm -f src/libostree/$(DEPDIR)/tests_test_lzma-ostree-lzma-compressor.Po
@@ -10696,6 +10766,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f tests/$(DEPDIR)/test_bsdiff-test-bsdiff.Po
 	-rm -f tests/$(DEPDIR)/test_checksum-test-checksum.Po
 	-rm -f tests/$(DEPDIR)/test_commit_sign_sh_ext-test-commit-sign-sh-ext.Po
+	-rm -f tests/$(DEPDIR)/test_fetcher_uri-test-fetcher-uri.Po
 	-rm -f tests/$(DEPDIR)/test_gpg_verify_result-test-gpg-verify-result.Po
 	-rm -f tests/$(DEPDIR)/test_include_ostree_h-test-include-ostree-h.Po
 	-rm -f tests/$(DEPDIR)/test_kargs-test-kargs.Po
