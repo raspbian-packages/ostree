@@ -1,3 +1,5 @@
+# systemd-tmpfiles --purge handles /var/tmp securely
+ostree-boot: possibly-insecure-handling-of-tmp-files-in-maintainer-script /var/tmp [postrm:*]
 # statically Wanted by another unit
 ostree-boot: systemd-service-file-missing-install-key [*/systemd/system/ostree-finalize-staged-hold.service]
 # ostree-remount genuinely does need to be run that early
